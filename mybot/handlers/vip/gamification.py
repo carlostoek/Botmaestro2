@@ -1,5 +1,5 @@
 """
-Enhanced gamification handlers with improved menu management.
+Enhanced gamification handlers with improved menu management and onboarding support.
 """
 from aiogram import Router, F
 from aiogram.filters import Command
@@ -71,7 +71,8 @@ async def menu_callback_handler(callback: CallbackQuery, session: AsyncSession):
     role = await get_user_role(callback.bot, user_id, session=session)
     
     # Check access for VIP-only features
-    if role not in ["vip", "admin"]:
+    menu_type = callback.data.split(":")[1]
+    if menu_type in ["rewards", "auctions"] and role not in ["vip", "admin"]:
         await callback.answer(
             "Esta función está disponible solo para miembros VIP.", 
             show_alert=True
@@ -79,12 +80,47 @@ async def menu_callback_handler(callback: CallbackQuery, session: AsyncSession):
         return
     
     try:
-        menu_type = callback.data.split(":")[1]
         text, keyboard = await menu_factory.create_menu(menu_type, user_id, session, callback.bot)
         await menu_manager.update_menu(callback, text, keyboard, session, menu_type)
     except Exception as e:
         logger.error(f"Error in menu navigation for user {user_id}: {e}")
         await callback.answer("Error al cargar el menú", show_alert=True)
+    
+    await callback.answer()
+
+@router.callback_query(F.data.in_(["skip_vip_onboarding", "skip_free_onboarding"]))
+async def skip_onboarding(callback: CallbackQuery, session: AsyncSession):
+    """Skip onboarding process."""
+    user_id = callback.from_user.id
+    user = await session.get(User, user_id)
+    
+    if not user:
+        await callback.answer("Error: Usuario no encontrado", show_alert=True)
+        return
+    
+    # Mark onboarding as complete
+    if callback.data == "skip_vip_onboarding":
+        user.vip_onboarding_complete = True
+        onboarding_type = "VIP"
+    else:
+        user.free_onboarding_complete = True
+        onboarding_type = "gratuito"
+    
+    await session.commit()
+    
+    try:
+        # Redirect to main menu
+        text, keyboard = await menu_factory.create_menu("main", user_id, session, callback.bot)
+        await menu_manager.update_menu(
+            callback, 
+            f"✅ **Onboarding {onboarding_type} omitido**\n\n{text}", 
+            keyboard, 
+            session, 
+            "main"
+        )
+    except Exception as e:
+        logger.error(f"Error skipping onboarding for user {user_id}: {e}")
+        await callback.answer("Error al omitir el onboarding", show_alert=True)
     
     await callback.answer()
 
@@ -158,10 +194,6 @@ async def handle_mission_details_callback(callback: CallbackQuery, session: Asyn
     user_id = callback.from_user.id
     role = await get_user_role(callback.bot, user_id, session=session)
     
-    if role not in ["vip", "admin"]:
-        await callback.answer("Esta función está disponible solo para miembros VIP.", show_alert=True)
-        return
-    
     try:
         mission_id = callback.data[len("mission_"):]
         mission_service = MissionService(session)
@@ -176,10 +208,21 @@ async def handle_mission_details_callback(callback: CallbackQuery, session: Asyn
         
         mission_details_message = await get_mission_details_message(mission)
 
+        # Determine back button based on mission category
+        if mission.category == "vip_onboarding":
+            back_callback = "menu:vip_onboarding"
+            back_text = "⬅️ Volver a Onboarding VIP"
+        elif mission.category == "free_onboarding":
+            back_callback = "menu:free_onboarding"
+            back_text = "⬅️ Volver a Introducción"
+        else:
+            back_callback = "menu:missions"
+            back_text = "⬅️ Volver a Misiones"
+
         keyboard = InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text="✅ Completar Misión", callback_data=f"complete_mission_{mission_id}")],
-                [InlineKeyboardButton(text="⬅️ Volver a Misiones", callback_data="menu:missions")],
+                [InlineKeyboardButton(text=back_text, callback_data=back_callback)],
                 [InlineKeyboardButton(text="🏠 Menú Principal", callback_data="menu_principal")],
             ]
         )
@@ -196,10 +239,6 @@ async def handle_complete_mission_callback(callback: CallbackQuery, session: Asy
     """Enhanced mission completion with better feedback."""
     user_id = callback.from_user.id
     role = await get_user_role(callback.bot, user_id, session=session)
-    
-    if role not in ["vip", "admin"]:
-        await callback.answer("Esta función está disponible solo para miembros VIP.", show_alert=True)
-        return
     
     try:
         mission_id = callback.data[len("complete_mission_"):]
@@ -223,13 +262,26 @@ async def handle_complete_mission_callback(callback: CallbackQuery, session: Asy
         )
 
         if completed:
-            # Show success and return to missions menu
-            text, keyboard = await menu_factory.create_menu("missions", user_id, session, callback.bot)
-            success_text = f"🎉 **¡Misión Completada!**\n\n" \
-                          f"Has completado '{mission.name}' y ganado {mission.reward_points} puntos.\n\n" + \
-                          text.split('\n\n', 1)[-1]
+            # Determine which menu to return to based on mission category
+            if mission.category == "vip_onboarding":
+                menu_type = "vip_onboarding"
+                success_prefix = "🎉 **¡Misión VIP Completada!**\n\n"
+            elif mission.category == "free_onboarding":
+                menu_type = "free_onboarding"
+                success_prefix = "🎉 **¡Misión de Introducción Completada!**\n\n"
+            else:
+                menu_type = "missions"
+                success_prefix = "🎉 **¡Misión Completada!**\n\n"
             
-            await menu_manager.update_menu(callback, success_text, keyboard, session, "missions")
+            # Show success and return to appropriate menu
+            text, keyboard = await menu_factory.create_menu(menu_type, user_id, session, callback.bot)
+            success_text = (
+                f"{success_prefix}"
+                f"Has completado '{mission.name}' y ganado {mission.reward_points} puntos.\n\n" +
+                text.split('\n\n', 1)[-1]
+            )
+            
+            await menu_manager.update_menu(callback, success_text, keyboard, session, menu_type)
             await callback.answer("¡Misión completada exitosamente!", show_alert=True)
         else:
             await callback.answer(
@@ -245,14 +297,6 @@ async def handle_daily_checkin(message: Message, session: AsyncSession, bot: Bot
     """Enhanced daily checkin with better feedback."""
     user_id = message.from_user.id
     role = await get_user_role(bot, user_id, session=session)
-    
-    if role not in ["vip", "admin"]:
-        await menu_manager.send_temporary_message(
-            message,
-            "❌ **Acceso Restringido**\n\nEsta función está disponible solo para miembros VIP.",
-            auto_delete_seconds=5
-        )
-        return
     
     try:
         service = PointService(session)
@@ -294,15 +338,6 @@ async def handle_daily_checkin(message: Message, session: AsyncSession, bot: Bot
 async def show_profile_from_reply_keyboard(message: Message, session: AsyncSession):
     """Enhanced profile display from reply keyboard."""
     user_id = message.from_user.id
-    role = await get_user_role(message.bot, user_id, session=session)
-    
-    if role not in ["vip", "admin"]:
-        await menu_manager.send_temporary_message(
-            message,
-            "❌ **Acceso Restringido**\n\nEsta función está disponible solo para miembros VIP.",
-            auto_delete_seconds=5
-        )
-        return
     
     try:
         text, keyboard = await menu_factory.create_menu("profile", user_id, session, message.bot)
@@ -319,15 +354,6 @@ async def show_profile_from_reply_keyboard(message: Message, session: AsyncSessi
 async def show_missions_from_reply_keyboard(message: Message, session: AsyncSession):
     """Enhanced missions display from reply keyboard."""
     user_id = message.from_user.id
-    role = await get_user_role(message.bot, user_id, session=session)
-    
-    if role not in ["vip", "admin"]:
-        await menu_manager.send_temporary_message(
-            message,
-            "❌ **Acceso Restringido**\n\nEsta función está disponible solo para miembros VIP.",
-            auto_delete_seconds=5
-        )
-        return
     
     try:
         text, keyboard = await menu_factory.create_menu("missions", user_id, session, message.bot)
@@ -394,15 +420,6 @@ async def show_auctions_from_reply_keyboard(message: Message, session: AsyncSess
 async def show_ranking_from_reply_keyboard(message: Message, session: AsyncSession):
     """Enhanced ranking display from reply keyboard."""
     user_id = message.from_user.id
-    role = await get_user_role(message.bot, user_id, session=session)
-    
-    if role not in ["vip", "admin"]:
-        await menu_manager.send_temporary_message(
-            message,
-            "❌ **Acceso Restringido**\n\nEsta función está disponible solo para miembros VIP.",
-            auto_delete_seconds=5
-        )
-        return
     
     try:
         text, keyboard = await menu_factory.create_menu("ranking", user_id, session, message.bot)

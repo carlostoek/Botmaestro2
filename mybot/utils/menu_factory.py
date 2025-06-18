@@ -49,7 +49,7 @@ class MenuFactory:
             
             # Handle role-based main menus
             if menu_state in ["main", "admin_main", "vip_main", "free_main"]:
-                return self._create_main_menu(role)
+                return await self._create_main_menu(role, user_id, session)
             
             # Handle specific menu states
             return await self._create_specific_menu(menu_state, user_id, session, role)
@@ -59,7 +59,7 @@ class MenuFactory:
             # Fallback to basic menu
             return self._create_fallback_menu()
     
-    def _create_main_menu(self, role: str) -> Tuple[str, InlineKeyboardMarkup]:
+    async def _create_main_menu(self, role: str, user_id: int, session: AsyncSession) -> Tuple[str, InlineKeyboardMarkup]:
         """Create the main menu based on user role."""
         if role == "admin":
             return (
@@ -69,19 +69,69 @@ class MenuFactory:
                 get_admin_main_kb()
             )
         elif role == "vip":
-            return (
-                "✨ **Bienvenido al Diván de Diana**\n\n"
-                "Tu suscripción VIP te da acceso completo a todas las funciones. "
-                "¡Disfruta de la experiencia premium!",
-                get_vip_main_kb()
-            )
+            # Check if VIP onboarding is complete
+            user = await session.get(User, user_id)
+            if user and not user.vip_onboarding_complete:
+                # Show onboarding-focused menu
+                return (
+                    "✨ **¡Bienvenido al VIP!**\n\n"
+                    "🎯 **Completa tu onboarding VIP**\n"
+                    "Hemos preparado algunas misiones especiales para que explores "
+                    "todas las funciones VIP. ¡Completa estas misiones para ganar puntos extra!\n\n"
+                    "Después podrás acceder a todas las funciones premium.",
+                    self._get_vip_onboarding_kb()
+                )
+            else:
+                return (
+                    "✨ **Bienvenido al Diván de Diana**\n\n"
+                    "Tu suscripción VIP te da acceso completo a todas las funciones. "
+                    "¡Disfruta de la experiencia premium!",
+                    get_vip_main_kb()
+                )
         else:
-            return (
-                "🌟 **Bienvenido a los Kinkys**\n\n"
-                "Explora nuestro contenido gratuito y descubre todo lo que tenemos para ti. "
-                "¿Listo para una experiencia única?",
-                get_subscription_kb()
-            )
+            # Check if free onboarding is complete
+            user = await session.get(User, user_id)
+            if user and not user.free_onboarding_complete:
+                # Show onboarding-focused menu
+                return (
+                    "🌟 **¡Bienvenido!**\n\n"
+                    "🎯 **Completa tu introducción**\n"
+                    "Hemos preparado algunas misiones para que conozcas las funciones básicas. "
+                    "¡Completa estas misiones para ganar tus primeros puntos!\n\n"
+                    "Después podrás explorar todo el contenido gratuito.",
+                    self._get_free_onboarding_kb()
+                )
+            else:
+                return (
+                    "🌟 **Bienvenido a los Kinkys**\n\n"
+                    "Explora nuestro contenido gratuito y descubre todo lo que tenemos para ti. "
+                    "¿Listo para una experiencia única?",
+                    get_subscription_kb()
+                )
+    
+    def _get_vip_onboarding_kb(self) -> InlineKeyboardMarkup:
+        """Create VIP onboarding keyboard."""
+        from aiogram.utils.keyboard import InlineKeyboardBuilder
+        
+        builder = InlineKeyboardBuilder()
+        builder.button(text="🎯 Ver Misiones VIP", callback_data="menu:vip_onboarding")
+        builder.button(text="👤 Mi Perfil", callback_data="menu:profile")
+        builder.button(text="🎁 Recompensas", callback_data="menu:rewards")
+        builder.button(text="⏭️ Saltar Onboarding", callback_data="skip_vip_onboarding")
+        builder.adjust(1)
+        return builder.as_markup()
+    
+    def _get_free_onboarding_kb(self) -> InlineKeyboardMarkup:
+        """Create free onboarding keyboard."""
+        from aiogram.utils.keyboard import InlineKeyboardBuilder
+        
+        builder = InlineKeyboardBuilder()
+        builder.button(text="🎯 Ver Misiones de Inicio", callback_data="menu:free_onboarding")
+        builder.button(text="👤 Mi Perfil", callback_data="menu:profile")
+        builder.button(text="ℹ️ Información", callback_data="free_info")
+        builder.button(text="⏭️ Saltar Introducción", callback_data="skip_free_onboarding")
+        builder.adjust(1)
+        return builder.as_markup()
     
     async def _create_setup_menu(
         self, 
@@ -128,7 +178,8 @@ class MenuFactory:
             create_missions_menu,
             create_rewards_menu,
             create_auction_menu,
-            create_ranking_menu
+            create_ranking_menu,
+            create_onboarding_missions_menu
         )
         
         if menu_state == "profile":
@@ -141,9 +192,13 @@ class MenuFactory:
             return await create_auction_menu(user_id, session)
         elif menu_state == "ranking":
             return await create_ranking_menu(user_id, session)
+        elif menu_state == "vip_onboarding":
+            return await create_onboarding_missions_menu(user_id, "vip", session)
+        elif menu_state == "free_onboarding":
+            return await create_onboarding_missions_menu(user_id, "free", session)
         else:
             # Fallback to main menu for unknown states
-            return self._create_main_menu(role)
+            return await self._create_main_menu(role, user_id, session)
     
     def _create_fallback_menu(self) -> Tuple[str, InlineKeyboardMarkup]:
         """Create a fallback menu when something goes wrong."""

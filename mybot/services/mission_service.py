@@ -2,10 +2,11 @@
 import datetime
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select, update, and_
 from database.models import (
     Mission,
     User,
+    UserMission,
     UserMissionProgress,
     Challenge,
     UserChallengeProgress,
@@ -24,13 +25,18 @@ class MissionService:
         from services.point_service import PointService
         self.point_service = PointService(session)
 
-    async def get_active_missions(self, user_id: int = None, mission_type: str = None) -> list[Mission]:
+    async def get_active_missions(self, user_id: int = None, mission_type: str = None, category: str = None) -> list[Mission]:
         """
-        Retrieves active missions, optionally filtered by user completion status and type.
+        Retrieves active missions, optionally filtered by user completion status, type, and category.
         """
         stmt = select(Mission).where(Mission.is_active == True)
+        
         if mission_type:
             stmt = stmt.where(Mission.type == mission_type)
+            
+        if category:
+            stmt = stmt.where(Mission.category == category)
+            
         result = await self.session.execute(stmt)
         missions = [m for m in result.scalars().all() if not m.duration_days or (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()]
 
@@ -50,6 +56,115 @@ class MissionService:
     async def get_daily_active_missions(self, user_id: int | None = None) -> list[Mission]:
         """Return missions of type 'daily' that are active today."""
         return await self.get_active_missions(user_id=user_id, mission_type="daily")
+
+    async def get_onboarding_missions(self, user_type: str, user_id: int = None) -> list[Mission]:
+        """Get onboarding missions for a specific user type."""
+        category = f"{user_type}_onboarding"
+        stmt = select(Mission).where(
+            Mission.is_active == True,
+            Mission.category == category
+        ).order_by(Mission.order_priority, Mission.created_at)
+        
+        result = await self.session.execute(stmt)
+        missions = result.scalars().all()
+        
+        if user_id:
+            # Filter out already completed missions
+            user = await self.session.get(User, user_id)
+            if user:
+                filtered_missions = []
+                for mission in missions:
+                    is_completed, _ = await self.check_mission_completion_status(user, mission)
+                    if not is_completed:
+                        filtered_missions.append(mission)
+                return filtered_missions
+        
+        return missions
+
+    async def assign_onboarding_missions(self, user_id: int, user_type: str) -> bool:
+        """Assign onboarding missions to a user based on their type."""
+        user = await self.session.get(User, user_id)
+        if not user:
+            return False
+        
+        # Check if onboarding is already complete
+        if user_type == "vip" and user.vip_onboarding_complete:
+            return False
+        elif user_type == "free" and user.free_onboarding_complete:
+            return False
+        
+        # Get onboarding missions for this user type
+        onboarding_missions = await self.get_onboarding_missions(user_type)
+        
+        if not onboarding_missions:
+            logger.warning(f"No onboarding missions found for user type: {user_type}")
+            return False
+        
+        # Assign missions to user
+        assigned_count = 0
+        for mission in onboarding_missions:
+            # Check if mission is already assigned
+            stmt = select(UserMission).where(
+                UserMission.user_id == user_id,
+                UserMission.mission_id == mission.id
+            )
+            result = await self.session.execute(stmt)
+            existing = result.scalar_one_or_none()
+            
+            if not existing:
+                user_mission = UserMission(
+                    user_id=user_id,
+                    mission_id=mission.id,
+                    progress=0,
+                    completed=False
+                )
+                self.session.add(user_mission)
+                assigned_count += 1
+        
+        if assigned_count > 0:
+            await self.session.commit()
+            logger.info(f"Assigned {assigned_count} onboarding missions to user {user_id} (type: {user_type})")
+        
+        return assigned_count > 0
+
+    async def check_onboarding_completion(self, user_id: int, user_type: str) -> bool:
+        """Check if user has completed all onboarding missions for their type."""
+        onboarding_missions = await self.get_onboarding_missions(user_type)
+        
+        if not onboarding_missions:
+            return True  # No onboarding missions means onboarding is complete
+        
+        # Check if all onboarding missions are completed
+        for mission in onboarding_missions:
+            stmt = select(UserMission).where(
+                UserMission.user_id == user_id,
+                UserMission.mission_id == mission.id,
+                UserMission.completed == True
+            )
+            result = await self.session.execute(stmt)
+            completed_mission = result.scalar_one_or_none()
+            
+            if not completed_mission:
+                return False  # Found an incomplete mission
+        
+        return True  # All missions completed
+
+    async def mark_onboarding_complete(self, user_id: int, user_type: str) -> bool:
+        """Mark onboarding as complete for a user."""
+        user = await self.session.get(User, user_id)
+        if not user:
+            return False
+        
+        if user_type == "vip":
+            user.vip_onboarding_complete = True
+        elif user_type == "free":
+            user.free_onboarding_complete = True
+        else:
+            return False
+        
+        await self.session.commit()
+        logger.info(f"Marked {user_type} onboarding complete for user {user_id}")
+        return True
 
     async def get_mission_by_id(self, mission_id: str) -> Mission | None:
         return await self.session.get(Mission, mission_id)
@@ -121,12 +236,22 @@ class MissionService:
                 user.channel_reactions = {}
             user.channel_reactions[str(target_message_id)] = now  # Record the reaction for this specific message
 
-        # Add points to user. Event multiplier should be handled by PointService or calling context.
-        # For simplicity here, we just add the base points.
-        # If event multiplier logic is outside this, ensure it's applied before calling add_points.
-        # If it's inside PointService, this is fine.
-        point_service = self.point_service # assuming point_service is still available in __init__
-        if not hasattr(self, 'point_service'): # Fallback if not initialized in __init__
+        # Update UserMission record if it exists
+        stmt = select(UserMission).where(
+            UserMission.user_id == user_id,
+            UserMission.mission_id == mission_id
+        )
+        result = await self.session.execute(stmt)
+        user_mission = result.scalar_one_or_none()
+        
+        if user_mission:
+            user_mission.completed = True
+            user_mission.completed_at = datetime.datetime.now()
+            user_mission.progress = mission.target_value
+
+        # Add points to user
+        point_service = self.point_service
+        if not hasattr(self, 'point_service'):
              from services.point_service import PointService
              point_service = PointService(self.session)
 
@@ -144,16 +269,37 @@ class MissionService:
         await self.session.commit()
         await self.session.refresh(user)
 
+        # Check if onboarding is complete after this mission
+        if mission.category in ["vip_onboarding", "free_onboarding"]:
+            user_type = mission.category.split("_")[0]  # Extract 'vip' or 'free'
+            if await self.check_onboarding_completion(user_id, user_type):
+                await self.mark_onboarding_complete(user_id, user_type)
+                
+                # Send completion message
+                if bot:
+                    completion_message = (
+                        f"🎉 **¡Onboarding Completado!**\n\n"
+                        f"Has completado todas las misiones de introducción para usuarios {user_type.upper()}.\n"
+                        f"¡Ahora puedes explorar todas las funciones disponibles!"
+                    )
+                    try:
+                        await bot.send_message(user_id, completion_message)
+                    except Exception as e:
+                        logger.warning(f"Could not send onboarding completion message to {user_id}: {e}")
+
         if bot:
             from utils.message_utils import get_mission_completed_message
             from utils.keyboard_utils import get_mission_completed_keyboard
 
             text = await get_mission_completed_message(mission)
-            await bot.send_message(
-                user_id,
-                text,
-                reply_markup=get_mission_completed_keyboard(),
-            )
+            try:
+                await bot.send_message(
+                    user_id,
+                    text,
+                    reply_markup=get_mission_completed_keyboard(),
+                )
+            except Exception as e:
+                logger.warning(f"Could not send mission completion message to {user_id}: {e}")
 
         logger.info(
             f"User {user_id} successfully completed mission {mission_id} (Type: {mission.type}, Message: {target_message_id})."
@@ -168,6 +314,9 @@ class MissionService:
         target_value: int,
         reward_points: int,
         duration_days: int = 0,
+        category: str = "standard",
+        user_type: str = "all",
+        order_priority: int = 0,
     ) -> Mission:
         mission_id = f"{mission_type}_{sanitize_text(name).lower().replace(' ', '_').replace('.', '').replace(',', '')}"
         new_mission = Mission(
@@ -179,6 +328,9 @@ class MissionService:
             target_value=target_value,
             duration_days=duration_days,
             is_active=True,
+            category=category,
+            user_type=user_type,
+            order_priority=order_priority,
         )
         self.session.add(new_mission)
         await self.session.commit()
@@ -230,11 +382,14 @@ class MissionService:
                     from utils.keyboard_utils import get_mission_completed_keyboard
 
                     text = await get_mission_completed_message(mission)
-                    await bot.send_message(
-                        user_id,
-                        text,
-                        reply_markup=get_mission_completed_keyboard(),
-                    )
+                    try:
+                        await bot.send_message(
+                            user_id,
+                            text,
+                            reply_markup=get_mission_completed_keyboard(),
+                        )
+                    except Exception as e:
+                        logger.warning(f"Could not send mission completion message to {user_id}: {e}")
         await self.session.commit()
 
     async def delete_mission(self, mission_id: str) -> bool:

@@ -1,4 +1,3 @@
-# database/models.py
 from sqlalchemy import (
     Column,
     Integer,
@@ -58,6 +57,10 @@ class User(AsyncAttrs, Base):
 
     # Channel reactions tracking
     channel_reactions = Column(JSON, default={})  # {'message_id': True}
+    
+    # Onboarding tracking
+    vip_onboarding_complete = Column(Boolean, default=False)
+    free_onboarding_complete = Column(Boolean, default=False)
 
 
 class Reward(AsyncAttrs, Base):
@@ -115,6 +118,11 @@ class Mission(AsyncAttrs, Base):
     requires_action = Column(Boolean, default=False)
     action_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=func.now())
+    
+    # New fields for onboarding and categorization
+    category = Column(String, default="standard")  # 'standard', 'vip_onboarding', 'free_onboarding'
+    user_type = Column(String, default="all")  # 'all', 'vip', 'free'
+    order_priority = Column(Integer, default=0)  # For ordering onboarding missions
 
 
 class UserMission(AsyncAttrs, Base):
@@ -125,6 +133,7 @@ class UserMission(AsyncAttrs, Base):
     progress = Column(Integer, default=0)
     completed = Column(Boolean, default=False)
     completed_at = Column(DateTime, nullable=True)
+    assigned_at = Column(DateTime, default=func.now())  # Track when mission was assigned
 
 
 class UserMissionProgress(AsyncAttrs, Base):

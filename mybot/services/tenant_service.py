@@ -180,7 +180,7 @@ class TenantService:
             # Initialize default achievements
             await achievement_service.ensure_achievements_exist()
             
-            # Create default missions
+            # Create default standard missions
             default_missions = [
                 {
                     "name": "Primer Mensaje",
@@ -188,7 +188,10 @@ class TenantService:
                     "mission_type": "messages",
                     "target_value": 1,
                     "reward_points": 10,
-                    "duration_days": 0
+                    "duration_days": 0,
+                    "category": "standard",
+                    "user_type": "all",
+                    "order_priority": 0
                 },
                 {
                     "name": "Check-in Diario",
@@ -196,7 +199,10 @@ class TenantService:
                     "mission_type": "daily",
                     "target_value": 1,
                     "reward_points": 5,
-                    "duration_days": 1
+                    "duration_days": 1,
+                    "category": "standard",
+                    "user_type": "all",
+                    "order_priority": 0
                 },
                 {
                     "name": "Conversador Activo",
@@ -204,19 +210,112 @@ class TenantService:
                     "mission_type": "messages",
                     "target_value": 10,
                     "reward_points": 25,
-                    "duration_days": 0
+                    "duration_days": 0,
+                    "category": "standard",
+                    "user_type": "all",
+                    "order_priority": 0
+                }
+            ]
+            
+            # Create VIP onboarding missions
+            vip_onboarding_missions = [
+                {
+                    "name": "Bienvenida VIP",
+                    "description": "¡Bienvenido al VIP! Explora tu nuevo estatus premium",
+                    "mission_type": "one_time",
+                    "target_value": 1,
+                    "reward_points": 50,
+                    "duration_days": 0,
+                    "category": "vip_onboarding",
+                    "user_type": "vip",
+                    "order_priority": 1
+                },
+                {
+                    "name": "Primer Check-in VIP",
+                    "description": "Realiza tu primer check-in como miembro VIP",
+                    "mission_type": "one_time",
+                    "target_value": 1,
+                    "reward_points": 20,
+                    "duration_days": 0,
+                    "category": "vip_onboarding",
+                    "user_type": "vip",
+                    "order_priority": 2
+                },
+                {
+                    "name": "Explorar Recompensas VIP",
+                    "description": "Visita la sección de recompensas VIP",
+                    "mission_type": "one_time",
+                    "target_value": 1,
+                    "reward_points": 15,
+                    "duration_days": 0,
+                    "category": "vip_onboarding",
+                    "user_type": "vip",
+                    "order_priority": 3
+                },
+                {
+                    "name": "Primera Interacción VIP",
+                    "description": "Envía tu primer mensaje como miembro VIP",
+                    "mission_type": "one_time",
+                    "target_value": 1,
+                    "reward_points": 30,
+                    "duration_days": 0,
+                    "category": "vip_onboarding",
+                    "user_type": "vip",
+                    "order_priority": 4
+                }
+            ]
+            
+            # Create Free onboarding missions
+            free_onboarding_missions = [
+                {
+                    "name": "Primeros Pasos",
+                    "description": "¡Bienvenido! Comienza tu aventura aquí",
+                    "mission_type": "one_time",
+                    "target_value": 1,
+                    "reward_points": 10,
+                    "duration_days": 0,
+                    "category": "free_onboarding",
+                    "user_type": "free",
+                    "order_priority": 1
+                },
+                {
+                    "name": "Primer Mensaje",
+                    "description": "Envía tu primer mensaje en el chat",
+                    "mission_type": "one_time",
+                    "target_value": 1,
+                    "reward_points": 5,
+                    "duration_days": 0,
+                    "category": "free_onboarding",
+                    "user_type": "free",
+                    "order_priority": 2
+                },
+                {
+                    "name": "Explorar Perfil",
+                    "description": "Visita tu perfil para ver tu progreso",
+                    "mission_type": "one_time",
+                    "target_value": 1,
+                    "reward_points": 5,
+                    "duration_days": 0,
+                    "category": "free_onboarding",
+                    "user_type": "free",
+                    "order_priority": 3
                 }
             ]
             
             created_missions = []
-            for mission_data in default_missions:
+            all_missions = default_missions + vip_onboarding_missions + free_onboarding_missions
+            
+            for mission_data in all_missions:
                 mission = await mission_service.create_mission(
                     mission_data["name"],
                     mission_data["description"],
                     mission_data["mission_type"],
                     mission_data["target_value"],
                     mission_data["reward_points"],
-                    mission_data["duration_days"]
+                    mission_data["duration_days"],
+                    mission_data["category"],
+                    mission_data["user_type"],
+                    mission_data["order_priority"]
                 )
                 created_missions.append(mission.name)
             
@@ -228,7 +327,8 @@ class TenantService:
                 "success": True,
                 "missions_created": created_missions,
                 "levels_initialized": True,
-                "achievements_initialized": True
+                "achievements_initialized": True,
+                "onboarding_missions_created": len(vip_onboarding_missions) + len(free_onboarding_missions)
             }
             
         except Exception as e:

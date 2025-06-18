@@ -9,6 +9,7 @@ from database.models import User
 from utils.text_utils import sanitize_text
 from services.token_service import TokenService
 from services.subscription_service import SubscriptionService
+from services.mission_service import MissionService
 from utils.menu_utils import send_temporary_reply
 from services.achievement_service import AchievementService
 from services.config_service import ConfigService
@@ -75,6 +76,10 @@ async def start_with_token(message: Message, command: CommandObject, session: As
     ach_service = AchievementService(session)
     await ach_service.check_vip_achievement(user.id, bot=bot)
 
+    # Assign VIP onboarding missions
+    mission_service = MissionService(session)
+    await mission_service.assign_onboarding_missions(user_id, "vip")
+
     # Generate VIP channel invite link
     invite_link = None
     config_service = ConfigService(session)
@@ -94,21 +99,27 @@ async def start_with_token(message: Message, command: CommandObject, session: As
             logger.error(f"Failed to create VIP invite link: {e}")
             invite_link = None
 
-    # Send welcome message with invite link
+    # Send welcome message with invite link and onboarding info
     if invite_link:
         welcome_msg = (
-            f"🎉 ¡Bienvenido al VIP!\n\n"
+            f"🎉 **¡Bienvenido al VIP!**\n\n"
             f"Tu suscripción VIP ha sido activada por {duration} días.\n"
             f"Expira el: {expires_at.strftime('%d/%m/%Y %H:%M')}\n\n"
-            f"🔗 Únete a nuestro canal VIP exclusivo:\n{invite_link}\n\n"
-            f"⚠️ Este enlace es personal y expira en 24 horas."
+            f"🔗 **Únete a nuestro canal VIP exclusivo:**\n{invite_link}\n\n"
+            f"⚠️ Este enlace es personal y expira en 24 horas.\n\n"
+            f"🎯 **¡Misiones VIP disponibles!**\n"
+            f"Hemos preparado algunas misiones especiales para que explores "
+            f"todas las funciones VIP. ¡Completa tu onboarding y gana puntos extra!"
         )
     else:
         welcome_msg = (
-            f"🎉 ¡Suscripción VIP activada!\n\n"
+            f"🎉 **¡Suscripción VIP activada!**\n\n"
             f"Duración: {duration} días\n"
             f"Expira el: {expires_at.strftime('%d/%m/%Y %H:%M')}\n\n"
-            f"Usa /vip_menu para acceder a tus beneficios VIP."
+            f"🎯 **¡Misiones VIP disponibles!**\n"
+            f"Hemos preparado algunas misiones especiales para que explores "
+            f"todas las funciones VIP. ¡Completa tu onboarding y gana puntos extra!\n\n"
+            f"Usa /start para acceder a tus beneficios VIP."
         )
 
     await message.answer(welcome_msg)

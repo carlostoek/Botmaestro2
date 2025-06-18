@@ -37,7 +37,7 @@ async def create_profile_menu(user_id: int, session: AsyncSession) -> Tuple[str,
 async def create_missions_menu(user_id: int, session: AsyncSession) -> Tuple[str, InlineKeyboardMarkup]:
     """Create the missions menu for a user."""
     mission_service = MissionService(session)
-    active_missions = await mission_service.get_active_missions(user_id=user_id)
+    active_missions = await mission_service.get_active_missions(user_id=user_id, category="standard")
     
     if not active_missions:
         text = (
@@ -52,6 +52,75 @@ async def create_missions_menu(user_id: int, session: AsyncSession) -> Tuple[str
         )
     
     return text, get_missions_keyboard(active_missions)
+
+async def create_onboarding_missions_menu(user_id: int, user_type: str, session: AsyncSession) -> Tuple[str, InlineKeyboardMarkup]:
+    """Create the onboarding missions menu for a user."""
+    mission_service = MissionService(session)
+    onboarding_missions = await mission_service.get_onboarding_missions(user_type, user_id)
+    
+    if not onboarding_missions:
+        # No onboarding missions or all completed
+        user = await session.get(User, user_id)
+        if user_type == "vip" and user and user.vip_onboarding_complete:
+            text = (
+                "✅ **¡Onboarding VIP Completado!**\n\n"
+                "Has completado todas las misiones de introducción VIP.\n"
+                "¡Ahora puedes acceder a todas las funciones premium!"
+            )
+        elif user_type == "free" and user and user.free_onboarding_complete:
+            text = (
+                "✅ **¡Introducción Completada!**\n\n"
+                "Has completado todas las misiones de introducción.\n"
+                "¡Ahora puedes explorar todo el contenido disponible!"
+            )
+        else:
+            text = (
+                f"🎯 **Misiones de {user_type.title()}**\n\n"
+                "No hay misiones de onboarding configuradas en este momento."
+            )
+    else:
+        completed_count = 0
+        for mission in onboarding_missions:
+            # Check if mission is completed
+            if user_id in [m.user_id for m in mission.user_missions if m.completed]:
+                completed_count += 1
+        
+        progress_text = f"({completed_count}/{len(onboarding_missions)} completadas)"
+        
+        if user_type == "vip":
+            text = (
+                f"🎯 **Misiones VIP de Onboarding** {progress_text}\n\n"
+                "Completa estas misiones para familiarizarte con las funciones VIP "
+                "y ganar puntos extra:"
+            )
+        else:
+            text = (
+                f"🎯 **Misiones de Introducción** {progress_text}\n\n"
+                "Completa estas misiones para conocer las funciones básicas "
+                "y ganar tus primeros puntos:"
+            )
+    
+    # Create custom keyboard for onboarding
+    from aiogram.utils.keyboard import InlineKeyboardBuilder
+    
+    builder = InlineKeyboardBuilder()
+    
+    # Add mission buttons
+    for mission in onboarding_missions:
+        # Check if completed (simplified check)
+        status_emoji = "✅" if mission.id in [m.mission_id for m in mission.user_missions if m.completed] else "🎯"
+        button_text = f"{status_emoji} {mission.name}"
+        builder.button(text=button_text, callback_data=f"mission_{mission.id}")
+    
+    # Add navigation buttons
+    if user_type == "vip":
+        builder.button(text="🏠 Menú VIP", callback_data="menu_principal")
+    else:
+        builder.button(text="🏠 Menú Principal", callback_data="menu_principal")
+    
+    builder.adjust(1)
+    
+    return text, builder.as_markup()
 
 async def create_rewards_menu(user_id: int, session: AsyncSession) -> Tuple[str, InlineKeyboardMarkup]:
     """Create the rewards menu for a user."""
