@@ -85,10 +85,11 @@ async def main() -> None:
         dp.poll_answer.middleware(PointsMiddleware())
         dp.message_reaction.middleware(PointsMiddleware())
 
-        # Include routers in order of priority
+        # Include routers in order of priority - START HANDLER FIRST!
+        logger.info("Registering handlers...")
+        dp.include_router(start.router)  # MOVED TO FIRST POSITION
         dp.include_router(start_token)
         dp.include_router(setup_router)
-        dp.include_router(start.router)
         dp.include_router(admin_router)
         dp.include_router(auction_admin_router)
         dp.include_router(free_channel_admin_router)
@@ -100,6 +101,7 @@ async def main() -> None:
         dp.include_router(minigames.router)
         dp.include_router(free_user.router)
         dp.include_router(channel_access_router)
+        logger.info("All handlers registered successfully")
 
         # Add error handler for unhandled updates
         @dp.error()
@@ -113,7 +115,7 @@ async def main() -> None:
         # Add fallback handlers for common update types
         @dp.message()
         async def fallback_message_handler(message):
-            logger.info(f"Fallback handler for message from user {message.from_user.id}: {message.text}")
+            logger.warning(f"Fallback handler triggered for message from user {message.from_user.id}: {message.text}")
             try:
                 await message.answer("🤖 Comando no reconocido. Usa /start para comenzar.")
             except Exception as e:
@@ -122,7 +124,7 @@ async def main() -> None:
 
         @dp.callback_query()
         async def fallback_callback_handler(callback):
-            logger.info(f"Fallback handler for callback from user {callback.from_user.id}: {callback.data}")
+            logger.warning(f"Fallback handler triggered for callback from user {callback.from_user.id}: {callback.data}")
             try:
                 await callback.answer("Acción no reconocida")
             except Exception as e:

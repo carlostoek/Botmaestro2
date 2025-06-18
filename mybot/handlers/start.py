@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User
 from utils.text_utils import sanitize_text
-from utils.menu_manager import menu_manager
 from utils.user_roles import clear_role_cache, is_admin
 from services.tenant_service import TenantService
 import logging
@@ -68,34 +67,46 @@ async def cmd_start(message: Message, session: AsyncSession):
         # Check if this is an admin and if setup is needed
         if is_admin(user_id):
             logger.info(f"Admin user detected: {user_id}")
-            tenant_service = TenantService(session)
-            tenant_status = await tenant_service.get_tenant_status(user_id)
-            
-            # If admin hasn't completed basic setup, guide them to setup
-            if not tenant_status["basic_setup_complete"]:
-                await message.answer(
-                    "👋 **¡Hola, Administrador!**\n\n"
-                    "Parece que es la primera vez que usas este bot. "
-                    "Te guiaré a través de una configuración rápida para que "
-                    "esté listo para tus usuarios.\n\n"
-                    "Usa /setup para comenzar la configuración o /admin_menu para ir directo al panel.",
-                    parse_mode="Markdown"
-                )
-                return
+            try:
+                tenant_service = TenantService(session)
+                tenant_status = await tenant_service.get_tenant_status(user_id)
+                
+                # If admin hasn't completed basic setup, guide them to setup
+                if not tenant_status["basic_setup_complete"]:
+                    await message.answer(
+                        "👋 **¡Hola, Administrador!**\n\n"
+                        "Parece que es la primera vez que usas este bot. "
+                        "Te guiaré a través de una configuración rápida para que "
+                        "esté listo para tus usuarios.\n\n"
+                        "Usa /setup para comenzar la configuración o /admin_menu para ir directo al panel.",
+                        parse_mode="Markdown"
+                    )
+                    return
+            except Exception as e:
+                logger.error(f"Error checking tenant status: {e}")
         
         # Simple welcome message based on user type
         if is_admin(user_id):
             welcome_text = "👑 **Panel de Administración**\n\nBienvenido al centro de control del bot."
-            from keyboards.admin_main_kb import get_admin_main_kb
-            keyboard = get_admin_main_kb()
+            try:
+                from keyboards.admin_main_kb import get_admin_main_kb
+                keyboard = get_admin_main_kb()
+            except ImportError:
+                keyboard = None
         elif user.role == "vip":
             welcome_text = "✨ **Bienvenido al Diván de Diana**\n\nTu suscripción VIP te da acceso completo."
-            from keyboards.vip_main_kb import get_vip_main_kb
-            keyboard = get_vip_main_kb()
+            try:
+                from keyboards.vip_main_kb import get_vip_main_kb
+                keyboard = get_vip_main_kb()
+            except ImportError:
+                keyboard = None
         else:
             welcome_text = "🌟 **Bienvenido a los Kinkys**\n\nExplora nuestro contenido gratuito."
-            from keyboards.subscription_kb import get_subscription_kb
-            keyboard = get_subscription_kb()
+            try:
+                from keyboards.subscription_kb import get_subscription_kb
+                keyboard = get_subscription_kb()
+            except ImportError:
+                keyboard = None
         
         if is_new_user:
             welcome_text = "🌟 **¡Bienvenido!**\n\n" + welcome_text
@@ -103,12 +114,17 @@ async def cmd_start(message: Message, session: AsyncSession):
             welcome_text = "🌟 **¡Hola de nuevo!**\n\n" + welcome_text
         
         await message.answer(welcome_text, reply_markup=keyboard, parse_mode="Markdown")
+        logger.info(f"Start command processed successfully for user {user_id}")
         
     except Exception as e:
         logger.error(f"Error in start command for user {user_id}: {e}", exc_info=True)
         # Fallback to basic response
-        await message.answer(
-            "❌ **Error Temporal**\n\n"
-            "Hubo un problema al cargar el menú. Por favor, intenta nuevamente.",
-            parse_mode="Markdown"
-        )
+        try:
+            await message.answer(
+                "❌ **Error Temporal**\n\n"
+                "Hubo un problema al cargar el menú. Por favor, intenta nuevamente.",
+                parse_mode="Markdown"
+            )
+        except Exception as e2:
+            logger.error(f"Error sending fallback message: {e2}")
+            await message.answer("Error al procesar el comando. Intenta nuevamente.")
