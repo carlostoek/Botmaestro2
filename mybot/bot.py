@@ -87,8 +87,8 @@ async def main() -> None:
 
         # Include routers in order of priority - START HANDLER FIRST!
         logger.info("Registering handlers...")
-        dp.include_router(start.router)  # MOVED TO FIRST POSITION
-        dp.include_router(start_token)
+        dp.include_router(start.router)  # FIRST - handles /start
+        dp.include_router(start_token)   # SECOND - handles /start with tokens
         dp.include_router(setup_router)
         dp.include_router(admin_router)
         dp.include_router(auction_admin_router)
