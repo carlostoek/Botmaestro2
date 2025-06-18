@@ -329,3 +329,14 @@ async def generate_token_callback(callback: CallbackQuery, session: AsyncSession
         await callback.answer("Error al generar el token", show_alert=True)
     
     await callback.answer()
+
+# Nuevo callback para gestión del canal gratuito
+@router.callback_query(F.data == "admin_free_channel")
+async def admin_free_channel_redirect(callback: CallbackQuery, session: AsyncSession):
+    """Redirigir a la gestión del canal gratuito."""
+    if not is_admin(callback.from_user.id):
+        return await callback.answer("Acceso denegado", show_alert=True)
+    
+    # Importar y llamar al handler del canal gratuito
+    from handlers.free_channel_admin import free_channel_admin_menu
+    await free_channel_admin_menu(callback, session)
