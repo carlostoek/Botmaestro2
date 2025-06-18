@@ -1,9 +1,9 @@
 """
 Enhanced start handler with improved user experience and multi-tenant support.
 """
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User
@@ -134,3 +134,33 @@ def _create_setup_choice_kb():
 
 # Add the method to MenuFactory
 menu_factory._create_setup_choice_kb = _create_setup_choice_kb
+
+
+# Callback handlers for guided setup choices
+
+@router.callback_query(F.data == "start_setup")
+async def start_setup_callback(callback: CallbackQuery, session: AsyncSession):
+    """Launch the guided setup from inline button."""
+    from handlers.setup import start_setup
+
+    await start_setup(callback.message, session)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "skip_to_admin")
+async def skip_to_admin_callback(callback: CallbackQuery, session: AsyncSession):
+    """Directly open the admin menu, skipping setup."""
+    from handlers.admin.admin_menu import admin_menu
+
+    await admin_menu(callback.message, session)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "show_setup_guide")
+async def show_setup_guide_callback(callback: CallbackQuery):
+    """Show a short message pointing to the setup guide."""
+    guide_text = (
+        "Consulta el README del proyecto para la guía completa de configuración."
+    )
+    await callback.message.answer(guide_text, disable_web_page_preview=True)
+    await callback.answer()
