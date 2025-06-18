@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database.models import User, UserProgress
+from utils.user_utils import get_or_create_user
 from utils.user_roles import get_points_multiplier
 from aiogram import Bot
 from services.level_service import LevelService
@@ -107,10 +108,7 @@ class PointService:
             logger.warning(
                 f"Attempted to add points to non-existent user {user_id}. Creating new user."
             )
-            user = User(id=user_id, points=0)
-            self.session.add(user)
-            await self.session.commit()
-            await self.session.refresh(user)
+            user = await get_or_create_user(self.session, user_id)
 
         multiplier = 1
         if bot:
