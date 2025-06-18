@@ -383,6 +383,42 @@ def get_admin_content_auctions_keyboard():
     return keyboard
 
 
+def get_admin_content_daily_gifts_keyboard():
+    """Keyboard for daily gift configuration options."""
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Bot\u00f3n de prueba", callback_data="admin_game_test"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Volver", callback_data="admin_manage_content"
+                )
+            ],
+        ]
+    )
+    return keyboard
+
+
+def get_admin_content_minigames_keyboard():
+    """Keyboard placeholder for minigames options."""
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Bot\u00f3n de prueba", callback_data="admin_game_test"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔙 Volver", callback_data="admin_manage_content"
+                )
+            ],
+        ]
+    )
+    return keyboard
 
 
 # --- Funciones para la navegación de menú ---
@@ -402,6 +438,51 @@ def get_root_menu():
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
+def get_parent_menu(parent_name: str):
+    """Returns the keyboard for a parent menu based on its name."""
+    if parent_name == "profile":
+        return get_profile_keyboard()
+    elif parent_name == "missions":
+        return get_missions_keyboard(
+            []
+        )  # Puedes adaptar esto si quieres mostrar misiones
+    elif parent_name == "rewards":
+        return get_reward_keyboard([], set())
+    elif parent_name == "ranking":
+        return get_ranking_keyboard()
+    else:
+        return get_root_menu()
+
+
+def get_child_menu(menu_name: str):
+    """Returns the keyboard for a child menu based on its name."""
+    if menu_name == "profile":
+        return get_profile_keyboard()
+    elif menu_name == "missions":
+        return get_missions_keyboard([])
+    elif menu_name == "rewards":
+        return get_reward_keyboard([], set())
+    elif menu_name == "ranking":
+        return get_ranking_keyboard()
+    else:
+        return get_root_menu()
+
+
+def get_main_reply_keyboard():
+    """
+    Returns the main ReplyKeyboardMarkup with persistent buttons.
+    This replaces the need for menu_principal callback for direct access from text.
+    """
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="👤 Perfil"), KeyboardButton(text="🗺 Misiones")],
+            [KeyboardButton(text="🎁 Recompensas"), KeyboardButton(text="🏛️ Subastas")],
+            [KeyboardButton(text="🏆 Ranking")],
+        ],
+        resize_keyboard=True,  # Make the keyboard smaller
+        one_time_keyboard=False,  # Keep the keyboard visible
+    )
+    return keyboard
 
 
 def get_back_keyboard(callback_data: str) -> InlineKeyboardMarkup:
