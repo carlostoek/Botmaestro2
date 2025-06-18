@@ -73,4 +73,14 @@ def get_content_protection_kb() -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-# removed unused: get_invite_link_options_kb
+def get_invite_link_options_kb() -> InlineKeyboardMarkup:
+    """Teclado para opciones de enlace de invitación."""
+    builder = InlineKeyboardBuilder()
+    
+    builder.button(text="📋 Crear Enlace Estándar", callback_data="create_standard_link")
+    builder.button(text="⏰ Crear Enlace Temporal", callback_data="create_temporary_link")
+    builder.button(text="👥 Crear Enlace Limitado", callback_data="create_limited_link")
+    builder.button(text="🔙 Volver", callback_data="admin_free_channel")
+    
+    builder.adjust(1)
+    return builder.as_markup()

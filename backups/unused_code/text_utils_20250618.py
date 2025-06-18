@@ -106,4 +106,12 @@ def format_time_remaining(end_time) -> str:
         return f"{minutes}m"
 
 
-# removed unused: truncate_text
+def truncate_text(text: str, max_length: int = 100) -> str:
+    """Truncate text to specified length with ellipsis."""
+    if not text:
+        return ""
+    
+    if len(text) <= max_length:
+        return text
+    
+    return text[:max_length-3] + "..."

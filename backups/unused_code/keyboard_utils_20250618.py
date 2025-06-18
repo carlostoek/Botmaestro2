@@ -131,7 +131,15 @@ def get_reaction_keyboard(
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-# removed unused: get_custom_reaction_keyboard
+def get_custom_reaction_keyboard(
+    message_id: int, buttons: list[str]
+) -> InlineKeyboardMarkup:
+    """Return an inline keyboard using custom button texts for reactions."""
+    if len(buttons) >= 2:
+        like, dislike = buttons[0], buttons[1]
+    else:
+        like, dislike = "👍", "👎"
+    return get_reaction_keyboard(message_id, like, dislike)
 
 
 def get_admin_manage_users_keyboard():

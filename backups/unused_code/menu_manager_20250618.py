@@ -199,7 +199,19 @@ class MenuManager:
             logger.error(f"Error going back for user {user_id}: {e}")
             return False
     
-    # removed unused: clear_user_data
+    async def clear_user_data(self, user_id: int, bot) -> None:
+        """
+        Clear all stored data for a user (menus, temp messages, history).
+        Useful when user logs out or resets.
+        """
+        # Clean up temporary messages
+        await self._cleanup_temp_messages(bot, user_id)
+        
+        # Remove active menu reference
+        self._active_menus.pop(user_id, None)
+        
+        # Clear navigation history
+        self._nav_history.pop(user_id, None)
     
     def _update_nav_history(self, user_id: int, menu_state: str) -> None:
         """Update navigation history for back button functionality."""

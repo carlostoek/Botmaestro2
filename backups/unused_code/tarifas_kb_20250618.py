@@ -24,4 +24,9 @@ def get_duration_kb():
     return builder.as_markup()
 
 
-# removed unused: get_plan_list_kb
+def get_plan_list_kb(plans):
+    builder = InlineKeyboardBuilder()
+    for plan in plans:
+        builder.button(text=plan.name, callback_data=f"plan_link_{plan.id}")
+    builder.adjust(1)
+    return builder.as_markup()
