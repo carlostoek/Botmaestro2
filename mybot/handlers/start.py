@@ -7,6 +7,7 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User
+from utils.user_utils import get_or_create_user
 from utils.text_utils import sanitize_text
 from utils.menu_manager import menu_manager
 from utils.menu_factory import menu_factory
@@ -28,20 +29,19 @@ async def cmd_start(message: Message, session: AsyncSession):
     # Clear any cached role for fresh check
     clear_role_cache(user_id)
     
-    # Get or create user
+    # Get or create user safely
     user = await session.get(User, user_id)
     is_new_user = user is None
-    
+
     if not user:
-        user = User(
-            id=user_id,
-            username=sanitize_text(message.from_user.username),
-            first_name=sanitize_text(message.from_user.first_name),
-            last_name=sanitize_text(message.from_user.last_name),
+        user = await get_or_create_user(
+            session,
+            user_id,
+            username=message.from_user.username,
+            first_name=message.from_user.first_name,
+            last_name=message.from_user.last_name,
         )
-        session.add(user)
-        await session.commit()
-        logger.info(f"Created new user: {user_id}")
+        is_new_user = True
     else:
         # Update user info if changed
         updated = False

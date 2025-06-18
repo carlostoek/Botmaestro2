@@ -6,6 +6,7 @@ except ImportError:  # Fallback for older aiogram
     MessageReactionUpdated = object
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User
+from utils.user_utils import get_or_create_user
 from services.point_service import PointService
 from utils.messages import BOT_MESSAGES
 import logging
@@ -56,9 +57,7 @@ class PointsMiddleware(BaseMiddleware):
                 if user_id and message_id:
                     user = await session.get(User, user_id)
                     if not user:
-                        user = User(id=user_id)
-                        session.add(user)
-                        await session.commit()
+                        user = await get_or_create_user(session, user_id)
                     await service.award_reaction(user, message_id, bot)
                     await mission_service.update_progress(user_id, "reaction", bot=bot)
                     await bot.send_message(user_id, BOT_MESSAGES["reaction_registered"])

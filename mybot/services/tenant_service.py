@@ -7,6 +7,7 @@ from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database.models import ConfigEntry, User, Tariff
+from utils.user_utils import get_or_create_user
 from services.config_service import ConfigService
 from services.channel_service import ChannelService
 from utils.text_utils import sanitize_text
@@ -35,11 +36,11 @@ class TenantService:
             # Ensure user exists and is marked as admin
             user = await self.session.get(User, admin_user_id)
             if not user:
-                user = User(id=admin_user_id, role="admin")
-                self.session.add(user)
-            else:
-                user.role = "admin"
-            
+                user = await get_or_create_user(
+                    self.session,
+                    admin_user_id,
+                )
+            user.role = "admin"
             await self.session.commit()
             
             # Check if tenant is already configured

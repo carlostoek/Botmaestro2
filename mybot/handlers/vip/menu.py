@@ -21,7 +21,7 @@ from services.subscription_service import SubscriptionService
 from services.mission_service import MissionService
 from services.achievement_service import AchievementService
 from database.models import User, UserBadge, set_user_menu_state
-from utils.text_utils import sanitize_text
+from utils.user_utils import get_or_create_user
 
 router = Router()
 
@@ -211,14 +211,13 @@ async def game_profile(callback: CallbackQuery, session: AsyncSession):
     user_id = callback.from_user.id
     user: User | None = await session.get(User, user_id)
     if not user:
-        user = User(
-            id=user_id,
-            username=sanitize_text(callback.from_user.username),
-            first_name=sanitize_text(callback.from_user.first_name),
-            last_name=sanitize_text(callback.from_user.last_name),
+        user = await get_or_create_user(
+            session,
+            user_id,
+            username=callback.from_user.username,
+            first_name=callback.from_user.first_name,
+            last_name=callback.from_user.last_name,
         )
-        session.add(user)
-        await session.commit()
 
     mission_service = MissionService(session)
     active_missions = await mission_service.get_active_missions(user_id=user_id)
