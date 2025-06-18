@@ -143,7 +143,7 @@ async def start_setup_callback(callback: CallbackQuery, session: AsyncSession):
     """Launch the guided setup from inline button."""
     from handlers.setup import start_setup
 
-    await start_setup(callback.message, session)
+    await start_setup(callback.message, session, user_id=callback.from_user.id)
     await callback.answer()
 
 
@@ -152,7 +152,7 @@ async def skip_to_admin_callback(callback: CallbackQuery, session: AsyncSession)
     """Directly open the admin menu, skipping setup."""
     from handlers.admin.admin_menu import admin_menu
 
-    await admin_menu(callback.message, session)
+    await admin_menu(callback.message, session, user_id=callback.from_user.id)
     await callback.answer()
 
 

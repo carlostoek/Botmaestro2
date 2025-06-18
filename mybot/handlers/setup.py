@@ -37,18 +37,19 @@ class SetupStates(StatesGroup):
     configuring_gamification = State()
 
 @router.message(Command("setup"))
-async def start_setup(message: Message, session: AsyncSession):
+async def start_setup(message: Message, session: AsyncSession, user_id: int | None = None):
     """Start the initial setup process for new admins."""
-    if not is_admin(message.from_user.id):
+    uid = user_id if user_id is not None else message.from_user.id
+    if not is_admin(uid):
         await menu_manager.send_temporary_message(
             message,
             "❌ **Acceso Denegado**\n\nSolo los administradores pueden acceder a la configuración inicial.",
             auto_delete_seconds=5
         )
         return
-    
+
     tenant_service = TenantService(session)
-    init_result = await tenant_service.initialize_tenant(message.from_user.id)
+    init_result = await tenant_service.initialize_tenant(uid)
     
     if not init_result["success"]:
         await menu_manager.send_temporary_message(
