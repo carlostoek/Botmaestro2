@@ -41,13 +41,17 @@ class PointsMiddleware(BaseMiddleware):
                         bot=bot,
                     )
                     for ch in completed:
-                        await bot.send_message(
-                            event.from_user.id,
-                            BOT_MESSAGES["challenge_completed"].format(
-                                challenge_type=ch.type,
-                                points=100,
-                            ),
-                        )
+                        try:
+                            await bot.send_message(
+                                event.from_user.id,
+                                BOT_MESSAGES["challenge_completed"].format(
+                                    challenge_type=ch.type,
+                                    points=100,
+                                ),
+                            )
+                        except Exception as e:
+                            logger.warning(f"Could not send challenge completion message to {event.from_user.id}: {e}")
+                            
             elif isinstance(event, MessageReactionUpdated):
                 user_id = getattr(event, "user", None)
                 if hasattr(user_id, "id"):
@@ -61,24 +65,37 @@ class PointsMiddleware(BaseMiddleware):
                         await session.commit()
                     await service.award_reaction(user, message_id, bot)
                     await mission_service.update_progress(user_id, "reaction", bot=bot)
-                    await bot.send_message(user_id, BOT_MESSAGES["reaction_registered"])
+                    try:
+                        await bot.send_message(user_id, BOT_MESSAGES["reaction_registered"])
+                    except Exception as e:
+                        logger.warning(f"Could not send reaction message to {user_id}: {e}")
                     completed = await mission_service.increment_challenge_progress(
                         user_id,
                         "reactions",
                         bot=bot,
                     )
                     for ch in completed:
-                        await bot.send_message(
-                            user_id,
-                            BOT_MESSAGES["challenge_completed"].format(
-                                challenge_type=ch.type,
-                                points=100,
-                            ),
-                        )
+                        try:
+                            await bot.send_message(
+                                user_id,
+                                BOT_MESSAGES["challenge_completed"].format(
+                                    challenge_type=ch.type,
+                                    points=100,
+                                ),
+                            )
+                        except Exception as e:
+                            logger.warning(f"Could not send challenge completion message to {user_id}: {e}")
+                            
             elif isinstance(event, PollAnswer):
-                await service.award_poll(event.user.id, bot)
+                if event.user and not event.user.is_bot:
+                    await service.award_poll(event.user.id, bot)
+                    
             elif isinstance(event, ChatMemberUpdated):
+                # Handle chat member updates if needed
                 pass
+                
         except Exception as e:
-            logger.exception("Error awarding points: %s", e)
+            logger.error(f"Error in PointsMiddleware: {e}", exc_info=True)
+            # Don't re-raise to prevent breaking the handler chain
+            
         return await handler(event, data)

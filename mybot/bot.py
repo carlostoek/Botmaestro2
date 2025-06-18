@@ -3,6 +3,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 
 from database.setup import init_db, get_session
 
@@ -22,14 +23,19 @@ import logging
 from services import channel_request_scheduler, vip_subscription_scheduler
 from services.scheduler import auction_monitor_scheduler, free_channel_cleanup_scheduler
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 async def main() -> None:
     await init_db()
     Session = await get_session()
 
-    logging.basicConfig(level=logging.INFO)
-    logging.info(f"VIP channel ID: {VIP_CHANNEL_ID}")
-    logging.info(f"Bot starting...")
+    logger.info(f"VIP channel ID: {VIP_CHANNEL_ID}")
+    logger.info(f"Bot starting...")
 
     bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
@@ -39,26 +45,37 @@ async def main() -> None:
             async with session_factory() as session:
                 data["session"] = session
                 data["bot"] = bot_instance
-                return await handler(event, data)
+                try:
+                    return await handler(event, data)
+                except Exception as e:
+                    logger.error(f"Error in handler: {e}", exc_info=True)
+                    # Don't re-raise to prevent update from being marked as unhandled
+                    return None
         return middleware
 
+    # Apply middleware to all update types
     dp.message.outer_middleware(session_middleware_factory(Session, bot))
     dp.callback_query.outer_middleware(session_middleware_factory(Session, bot))
     dp.chat_join_request.outer_middleware(session_middleware_factory(Session, bot))
     dp.chat_member.outer_middleware(session_middleware_factory(Session, bot))
     dp.poll_answer.outer_middleware(session_middleware_factory(Session, bot))
     dp.message_reaction.outer_middleware(session_middleware_factory(Session, bot))
+    dp.inline_query.outer_middleware(session_middleware_factory(Session, bot))
+    dp.chosen_inline_result.outer_middleware(session_middleware_factory(Session, bot))
+    dp.pre_checkout_query.outer_middleware(session_middleware_factory(Session, bot))
+    dp.successful_payment.outer_middleware(session_middleware_factory(Session, bot))
 
     from middlewares import PointsMiddleware
     dp.message.middleware(PointsMiddleware())
     dp.poll_answer.middleware(PointsMiddleware())
     dp.message_reaction.middleware(PointsMiddleware())
 
+    # Include routers in order of priority
     dp.include_router(start_token)
     dp.include_router(start.router)
     dp.include_router(admin_router)
     dp.include_router(auction_admin_router)
-    dp.include_router(free_channel_admin_router)  # Nuevo router para canal gratuito
+    dp.include_router(free_channel_admin_router)
     dp.include_router(vip.router)
     dp.include_router(gamification.router)
     dp.include_router(auction_user_router)
@@ -68,6 +85,44 @@ async def main() -> None:
     dp.include_router(free_user.router)
     dp.include_router(channel_access_router)
 
+    # Add error handler for unhandled updates
+    @dp.error()
+    async def error_handler(event, exception):
+        logger.error(f"Unhandled error: {exception}", exc_info=True)
+        return True  # Mark as handled
+
+    # Add fallback handlers for common update types
+    @dp.message()
+    async def fallback_message_handler(message):
+        logger.debug(f"Fallback handler for message from user {message.from_user.id}")
+        return True
+
+    @dp.callback_query()
+    async def fallback_callback_handler(callback):
+        logger.debug(f"Fallback handler for callback from user {callback.from_user.id}")
+        await callback.answer()
+        return True
+
+    @dp.inline_query()
+    async def fallback_inline_handler(inline_query):
+        logger.debug(f"Fallback handler for inline query from user {inline_query.from_user.id}")
+        return True
+
+    @dp.chosen_inline_result()
+    async def fallback_chosen_inline_handler(chosen_inline_result):
+        logger.debug(f"Fallback handler for chosen inline result from user {chosen_inline_result.from_user.id}")
+        return True
+
+    @dp.pre_checkout_query()
+    async def fallback_pre_checkout_handler(pre_checkout_query):
+        logger.debug(f"Fallback handler for pre checkout query from user {pre_checkout_query.from_user.id}")
+        return True
+
+    @dp.successful_payment()
+    async def fallback_payment_handler(successful_payment):
+        logger.debug(f"Fallback handler for successful payment from user {successful_payment.from_user.id}")
+        return True
+
     # Tareas programadas
     pending_task = asyncio.create_task(channel_request_scheduler(bot, Session))
     vip_task = asyncio.create_task(vip_subscription_scheduler(bot, Session))
@@ -75,18 +130,37 @@ async def main() -> None:
     cleanup_task = asyncio.create_task(free_channel_cleanup_scheduler(bot, Session))
 
     try:
-        logging.info("Bot is starting polling...")
-        await dp.start_polling(bot)
+        logger.info("Bot is starting polling...")
+        await dp.start_polling(bot, handle_signals=False)
+    except Exception as e:
+        logger.error(f"Error during polling: {e}", exc_info=True)
     finally:
+        logger.info("Shutting down bot...")
         pending_task.cancel()
         vip_task.cancel()
         auction_task.cancel()
         cleanup_task.cancel()
-        await asyncio.gather(
-            pending_task, vip_task, auction_task, cleanup_task, 
-            return_exceptions=True
-        )
+        
+        # Wait for tasks to complete with timeout
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(
+                    pending_task, vip_task, auction_task, cleanup_task, 
+                    return_exceptions=True
+                ),
+                timeout=10.0
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Some tasks did not complete within timeout")
+        
+        await bot.session.close()
+        logger.info("Bot shutdown complete")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("Bot stopped by user")
+    except Exception as e:
+        logger.error(f"Fatal error: {e}", exc_info=True)

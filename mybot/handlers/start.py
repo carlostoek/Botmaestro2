@@ -25,70 +25,70 @@ async def cmd_start(message: Message, session: AsyncSession):
     """
     user_id = message.from_user.id
     
-    # Clear any cached role for fresh check
-    clear_role_cache(user_id)
-    
-    # Get or create user
-    user = await session.get(User, user_id)
-    is_new_user = user is None
-    
-    if not user:
-        user = User(
-            id=user_id,
-            username=sanitize_text(message.from_user.username),
-            first_name=sanitize_text(message.from_user.first_name),
-            last_name=sanitize_text(message.from_user.last_name),
-        )
-        session.add(user)
-        await session.commit()
-        logger.info(f"Created new user: {user_id}")
-    else:
-        # Update user info if changed
-        updated = False
-        new_username = sanitize_text(message.from_user.username)
-        new_first_name = sanitize_text(message.from_user.first_name)
-        new_last_name = sanitize_text(message.from_user.last_name)
-        
-        if user.username != new_username:
-            user.username = new_username
-            updated = True
-        if user.first_name != new_first_name:
-            user.first_name = new_first_name
-            updated = True
-        if user.last_name != new_last_name:
-            user.last_name = new_last_name
-            updated = True
-            
-        if updated:
-            await session.commit()
-            logger.info(f"Updated user info: {user_id}")
-    
-    # Check if this is an admin and if setup is needed
-    if is_admin(user_id):
-        tenant_service = TenantService(session)
-        tenant_status = await tenant_service.get_tenant_status(user_id)
-        
-        # If admin hasn't completed basic setup, guide them to setup
-        if not tenant_status["basic_setup_complete"]:
-            await menu_manager.show_menu(
-                message,
-                "👋 **¡Hola, Administrador!**\n\n"
-                "Parece que es la primera vez que usas este bot. "
-                "Te guiaré a través de una configuración rápida para que "
-                "esté listo para tus usuarios.\n\n"
-                "**¿Quieres configurar el bot ahora?**\n"
-                "• ✅ Configuración guiada (recomendado)\n"
-                "• ⏭️ Ir directo al panel de administración\n\n"
-                "La configuración solo toma unos minutos y puedes "
-                "cambiar todo después.",
-                menu_factory._create_setup_choice_kb(),
-                session,
-                "admin_setup_choice"
-            )
-            return
-    
-    # Create appropriate menu based on user role and status
     try:
+        # Clear any cached role for fresh check
+        clear_role_cache(user_id)
+        
+        # Get or create user
+        user = await session.get(User, user_id)
+        is_new_user = user is None
+        
+        if not user:
+            user = User(
+                id=user_id,
+                username=sanitize_text(message.from_user.username),
+                first_name=sanitize_text(message.from_user.first_name),
+                last_name=sanitize_text(message.from_user.last_name),
+            )
+            session.add(user)
+            await session.commit()
+            logger.info(f"Created new user: {user_id}")
+        else:
+            # Update user info if changed
+            updated = False
+            new_username = sanitize_text(message.from_user.username)
+            new_first_name = sanitize_text(message.from_user.first_name)
+            new_last_name = sanitize_text(message.from_user.last_name)
+            
+            if user.username != new_username:
+                user.username = new_username
+                updated = True
+            if user.first_name != new_first_name:
+                user.first_name = new_first_name
+                updated = True
+            if user.last_name != new_last_name:
+                user.last_name = new_last_name
+                updated = True
+                
+            if updated:
+                await session.commit()
+                logger.info(f"Updated user info: {user_id}")
+        
+        # Check if this is an admin and if setup is needed
+        if is_admin(user_id):
+            tenant_service = TenantService(session)
+            tenant_status = await tenant_service.get_tenant_status(user_id)
+            
+            # If admin hasn't completed basic setup, guide them to setup
+            if not tenant_status["basic_setup_complete"]:
+                await menu_manager.show_menu(
+                    message,
+                    "👋 **¡Hola, Administrador!**\n\n"
+                    "Parece que es la primera vez que usas este bot. "
+                    "Te guiaré a través de una configuración rápida para que "
+                    "esté listo para tus usuarios.\n\n"
+                    "**¿Quieres configurar el bot ahora?**\n"
+                    "• ✅ Configuración guiada (recomendado)\n"
+                    "• ⏭️ Ir directo al panel de administración\n\n"
+                    "La configuración solo toma unos minutos y puedes "
+                    "cambiar todo después.",
+                    _create_setup_choice_kb(),
+                    session,
+                    "admin_setup_choice"
+                )
+                return
+        
+        # Create appropriate menu based on user role and status
         text, keyboard = await menu_factory.create_menu("main", user_id, session, message.bot)
         
         # Customize welcome message for new vs returning users
@@ -112,7 +112,7 @@ async def cmd_start(message: Message, session: AsyncSession):
         await menu_manager.show_menu(message, text, keyboard, session, "main")
         
     except Exception as e:
-        logger.error(f"Error in start command for user {user_id}: {e}")
+        logger.error(f"Error in start command for user {user_id}: {e}", exc_info=True)
         # Fallback to basic menu
         await menu_manager.send_temporary_message(
             message,
