@@ -114,7 +114,7 @@ async def free_game(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
 
-@router.callback_query(F.data.in_("free_info_test", "free_game_test"))
+@router.callback_query(F.data.in_({"free_info_test", "free_game_test"}))
 async def dummy_button(callback: CallbackQuery):
     """Handle placeholder buttons in the free user menu."""
     await callback.answer("🎮 Función en desarrollo - ¡Pronto disponible!")
