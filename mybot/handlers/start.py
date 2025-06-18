@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User
 from utils.text_utils import sanitize_text
 from utils.menu_manager import menu_manager
-from utils.menu_factory import menu_factory
 from utils.user_roles import clear_role_cache, is_admin
 from services.tenant_service import TenantService
 import logging
@@ -26,6 +25,8 @@ async def cmd_start(message: Message, session: AsyncSession):
     user_id = message.from_user.id
     
     try:
+        logger.info(f"Start command received from user {user_id}")
+        
         # Clear any cached role for fresh check
         clear_role_cache(user_id)
         
@@ -66,71 +67,48 @@ async def cmd_start(message: Message, session: AsyncSession):
         
         # Check if this is an admin and if setup is needed
         if is_admin(user_id):
+            logger.info(f"Admin user detected: {user_id}")
             tenant_service = TenantService(session)
             tenant_status = await tenant_service.get_tenant_status(user_id)
             
             # If admin hasn't completed basic setup, guide them to setup
             if not tenant_status["basic_setup_complete"]:
-                await menu_manager.show_menu(
-                    message,
+                await message.answer(
                     "👋 **¡Hola, Administrador!**\n\n"
                     "Parece que es la primera vez que usas este bot. "
                     "Te guiaré a través de una configuración rápida para que "
                     "esté listo para tus usuarios.\n\n"
-                    "**¿Quieres configurar el bot ahora?**\n"
-                    "• ✅ Configuración guiada (recomendado)\n"
-                    "• ⏭️ Ir directo al panel de administración\n\n"
-                    "La configuración solo toma unos minutos y puedes "
-                    "cambiar todo después.",
-                    _create_setup_choice_kb(),
-                    session,
-                    "admin_setup_choice"
+                    "Usa /setup para comenzar la configuración o /admin_menu para ir directo al panel.",
+                    parse_mode="Markdown"
                 )
                 return
         
-        # Create appropriate menu based on user role and status
-        text, keyboard = await menu_factory.create_menu("main", user_id, session, message.bot)
-        
-        # Customize welcome message for new vs returning users
-        if is_new_user:
-            welcome_prefix = "🌟 **¡Bienvenido!**\n\n"
-            if "admin" in text.lower():
-                welcome_prefix = "👑 **¡Bienvenido, Administrador!**\n\n"
-            elif "vip" in text.lower():
-                welcome_prefix = "✨ **¡Bienvenido, Miembro VIP!**\n\n"
-            
-            text = welcome_prefix + text
+        # Simple welcome message based on user type
+        if is_admin(user_id):
+            welcome_text = "👑 **Panel de Administración**\n\nBienvenido al centro de control del bot."
+            from keyboards.admin_main_kb import get_admin_main_kb
+            keyboard = get_admin_main_kb()
+        elif user.role == "vip":
+            welcome_text = "✨ **Bienvenido al Diván de Diana**\n\nTu suscripción VIP te da acceso completo."
+            from keyboards.vip_main_kb import get_vip_main_kb
+            keyboard = get_vip_main_kb()
         else:
-            # Returning user - more concise welcome
-            if "admin" in text.lower():
-                text = "👑 **Panel de Administración**\n\n" + text.split('\n\n', 1)[-1]
-            elif "vip" in text.lower():
-                text = "✨ **Bienvenido de vuelta**\n\n" + text.split('\n\n', 1)[-1]
-            else:
-                text = "🌟 **¡Hola de nuevo!**\n\n" + text.split('\n\n', 1)[-1]
+            welcome_text = "🌟 **Bienvenido a los Kinkys**\n\nExplora nuestro contenido gratuito."
+            from keyboards.subscription_kb import get_subscription_kb
+            keyboard = get_subscription_kb()
         
-        await menu_manager.show_menu(message, text, keyboard, session, "main")
+        if is_new_user:
+            welcome_text = "🌟 **¡Bienvenido!**\n\n" + welcome_text
+        else:
+            welcome_text = "🌟 **¡Hola de nuevo!**\n\n" + welcome_text
+        
+        await message.answer(welcome_text, reply_markup=keyboard, parse_mode="Markdown")
         
     except Exception as e:
         logger.error(f"Error in start command for user {user_id}: {e}", exc_info=True)
-        # Fallback to basic menu
-        await menu_manager.send_temporary_message(
-            message,
+        # Fallback to basic response
+        await message.answer(
             "❌ **Error Temporal**\n\n"
-            "Hubo un problema al cargar el menú. Por favor, intenta nuevamente en unos segundos.",
-            auto_delete_seconds=5
+            "Hubo un problema al cargar el menú. Por favor, intenta nuevamente.",
+            parse_mode="Markdown"
         )
-
-def _create_setup_choice_kb():
-    """Create keyboard for admin setup choice."""
-    from aiogram.utils.keyboard import InlineKeyboardBuilder
-    
-    builder = InlineKeyboardBuilder()
-    builder.button(text="🚀 Configurar Ahora", callback_data="start_setup")
-    builder.button(text="⏭️ Ir al Panel", callback_data="skip_to_admin")
-    builder.button(text="📖 Ver Guía", callback_data="show_setup_guide")
-    builder.adjust(1)
-    return builder.as_markup()
-
-# Add the method to MenuFactory
-menu_factory._create_setup_choice_kb = _create_setup_choice_kb
