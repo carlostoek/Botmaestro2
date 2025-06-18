@@ -8,6 +8,7 @@ from database.setup import init_db, get_session
 
 from handlers import start, free_user
 from handlers import daily_gift, minigames
+from handlers import setup
 from handlers.channel_access import router as channel_access_router
 from handlers.user import start_token
 from handlers.vip import menu as vip
@@ -56,6 +57,7 @@ async def main() -> None:
 
     dp.include_router(start_token)
     dp.include_router(start.router)
+    dp.include_router(setup.router)
     dp.include_router(admin_router)
     dp.include_router(auction_admin_router)
     dp.include_router(free_channel_admin_router)  # Nuevo router para canal gratuito
