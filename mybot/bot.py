@@ -3,7 +3,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest, TelegramConflictError
 
 from database.setup import init_db, get_session
 
@@ -42,14 +42,18 @@ async def main() -> None:
         bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
         dp = Dispatcher(storage=MemoryStorage())
 
-        # Test bot connection
+        # Test bot connection and clear any existing webhooks
         try:
             me = await bot.get_me()
             logger.info(f"Bot connected: @{me.username} - {me.first_name}")
             
-            # Delete webhook to ensure polling mode
-            await bot.delete_webhook()
-            logger.info("Webhook deleted, using polling mode")
+            # Force delete webhook and clear pending updates
+            await bot.delete_webhook(drop_pending_updates=True)
+            logger.info("Webhook deleted and pending updates cleared")
+            
+            # Wait a moment to ensure webhook is fully cleared
+            await asyncio.sleep(2)
+            
         except Exception as e:
             logger.error(f"Failed to connect to bot: {e}")
             return
@@ -83,7 +87,7 @@ async def main() -> None:
 
         # Include routers in order of priority
         dp.include_router(start_token)
-        dp.include_router(setup_router)  # Add setup router
+        dp.include_router(setup_router)
         dp.include_router(start.router)
         dp.include_router(admin_router)
         dp.include_router(auction_admin_router)
@@ -100,6 +104,9 @@ async def main() -> None:
         # Add error handler for unhandled updates
         @dp.error()
         async def error_handler(event, exception):
+            if isinstance(exception, TelegramConflictError):
+                logger.error("Conflict error - another bot instance is running!")
+                return True
             logger.error(f"Unhandled error: {exception}", exc_info=True)
             return True
 
@@ -107,13 +114,19 @@ async def main() -> None:
         @dp.message()
         async def fallback_message_handler(message):
             logger.info(f"Fallback handler for message from user {message.from_user.id}: {message.text}")
-            await message.answer("🤖 Comando no reconocido. Usa /start para comenzar.")
+            try:
+                await message.answer("🤖 Comando no reconocido. Usa /start para comenzar.")
+            except Exception as e:
+                logger.error(f"Error in fallback message handler: {e}")
             return True
 
         @dp.callback_query()
         async def fallback_callback_handler(callback):
             logger.info(f"Fallback handler for callback from user {callback.from_user.id}: {callback.data}")
-            await callback.answer("Acción no reconocida")
+            try:
+                await callback.answer("Acción no reconocida")
+            except Exception as e:
+                logger.error(f"Error in fallback callback handler: {e}")
             return True
 
         # Tareas programadas
@@ -123,33 +136,57 @@ async def main() -> None:
         cleanup_task = asyncio.create_task(free_channel_cleanup_scheduler(bot, Session))
 
         logger.info("Bot is starting polling...")
-        await dp.start_polling(bot, handle_signals=False)
+        
+        # Start polling with conflict handling
+        try:
+            await dp.start_polling(
+                bot, 
+                handle_signals=False,
+                allowed_updates=dp.resolve_used_update_types()
+            )
+        except TelegramConflictError as e:
+            logger.error(f"Conflict error during polling: {e}")
+            logger.error("Another bot instance is already running. Please stop other instances first.")
+            return
         
     except Exception as e:
         logger.error(f"Error during bot startup: {e}", exc_info=True)
     finally:
         logger.info("Shutting down bot...")
         try:
-            pending_task.cancel()
-            vip_task.cancel()
-            auction_task.cancel()
-            cleanup_task.cancel()
+            if 'pending_task' in locals():
+                pending_task.cancel()
+            if 'vip_task' in locals():
+                vip_task.cancel()
+            if 'auction_task' in locals():
+                auction_task.cancel()
+            if 'cleanup_task' in locals():
+                cleanup_task.cancel()
             
             # Wait for tasks to complete with timeout
-            await asyncio.wait_for(
-                asyncio.gather(
-                    pending_task, vip_task, auction_task, cleanup_task, 
-                    return_exceptions=True
-                ),
-                timeout=10.0
-            )
+            tasks_to_wait = []
+            if 'pending_task' in locals():
+                tasks_to_wait.append(pending_task)
+            if 'vip_task' in locals():
+                tasks_to_wait.append(vip_task)
+            if 'auction_task' in locals():
+                tasks_to_wait.append(auction_task)
+            if 'cleanup_task' in locals():
+                tasks_to_wait.append(cleanup_task)
+            
+            if tasks_to_wait:
+                await asyncio.wait_for(
+                    asyncio.gather(*tasks_to_wait, return_exceptions=True),
+                    timeout=10.0
+                )
         except asyncio.TimeoutError:
             logger.warning("Some tasks did not complete within timeout")
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")
         
         try:
-            await bot.session.close()
+            if 'bot' in locals():
+                await bot.session.close()
         except:
             pass
         logger.info("Bot shutdown complete")
