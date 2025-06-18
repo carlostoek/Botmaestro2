@@ -51,7 +51,7 @@ async def admin_start(message: Message, session: AsyncSession):
     if not tenant_status["basic_setup_complete"]:
         # Redirect to setup
         from handlers.setup import start_setup
-        await start_setup(message, session)
+        await start_setup(message, session, user_id=message.from_user.id)
         return
     
     # Show admin panel
@@ -59,9 +59,10 @@ async def admin_start(message: Message, session: AsyncSession):
     await menu_manager.show_menu(message, text, keyboard, session, "admin_main")
 
 @router.message(Command("admin_menu"))
-async def admin_menu(message: Message, session: AsyncSession):
+async def admin_menu(message: Message, session: AsyncSession, user_id: int | None = None):
     """Enhanced admin menu command."""
-    if not is_admin(message.from_user.id):
+    uid = user_id if user_id is not None else message.from_user.id
+    if not is_admin(uid):
         await menu_manager.send_temporary_message(
             message,
             "❌ **Acceso Denegado**\n\nNo tienes permisos de administrador.",
@@ -70,10 +71,10 @@ async def admin_menu(message: Message, session: AsyncSession):
         return
     
     try:
-        text, keyboard = await menu_factory.create_menu("admin_main", message.from_user.id, session, message.bot)
+        text, keyboard = await menu_factory.create_menu("admin_main", uid, session, message.bot)
         await menu_manager.show_menu(message, text, keyboard, session, "admin_main")
     except Exception as e:
-        logger.error(f"Error showing admin menu for user {message.from_user.id}: {e}")
+        logger.error(f"Error showing admin menu for user {uid}: {e}")
         await menu_manager.send_temporary_message(
             message,
             "❌ **Error Temporal**\n\nNo se pudo cargar el panel de administración.",
