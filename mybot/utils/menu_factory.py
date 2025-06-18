@@ -173,31 +173,35 @@ class MenuFactory:
     ) -> Tuple[str, InlineKeyboardMarkup]:
         """Create specific menus based on state."""
         # Import specific menu creators here to avoid circular imports
-        from utils.menu_creators import (
-            create_profile_menu,
-            create_missions_menu,
-            create_rewards_menu,
-            create_auction_menu,
-            create_ranking_menu,
-            create_onboarding_missions_menu
-        )
-        
-        if menu_state == "profile":
-            return await create_profile_menu(user_id, session)
-        elif menu_state == "missions":
-            return await create_missions_menu(user_id, session)
-        elif menu_state == "rewards":
-            return await create_rewards_menu(user_id, session)
-        elif menu_state == "auctions":
-            return await create_auction_menu(user_id, session)
-        elif menu_state == "ranking":
-            return await create_ranking_menu(user_id, session)
-        elif menu_state == "vip_onboarding":
-            return await create_onboarding_missions_menu(user_id, "vip", session)
-        elif menu_state == "free_onboarding":
-            return await create_onboarding_missions_menu(user_id, "free", session)
-        else:
-            # Fallback to main menu for unknown states
+        try:
+            from utils.menu_creators import (
+                create_profile_menu,
+                create_missions_menu,
+                create_rewards_menu,
+                create_auction_menu,
+                create_ranking_menu,
+                create_onboarding_missions_menu
+            )
+            
+            if menu_state == "profile":
+                return await create_profile_menu(user_id, session)
+            elif menu_state == "missions":
+                return await create_missions_menu(user_id, session)
+            elif menu_state == "rewards":
+                return await create_rewards_menu(user_id, session)
+            elif menu_state == "auctions":
+                return await create_auction_menu(user_id, session)
+            elif menu_state == "ranking":
+                return await create_ranking_menu(user_id, session)
+            elif menu_state == "vip_onboarding":
+                return await create_onboarding_missions_menu(user_id, "vip", session)
+            elif menu_state == "free_onboarding":
+                return await create_onboarding_missions_menu(user_id, "free", session)
+            else:
+                # Fallback to main menu for unknown states
+                return await self._create_main_menu(role, user_id, session)
+        except ImportError:
+            # If menu creators are not available, fallback to main menu
             return await self._create_main_menu(role, user_id, session)
     
     def _create_fallback_menu(self) -> Tuple[str, InlineKeyboardMarkup]:

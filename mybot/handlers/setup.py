@@ -36,7 +36,6 @@ class SetupStates(StatesGroup):
     configuring_tariffs = State()
     configuring_gamification = State()
 
-@router.message(Command("setup"))
 async def start_setup(message: Message, session: AsyncSession):
     """Start the initial setup process for new admins."""
     if not is_admin(message.from_user.id):
@@ -85,6 +84,11 @@ async def start_setup(message: Message, session: AsyncSession):
             session,
             "setup_main"
         )
+
+@router.message(Command("setup"))
+async def setup_command(message: Message, session: AsyncSession):
+    """Setup command handler."""
+    await start_setup(message, session)
 
 @router.callback_query(F.data == "setup_channels")
 async def setup_channels_menu(callback: CallbackQuery, session: AsyncSession):
