@@ -15,7 +15,8 @@ import logging
 logger = logging.getLogger(__name__)
 router = Router()
 
-@router.message(CommandStart())
+# Handle plain /start commands only so deep links can be processed
+@router.message(CommandStart(deep_link=False))
 async def cmd_start(message: Message, session: AsyncSession):
     """
     Enhanced start command with intelligent routing based on user status.
@@ -115,6 +116,7 @@ async def cmd_start(message: Message, session: AsyncSession):
         
         await message.answer(welcome_text, reply_markup=keyboard, parse_mode="Markdown")
         logger.info(f"Start command processed successfully for user {user_id}")
+        return True
         
     except Exception as e:
         logger.error(f"Error in start command for user {user_id}: {e}", exc_info=True)
@@ -128,3 +130,4 @@ async def cmd_start(message: Message, session: AsyncSession):
         except Exception as e2:
             logger.error(f"Error sending fallback message: {e2}")
             await message.answer("Error al procesar el comando. Intenta nuevamente.")
+        return True

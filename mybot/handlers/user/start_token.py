@@ -127,3 +127,4 @@ async def start_with_token(message: Message, command: CommandObject, session: As
 
     # Clear role cache again to ensure the new role is detected immediately
     clear_role_cache(user_id)
+    return True
