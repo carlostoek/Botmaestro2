@@ -53,7 +53,7 @@ async def main() -> None:
                     return None
         return middleware
 
-    # Apply middleware to all update types
+    # Apply middleware to available update types only
     dp.message.outer_middleware(session_middleware_factory(Session, bot))
     dp.callback_query.outer_middleware(session_middleware_factory(Session, bot))
     dp.chat_join_request.outer_middleware(session_middleware_factory(Session, bot))
@@ -62,8 +62,7 @@ async def main() -> None:
     dp.message_reaction.outer_middleware(session_middleware_factory(Session, bot))
     dp.inline_query.outer_middleware(session_middleware_factory(Session, bot))
     dp.chosen_inline_result.outer_middleware(session_middleware_factory(Session, bot))
-    dp.pre_checkout_query.outer_middleware(session_middleware_factory(Session, bot))
-    dp.successful_payment.outer_middleware(session_middleware_factory(Session, bot))
+    # Removed: dp.pre_checkout_query and dp.successful_payment (not available in aiogram 3.x)
 
     from middlewares import PointsMiddleware
     dp.message.middleware(PointsMiddleware())
@@ -111,16 +110,6 @@ async def main() -> None:
     @dp.chosen_inline_result()
     async def fallback_chosen_inline_handler(chosen_inline_result):
         logger.debug(f"Fallback handler for chosen inline result from user {chosen_inline_result.from_user.id}")
-        return True
-
-    @dp.pre_checkout_query()
-    async def fallback_pre_checkout_handler(pre_checkout_query):
-        logger.debug(f"Fallback handler for pre checkout query from user {pre_checkout_query.from_user.id}")
-        return True
-
-    @dp.successful_payment()
-    async def fallback_payment_handler(successful_payment):
-        logger.debug(f"Fallback handler for successful payment from user {successful_payment.from_user.id}")
         return True
 
     # Tareas programadas
