@@ -4,8 +4,7 @@ from sqlalchemy import select
 from .config import ADMIN_IDS, VIP_CHANNEL_ID
 from database.models import User, VipSubscription
 import os
-import time
-from typing import Dict, Tuple
+from typing import Dict
 from datetime import datetime
 import logging
 
@@ -13,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_VIP_MULTIPLIER = int(os.environ.get("VIP_POINTS_MULTIPLIER", "2"))
 
-# Cache user roles for a short time to avoid repeated API calls
-_ROLE_CACHE: Dict[int, Tuple[str, float]] = {}
+# Cache user roles for the duration of the bot session
+_ROLE_CACHE: Dict[int, str] = {}
 
 
 def is_admin(user_id: int) -> bool:
@@ -95,21 +94,19 @@ async def get_user_role(
     bot: Bot, user_id: int, session: AsyncSession | None = None
 ) -> str:
     """Return the role for the given user (admin, vip or free)."""
-    now = time.time()
     cached = _ROLE_CACHE.get(user_id)
-    
-    # Use cache only for non-admin users and only for 2 minutes
-    if cached and now < cached[1] and not is_admin(user_id):
-        logger.debug(f"Using cached role for user {user_id}: {cached[0]}")
-        return cached[0]
 
+    # Use cached value if available to avoid repeated checks
+    if cached:
+        logger.debug(f"Using cached role for user {user_id}: {cached}")
+        return cached
     # Check admin first (highest priority)
     if is_admin(user_id):
         role = "admin"
-        _ROLE_CACHE[user_id] = (role, now + 120)  # cache for 2 minutes
         logger.debug(f"User {user_id} is admin")
+        _ROLE_CACHE[user_id] = role
         return role
-    
+
     # Check VIP status
     try:
         if await is_vip_member(bot, user_id, session=session):
@@ -122,7 +119,7 @@ async def get_user_role(
         logger.error(f"Error determining user role for {user_id}: {e}")
         role = "free"
 
-    _ROLE_CACHE[user_id] = (role, now + 120)  # cache for 2 minutes
+    _ROLE_CACHE[user_id] = role
     return role
 
 

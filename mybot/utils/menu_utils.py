@@ -138,8 +138,10 @@ async def send_role_menu(message: Message, session: AsyncSession) -> None:
         print(f"User {message.from_user.id} detected role: {role}")  # Debug log
         text, kb, state = _menu_details(role)
         await send_menu(message, text, kb, session, state)
+        return
     except Exception as e:
         print(f"Error in send_role_menu: {e}")
         # Fallback to free user menu
         text, kb, state = _menu_details("free")
         await send_menu(message, text, kb, session, state)
+        return
