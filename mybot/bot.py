@@ -11,7 +11,6 @@ from handlers import daily_gift, minigames
 from handlers import setup
 from handlers.channel_access import router as channel_access_router
 from handlers.user import start_token
-from handlers.vip import menu as vip
 from handlers.vip import gamification
 from handlers.vip.auction_user import router as auction_user_router
 from handlers.interactive_post import router as interactive_post_router
@@ -61,7 +60,6 @@ async def main() -> None:
     dp.include_router(admin_router)
     dp.include_router(auction_admin_router)
     dp.include_router(free_channel_admin_router)  # Nuevo router para canal gratuito
-    dp.include_router(vip.router)
     dp.include_router(gamification.router)
     dp.include_router(auction_user_router)
     dp.include_router(interactive_post_router)
