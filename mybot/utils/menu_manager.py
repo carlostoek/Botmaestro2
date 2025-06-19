@@ -115,7 +115,7 @@ class MenuManager:
             )
             
             # Update stored menu reference
-            self._active_menus[user_id] = (message.chat.id, message.message.id)
+            self._active_menus[user_id] = (message.chat.id, message.message_id)
             await set_user_menu_state(session, user_id, menu_state)
             
             # Update navigation history
