@@ -54,6 +54,48 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
+@router.message(Command("vip_menu"))
+async def vip_menu_command(message: Message, session: AsyncSession):
+    """Show the main VIP menu using the gamification interface."""
+    role = await get_user_role(message.bot, message.from_user.id, session=session)
+    if role != "vip":
+        await message.answer(
+            BOT_MESSAGES.get(
+                "vip_members_only",
+                "Esta sección está disponible solo para miembros VIP.",
+            )
+        )
+        return
+
+    await set_user_menu_state(session, message.from_user.id, "root")
+    await message.answer(
+        BOT_MESSAGES["start_welcome_returning_user"],
+        reply_markup=get_main_menu_keyboard(),
+    )
+
+
+@router.callback_query(F.data == "vip_menu")
+async def vip_menu_callback(callback: CallbackQuery, session: AsyncSession):
+    """Handle callbacks to return to the VIP main menu."""
+    role = await get_user_role(callback.bot, callback.from_user.id, session=session)
+    if role != "vip":
+        await callback.answer(
+            BOT_MESSAGES.get(
+                "vip_members_only",
+                "Esta sección está disponible solo para miembros VIP.",
+            ),
+            show_alert=True,
+        )
+        return
+
+    await set_user_menu_state(session, callback.from_user.id, "root")
+    await callback.message.edit_text(
+        BOT_MESSAGES["start_welcome_returning_user"],
+        reply_markup=get_main_menu_keyboard(),
+    )
+    await callback.answer()
+
+
 # /rewards command
 @router.message(Command("rewards"))
 async def rewards_command(message: Message, session: AsyncSession):
