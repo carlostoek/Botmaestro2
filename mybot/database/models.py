@@ -36,6 +36,8 @@ class User(AsyncAttrs, Base):
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
+    # Menu state tracking for user navigation
+    current_menu_state = Column(String, default="main", nullable=False)
     points = Column(Float, default=0)
     level = Column(Integer, default=1)
     achievements = Column(JSON, default={})  # {'achievement_id': timestamp_isoformat}
@@ -58,6 +60,11 @@ class User(AsyncAttrs, Base):
 
     # Channel reactions tracking
     channel_reactions = Column(JSON, default={})  # {'message_id': True}
+
+    def __repr__(self):
+        return (
+            f"<User(id={self.id}, username='{self.username}', current_menu_state='{self.current_menu_state}')>"
+        )
 
 
 class Reward(AsyncAttrs, Base):
