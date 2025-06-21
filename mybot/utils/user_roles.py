@@ -17,8 +17,14 @@ DEFAULT_VIP_MULTIPLIER = int(os.environ.get("VIP_POINTS_MULTIPLIER", "2"))
 _ROLE_CACHE: Dict[int, Tuple[str, float]] = {}
 
 
-def is_admin(user_id: int) -> bool:
+async def is_admin(user_id: int, session: AsyncSession) -> bool:
     """Check if the user is an admin."""
+    try:
+        user = await session.get(User, user_id)
+        if user and user.role == "admin":
+            return True
+    except Exception as e:
+        logger.error(f"Error checking admin in DB for {user_id}: {e}")
     return user_id in ADMIN_IDS
 
 
@@ -99,12 +105,12 @@ async def get_user_role(
     cached = _ROLE_CACHE.get(user_id)
     
     # Use cache only for non-admin users and only for 2 minutes
-    if cached and now < cached[1] and not is_admin(user_id):
+    if cached and now < cached[1] and not await is_admin(user_id, session):
         logger.debug(f"Using cached role for user {user_id}: {cached[0]}")
         return cached[0]
 
     # Check admin first (highest priority)
-    if is_admin(user_id):
+    if await is_admin(user_id, session):
         role = "admin"
         _ROLE_CACHE[user_id] = (role, now + 120)  # cache for 2 minutes
         logger.debug(f"User {user_id} is admin")

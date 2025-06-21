@@ -5,18 +5,21 @@ Centralizes menu creation logic for better maintainability.
 from typing import Tuple, Optional
 from aiogram.types import InlineKeyboardMarkup
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils.user_roles import get_user_role
-from keyboards.admin_main_kb import get_admin_main_kb
+from aiogram import Bot
+
+from utils.user_roles import get_user_role, is_admin
+from keyboards.admin_kb import get_admin_kb
 from keyboards.vip_main_kb import get_vip_main_kb
 from keyboards.subscription_kb import get_subscription_kb
 from keyboards.setup_kb import (
-    get_setup_main_kb, 
-    get_setup_channels_kb, 
+    get_setup_main_kb,
+    get_setup_channels_kb,
     get_setup_complete_kb,
     get_setup_gamification_kb,
     get_setup_tariffs_kb,
     get_setup_confirmation_kb,
 )
+from keyboards.user_kb import get_free_user_menu_kb, get_main_menu_kb
 from database.models import User
 import logging
 
@@ -41,35 +44,46 @@ class MenuFactory:
     """
     
     async def create_menu(
-        self, 
-        menu_state: str, 
-        user_id: int, 
+        self,
+        menu_state: str,
+        user_id: int,
         session: AsyncSession,
-        bot=None # Asegúrate de que el objeto bot siempre se pase desde los handlers
+        bot: Bot = None
     ) -> Tuple[str, InlineKeyboardMarkup]:
         """
         Create a menu based on the current state and user role.
-        
+
         Returns:
             Tuple[str, InlineKeyboardMarkup]: (text, keyboard)
         """
         try:
             role = await get_user_role(bot, user_id, session=session)
-            
+
+            # Si el menu_state es 'main', decidimos destino según rol
+            if menu_state == "main":
+                if role == "vip":
+                    menu_state = "vip_main"
+                elif role == "free":
+                    menu_state = "free_main"
+
             # Handle setup flow for new installations
-            if menu_state.startswith("setup_") or menu_state == "admin_setup_choice": # Añadido admin_setup_choice aquí
+            if menu_state.startswith("setup_") or menu_state == "admin_setup_choice":
                 return await self._create_setup_menu(menu_state, user_id, session)
-            
+
             # Handle role-based main menus
-            if menu_state in ["main", "admin_main", "vip_main", "free_main"]:
-                return self._create_main_menu(role)
-            
+            if menu_state == "admin_main":
+                return self._create_main_menu("admin")
+            elif menu_state == "vip_main":
+                return self._create_main_menu("vip")
+            elif menu_state == "free_main":
+                return self._create_main_menu("free")
+
             # Handle specific menu states
             return await self._create_specific_menu(menu_state, user_id, session, role)
-            
+
         except Exception as e:
             logger.error(f"Error creating menu for state {menu_state}, user {user_id}: {e}")
-            return self._create_fallback_menu(role) 
+            return self._create_fallback_menu(role)
     
     def _create_main_menu(self, role: str) -> Tuple[str, InlineKeyboardMarkup]:
         """Create the main menu based on user role."""
@@ -78,21 +92,21 @@ class MenuFactory:
                 "🛠️ **Panel de Administración**\n\n"
                 "Bienvenido al centro de control del bot. Desde aquí puedes gestionar "
                 "todos los aspectos del sistema.",
-                get_admin_main_kb()
+                get_admin_kb()
             )
         elif role == "vip":
             return (
                 "✨ **Bienvenido al Diván de Diana**\n\n"
                 "Tu suscripción VIP te da acceso completo a todas las funciones. "
                 "¡Disfruta de la experiencia premium!",
-                get_vip_main_kb()
+                get_main_menu_kb()
             )
-        else: # Covers "free" and any other unrecognized roles
+        else:  # Covers "free" and any other unrecognized roles
             return (
                 "🌟 **Bienvenido a los Kinkys**\n\n"
                 "Explora nuestro contenido gratuito y descubre todo lo que tenemos para ti. "
                 "¿Listo para una experiencia única?",
-                get_subscription_kb()
+                get_free_user_menu_kb()
             )
     
     async def _create_setup_menu(
@@ -259,13 +273,13 @@ class MenuFactory:
         """
         text = "⚠️ **Error de Navegación**\n\n" \
                "Hubo un problema al cargar el menú. Por favor, intenta nuevamente."
-        
+
         if role == "admin":
-            return (text, get_admin_main_kb())
+            return (text, get_admin_kb())
         elif role == "vip":
-            return (text, get_vip_main_kb())
-        else: # Default for 'free' or unknown
-            return (text, get_subscription_kb())
+            return (text, get_main_menu_kb())
+        else:  # Default for 'free' or unknown
+            return (text, get_free_user_menu_kb())
 
     def create_setup_choice_menu(self) -> Tuple[str, InlineKeyboardMarkup]:
         """
