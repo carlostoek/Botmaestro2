@@ -358,4 +358,139 @@ class MenuFactory:
                 "Por favor, ingresa el ID numérico de tu canal. Normalmente empieza con `-100`.",
                 get_setup_confirmation_kb("cancel_channel_setup")
             )
+        elif menu_state == "setup_gamification":
+            return (
+                "🎮 **Configuración de Gamificación**\n\n"
+                "El sistema de gamificación mantiene a tus usuarios comprometidos con:\n\n"
+                "🎯 **Misiones**: Tareas que los usuarios pueden completar\n"
+                "🏅 **Insignias**: Reconocimientos por logros\n"
+                "🎁 **Recompensas**: Premios por acumular puntos\n"
+                "📊 **Niveles**: Sistema de progresión\n\n"
+                "**Recomendación**: Usa la configuración por defecto para empezar rápido.",
+                get_setup_gamification_kb()
+            )
+        elif menu_state == "setup_tariffs":
+            return (
+                "💳 **Configuración de Tarifas VIP**\n\n"
+                "Las tarifas determinan los precios y duración de las suscripciones VIP.\n\n"
+                "**Opciones disponibles**:\n"
+                "💎 **Básica**: Tarifa estándar de 30 días\n"
+                "👑 **Premium**: Tarifa de 90 días con descuento\n"
+                "🎯 **Personalizada**: Crea tus propias tarifas\n\n"
+                "**Recomendación**: Empieza con las tarifas básica y premium.",
+                get_setup_tariffs_kb()
+            )
+        elif menu_state in ["setup_missions_info", "setup_badges_info", "setup_rewards_info", "setup_levels_info"]:
+            feature_name = menu_state.replace('_info', '').replace('setup_', '').replace('_', ' ').capitalize()
+            return (
+                f"ℹ️ **Información sobre {feature_name}**\n\n"
+                "Esta es una sección informativa. La implementación para crear/editar "
+                "estos elementos estará disponible próximamente.",
+                get_setup_gamification_kb()
+            )
+        elif menu_state in ["setup_premium_tariff_info", "setup_custom_tariffs_info"]:
+            feature_name = menu_state.replace('_info', '').replace('setup_', '').replace('_', ' ').capitalize()
+            return (
+                f"ℹ️ **Información sobre {feature_name}**\n\n"
+                "Esta es una sección informativa. La implementación para crear/editar "
+                "tarifas premium o personalizadas estará disponible próximamente.",
+                get_setup_tariffs_kb()
+            )
+        elif menu_state == "setup_guide_info":
+            return (
+                "📖 **Guía de Uso del Bot**\n\n"
+                "Aquí encontrarás información detallada sobre cómo usar y configurar tu bot. "
+                "Temas:\n"
+                "• Gestión de usuarios\n"
+                "• Creación de contenido\n"
+                "• Marketing y monetización\n\n"
+                "*(Contenido de la guía próximamente)*",
+                get_setup_complete_kb()
+            )
+        elif menu_state == "setup_advanced_info":
+            return (
+                "🔧 **Configuración Avanzada (Próximamente)**\n\n"
+                "Esta sección contendrá opciones avanzadas para la personalización del bot, "
+                "integraciones y herramientas de depuración.\n\n"
+                "*(Opciones avanzadas próximamente)*",
+                get_setup_complete_kb()
+            )
+        else:
+            logger.warning(f"Unknown setup menu state: {menu_state}. Falling back to main setup menu.")
+            return (
+                "⚠️ **Error de Configuración**\n\n"
+                "No se pudo cargar el menú de configuración solicitado. Volviendo al inicio.",
+                get_setup_main_kb()
+            )
+    
+    async def _create_specific_menu(
+        self, 
+        menu_state: str, 
+        user_id: int, 
+        session: AsyncSession, 
+        role: str
+    ) -> Tuple[str, InlineKeyboardMarkup]:
+        """Create specific menus based on state."""
         
+        # Estas funciones create_profile_menu, etc., deberían estar definidas en utils.menu_creators
+        # y retornar (text, keyboard)
+        if menu_state == "profile":
+            return await create_profile_menu(user_id, session)
+        elif menu_state == "missions":
+            return await create_missions_menu(user_id, session)
+        elif menu_state == "rewards":
+            return await create_rewards_menu(user_id, session)
+        elif menu_state == "auctions":
+            return await create_auction_menu(user_id, session)
+        elif menu_state == "ranking":
+            return await create_ranking_menu(user_id, session)
+        
+        elif menu_state == "admin_gamification_main": 
+            # Si se llega a este estado específico, se puede redirigir al panel de admin
+            return self._create_main_menu("admin") 
+        else:
+            logger.warning(f"Unknown specific menu state: {menu_state}. Falling back to main menu for role: {role}")
+            return self._create_main_menu(role)
+    
+    def _create_fallback_menu(self, role: str = "free") -> Tuple[str, InlineKeyboardMarkup]:
+        """
+        Create a fallback menu when something goes wrong.
+        Tries to provide a role-appropriate fallback.
+        """
+        text = "⚠️ **Error de Navegación**\n\n" \
+               "Hubo un problema al cargar el menú. Por favor, intenta nuevamente."
+        
+        if role == "admin":
+            return (text, get_admin_main_kb())
+        elif role == "vip":
+            return (text, get_main_menu_kb()) # Fallback para VIP
+        else: # Default for 'free' or unknown
+            return (text, get_free_user_menu_kb()) # Fallback para Free
+
+    def create_setup_choice_menu(self) -> Tuple[str, InlineKeyboardMarkup]:
+        """
+        Crea el texto y el teclado para la elección inicial de configuración del admin.
+        Este método está diseñado para ser llamado por handlers/start.py
+        """
+        
+        builder = InlineKeyboardBuilder()
+        builder.button(text="🚀 Configurar Ahora", callback_data="start_setup")
+        builder.button(text="⏭️ Ir al Panel", callback_data="skip_to_admin")
+        builder.button(text="📖 Ver Guía", callback_data="show_setup_guide")
+        builder.adjust(1)
+        
+        text = (
+            "👋 **¡Hola, Administrador!**\n\n"
+            "Parece que es la primera vez que usas este bot. "
+            "Te guiaré a través de una configuración rápida para que "
+            "esté listo para tus usuarios.\n\n"
+            "**¿Quieres configurar el bot ahora?**\n"
+            "• ✅ Configuración guiada (recomendado)\n"
+            "• ⏭️ Ir directo al panel de administración\n\n"
+            "La configuración solo toma unos minutos y puedes "
+            "cambiar todo después."
+        )
+        return text, builder.as_markup()
+
+# Global factory instance
+menu_factory = MenuFactory()
