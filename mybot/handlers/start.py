@@ -6,12 +6,13 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User
+from database.models import User # Asegúrate de que User tiene current_menu_state
 from utils.text_utils import sanitize_text
 from utils.menu_manager import menu_manager
 from utils.menu_factory import menu_factory 
-from utils.user_roles import clear_role_cache, is_admin
+from utils.user_roles import clear_role_cache, is_admin, get_user_role # Usaremos get_user_role directamente para los no-admins
 from services.tenant_service import TenantService
+from services.user_service import UserService # Necesario para is_vip_member
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,7 @@ async def cmd_start(message: Message, session: AsyncSession):
             username=sanitize_text(message.from_user.username),
             first_name=sanitize_text(message.from_user.first_name),
             last_name=sanitize_text(message.from_user.last_name),
+            current_menu_state="initial" # Establece un estado inicial para nuevos usuarios
         )
         session.add(user)
         await session.commit()
@@ -64,11 +66,10 @@ async def cmd_start(message: Message, session: AsyncSession):
             logger.info(f"Updated user info: {user_id}")
     
     # Check if this is an admin
-    if is_admin(user_id):
+    if await is_admin(user_id, session): # Asegúrate de pasar la sesión aquí
         tenant_service = TenantService(session)
         
-        # Opcional: Asegurarse de que el tenant exista, incluso si no se completará el setup
-        # Esto es importante para que el panel de administración funcione correctamente
+        # Intenta inicializar o obtener el tenant. Esto es crucial para admins.
         init_result = await tenant_service.initialize_tenant(user_id)
         if not init_result["success"]:
             logger.error(f"Failed to initialize tenant for admin {user_id}: {init_result['error']}")
@@ -79,45 +80,78 @@ async def cmd_start(message: Message, session: AsyncSession):
             )
             return
 
-        # *** CAMBIO CLAVE AQUÍ: Siempre ir al panel de administración para admins ***
-        text, keyboard = await menu_factory.create_menu("admin_main", user_id, session, message.bot)
-        
-        # Personalizar mensaje de bienvenida para admin al iniciar
-        welcome_prefix = "👑 **¡Bienvenido, Administrador!**\n\n"
-        text = welcome_prefix + text.split('\n\n', 1)[-1] # Mantiene el texto del menú, pero reemplaza el saludo inicial
-
+        # *** Lógica para admins: Elección de configuración o Panel de Administración ***
+        if not init_result["status"]["basic_setup_complete"]:
+            # Si la configuración no está completa, muestra la elección inicial de setup
+            text, keyboard = menu_factory.create_setup_choice_menu() # Llama directamente al método para el menú de elección
+            target_menu_state = "admin_setup_choice"
+            welcome_prefix = "👋 **¡Hola, Administrador!**\n\n"
+            text = welcome_prefix + text # Asegura el saludo
+        else:
+            # Si la configuración ya está completa, va directo al panel de admin
+            text, keyboard = await menu_factory.create_menu("admin_main", user_id, session, message.bot)
+            target_menu_state = "admin_main"
+            welcome_prefix = "👑 **¡Bienvenido, Administrador!**\n\n"
+            # Extrae el contenido principal del texto para evitar duplicar el saludo
+            text_parts = text.split('\n\n', 1)
+            text = welcome_prefix + (text_parts[1] if len(text_parts) > 1 else text_parts[0])
+            
         await menu_manager.show_menu(
             message,
             text,
             keyboard,
             session,
-            "admin_main", # Asegúrate de registrar el estado correcto
+            target_menu_state, # Usar el estado de menú decidido
             delete_origin_message=True
         )
         return # Terminar aquí para el flujo de administración
     
-    # Lógica para usuarios no-administradores (VIP, Free)
+    # Lógica para usuarios no-administradores (VIP o Gratuitos)
     try:
+        # Pide el menú "main" al factory. El factory decidirá internamente
+        # si debe mostrar "vip_main" o "free_main" basándose en el rol del usuario.
         text, keyboard = await menu_factory.create_menu("main", user_id, session, message.bot)
         
+        # Ahora, para personalizar el prefijo de bienvenida, inferimos el estado final
+        # basado en el contenido del texto devuelto por el factory.
+        final_menu_state_for_welcome = "main" # Por defecto
+        if "bienvenido al diván de diana" in text.lower() or "experiencia premium" in text.lower():
+            final_menu_state_for_welcome = "vip_main"
+        elif "bienvenido a los kinkys" in text.lower() or "explora nuestro contenido gratuito" in text.lower():
+            final_menu_state_for_welcome = "free_main"
+
+        welcome_prefix = ""
         if is_new_user:
-            welcome_prefix = "🌟 **¡Bienvenido!**\n\n"
-            if "suscripción vip" in text.lower() or "experiencia premium" in text.lower():
+            if final_menu_state_for_welcome == "vip_main":
                 welcome_prefix = "✨ **¡Bienvenido, Miembro VIP!**\n\n"
-            
-            text = welcome_prefix + text
-        else:
-            if "suscripción vip" in text.lower() or "experiencia premium" in text.lower():
-                text = "✨ **Bienvenido de vuelta**\n\n" + text.split('\n\n', 1)[-1]
+            elif final_menu_state_for_welcome == "free_main":
+                welcome_prefix = "👋 **¡Bienvenido!**\n\n"
             else:
-                text = "🌟 **¡Hola de nuevo!**\n\n" + text.split('\n\n', 1)[-1]
-        
+                welcome_prefix = "🌟 **¡Bienvenido!**\n\n" # General welcome
+        else:
+            if final_menu_state_for_welcome == "vip_main":
+                welcome_prefix = "✨ **Bienvenido de vuelta**\n\n"
+            elif final_menu_state_for_welcome == "free_main":
+                welcome_prefix = "👋 **¡Hola de nuevo!**\n\n"
+            else:
+                welcome_prefix = "🌟 **¡Hola de nuevo!**\n\n" # General welcome
+
+        # Asegúrate de que el prefijo se añada correctamente al texto del menú
+        # Esto intenta evitar duplicar saludos si el texto del menú ya tiene uno
+        text_parts = text.split('\n\n', 1)
+        if len(text_parts) > 1:
+            # Si el texto ya tiene un salto de línea doble, asume que la primera parte es un saludo
+            text = welcome_prefix + text_parts[1]
+        else:
+            # Si no hay salto de línea doble, simplemente añade el prefijo
+            text = welcome_prefix + text 
+
         await menu_manager.show_menu(
             message, 
             text, 
             keyboard, 
             session, 
-            "main",
+            final_menu_state_for_welcome, # Usar el estado de menú decidido
             delete_origin_message=True
         )
         
@@ -128,5 +162,5 @@ async def cmd_start(message: Message, session: AsyncSession):
             "❌ **Error Temporal**\n\n"
             "Hubo un problema al cargar el menú. Por favor, intenta nuevamente en unos segundos.",
             auto_delete_seconds=5
-        )
+    )
         
