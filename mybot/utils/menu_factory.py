@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram import Bot # Importa Bot aquí
 
 from utils.user_roles import get_user_role, is_admin, is_vip_member # Asegúrate de que estas funciones existan
-from keyboards.admin_kb import get_admin_main_kb, get_admin_channels_kb, get_admin_gamification_kb, get_admin_tariffs_kb, get_admin_users_kb, get_admin_channel_id_input_kb
+from keyboards.admin_kb import get_admin_kb, get_admin_channels_kb, get_admin_gamification_kb, get_admin_tariffs_kb, get_admin_users_kb, get_admin_channel_id_input_kb
 from keyboards.vip_main_kb import get_vip_main_kb # Asumo que tienes este teclado para VIPs
 from keyboards.subscription_kb import get_subscription_kb # Asumo que tienes este teclado, si es para usuarios gratuitos
 from keyboards.setup_kb import (
