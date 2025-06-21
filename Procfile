@@ -1,1 +1,3 @@
-worker: python mybot/bot.py
+web: alembic upgrade
+head && python -m
+python mybot/bot.py
