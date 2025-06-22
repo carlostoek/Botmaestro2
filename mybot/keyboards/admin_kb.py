@@ -3,13 +3,12 @@ from aiogram.types import InlineKeyboardMarkup
 
 # Teclado principal de administración
 def get_admin_kb() -> InlineKeyboardMarkup:
+    """Main admin menu keyboard."""
     builder = InlineKeyboardBuilder()
-    builder.button(text="👥 Gestionar Usuarios", callback_data="admin_users")
-    builder.button(text="📺 Gestionar Canales", callback_data="admin_channels")
-    builder.button(text="🎮 Configurar Gamificación", callback_data="setup_gamification")
-    builder.button(text="💳 Configurar Tarifas", callback_data="setup_tariffs")
-    builder.button(text="⚙️ Configuración del Bot", callback_data="admin_settings")
-    builder.button(text="🎲 Juego Kinky (Admin)", callback_data="admin_kinky_game")
+    builder.button(text="👥 Gestionar Usuarios VIP", callback_data="vip_manage")
+    builder.button(text="📺 Gestionar Canales", callback_data="admin_manage_channels")
+    builder.button(text="🎮 Configurar Gamificación", callback_data="admin_kinky_game")
+    builder.button(text="⚙️ Configuración del Bot", callback_data="admin_bot_config")
     builder.adjust(2)
     return builder.as_markup()
 

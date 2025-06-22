@@ -25,3 +25,13 @@ def get_wait_time_kb():
     builder.button(text="🔙 Volver", callback_data="admin_channels")
     builder.adjust(3)
     return builder.as_markup()
+
+
+def get_manage_channels_menu_kb():
+    """Keyboard to choose which channel to manage."""
+    builder = InlineKeyboardBuilder()
+    builder.button(text="📢 Canal VIP", callback_data="admin_vip")
+    builder.button(text="💬 Canal Free", callback_data="admin_free")
+    builder.button(text="🔙 Volver", callback_data="admin_main_menu")
+    builder.adjust(1)
+    return builder.as_markup()

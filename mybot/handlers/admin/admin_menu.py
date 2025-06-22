@@ -16,7 +16,8 @@ from database.models import Tariff, Token
 from uuid import uuid4
 from sqlalchemy import select
 from utils.messages import BOT_MESSAGES
-from utils.keyboard_utils import get_admin_manage_content_keyboard # Importar la función del teclado
+from utils.keyboard_utils import get_admin_manage_content_keyboard  # Importar la función del teclado
+from keyboards.admin_channels_kb import get_manage_channels_menu_kb
 
 import logging
 
@@ -165,6 +166,23 @@ async def back_to_admin_main(callback: CallbackQuery, session: AsyncSession):
         logger.error(f"Error returning to admin main: {e}")
         await callback.answer("Error al cargar el menú principal", show_alert=True)
     
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin_manage_channels")
+async def show_manage_channels(callback: CallbackQuery, session: AsyncSession):
+    """Show menu to select which channel to manage."""
+    if not is_admin(callback.from_user.id):
+        return await callback.answer("Acceso denegado", show_alert=True)
+
+    keyboard = get_manage_channels_menu_kb()
+    await menu_manager.update_menu(
+        callback,
+        "📺 **Gestionar Canales**\n\nElige una opción:",
+        keyboard,
+        session,
+        "admin_manage_channels",
+    )
     await callback.answer()
 
 # --- MODIFICACIÓN: RENOMBRADO Y REUTILIZADO PARA GESTIÓN DE GAMIFICACIÓN ---
