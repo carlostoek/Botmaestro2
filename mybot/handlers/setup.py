@@ -529,30 +529,6 @@ async def handle_setup_complete(callback: CallbackQuery, session: AsyncSession, 
     await callback.answer()
 
 
-@router.callback_query(F.data == "setup_main")
-async def handle_setup_main(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
-    """Return to the main setup menu from any sub-menu."""
-    if not await is_admin(callback.from_user.id, session):
-        return await callback.answer("Acceso denegado", show_alert=True)
-
-    await state.clear()
-
-    text, keyboard = await menu_factory.create_menu(
-        "setup_main",
-        callback.from_user.id,
-        session,
-        callback.bot,
-    )
-    await menu_manager.update_menu(
-        callback,
-        text,
-        keyboard,
-        session,
-        "setup_main",
-    )
-    await callback.answer()
-
-
 @router.callback_query(F.data == "skip_setup")
 async def handle_skip_setup(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
     """Skip remaining setup steps and go directly to the admin panel."""
