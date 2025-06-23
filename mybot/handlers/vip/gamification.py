@@ -78,11 +78,7 @@ async def menu_callback_handler(callback: CallbackQuery, session: AsyncSession):
         )
         return
     
-    from utils.user_roles import is_vip_member
-
     try:
-        # Force membership validation for important action
-        await is_vip_member(callback.bot, user_id, session=session, force_check=True)
         menu_type = callback.data.split(":")[1]
         text, keyboard = await menu_factory.create_menu(menu_type, user_id, session, callback.bot)
         await menu_manager.update_menu(callback, text, keyboard, session, menu_type)
@@ -139,10 +135,7 @@ async def handle_claim_reward_callback(callback: CallbackQuery, session: AsyncSe
         await callback.answer("Esta función está disponible solo para miembros VIP.", show_alert=True)
         return
     
-    from utils.user_roles import is_vip_member
-
     try:
-        await is_vip_member(callback.bot, user_id, session=session, force_check=True)
         reward_id = int(callback.data.split("_")[-1])
         reward_service = RewardService(session)
         success, message = await reward_service.claim_reward(user_id, reward_id)
@@ -208,11 +201,8 @@ async def handle_complete_mission_callback(callback: CallbackQuery, session: Asy
         await callback.answer("Esta función está disponible solo para miembros VIP.", show_alert=True)
         return
     
-    from utils.user_roles import is_vip_member
-
     try:
-        await is_vip_member(callback.bot, user_id, session=session, force_check=True)
-        mission_id = callback.data[len("complete_mission_") :]
+        mission_id = callback.data[len("complete_mission_"):]
         mission_service = MissionService(session)
         user = await session.get(User, user_id)
         mission = await mission_service.get_mission_by_id(mission_id)
