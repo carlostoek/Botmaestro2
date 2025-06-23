@@ -62,6 +62,13 @@ async def cmd_start(message: Message, session: AsyncSession):
         if updated:
             await session.commit()
             logger.info(f"Updated user info: {user_id}")
+
+    # Validate VIP membership on each /start
+    from utils.user_roles import is_vip_member
+    try:
+        await is_vip_member(message.bot, user_id, session=session, force_check=True)
+    except Exception as e:
+        logger.error(f"VIP validation failed for {user_id}: {e}")
     
     # Check if this is an admin
     if is_admin(user_id):
