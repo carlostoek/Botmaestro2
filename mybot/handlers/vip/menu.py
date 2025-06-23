@@ -15,7 +15,7 @@ from utils.keyboard_utils import (
 )
 from keyboards.vip_main_kb import get_vip_main_kb
 from keyboards.vip_game_kb import get_game_menu_kb
-from utils.messages import BOT_MESSAGES
+from utils.messages import BOT_MESSAGES, MENU_TEXTS
 from utils.message_utils import get_profile_message
 from services.subscription_service import SubscriptionService
 from services.mission_service import MissionService
@@ -39,7 +39,7 @@ async def vip_menu(message: Message, session: AsyncSession):
         return
     await send_menu(
         message,
-        "Bienvenido al Diván de Diana",
+        MENU_TEXTS["vip_main"],
         get_vip_main_kb(),
         session,
         "vip_main",
@@ -60,7 +60,7 @@ async def vip_menu_cb(callback: CallbackQuery, session: AsyncSession):
         return
     await update_menu(
         callback,
-        "Bienvenido al Diván de Diana",
+        MENU_TEXTS["vip_main"],
         get_vip_main_kb(),
         session,
         "vip_main",

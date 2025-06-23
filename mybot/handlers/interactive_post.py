@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.message_service import MessageService
 from services.mission_service import MissionService
+from utils.messages import BOT_MESSAGES
 
 router = Router()
 
@@ -31,5 +32,5 @@ async def handle_interactive_post_callback(
         target_message_id=message_id,
         bot=bot,
     )
-    await callback.answer("\u2757 Gracias por reaccionar!")
+    await callback.answer(BOT_MESSAGES["reaction_thanks"])
 
