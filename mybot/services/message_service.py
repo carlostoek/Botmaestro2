@@ -98,15 +98,18 @@ class MessageService:
     async def get_reaction_counts(self, message_id: int) -> dict[str, int]:
         """Return reaction counts for the given message."""
         stmt = (
+
             select(
                 ButtonReaction.reaction_type,
                 func.count(ButtonReaction.id),
             )
+
             .where(ButtonReaction.message_id == message_id)
-            .group_by(ButtonReaction.reaction_type)
+            .
         )
         result = await self.session.execute(stmt)
         return {row[0]: row[1] for row in result.all()}
+
 
     async def update_reaction_markup(
         self, chat_id: int, message_id: int
@@ -119,11 +122,13 @@ class MessageService:
             await self.bot.edit_message_reply_markup(
                 chat_id,
                 message_id,
+ 
                 reply_markup=get_interactive_post_kb(
                     message_id,
                     buttons,
                     counts,
                 ),
+=
             )
         except TelegramBadRequest:
             pass
