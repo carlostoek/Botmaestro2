@@ -4,6 +4,7 @@ from aiogram import Bot
 from aiogram.types import Message, ReactionTypeEmoji
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError, TelegramAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 
 from .config_service import ConfigService
 from database.models import ButtonReaction
@@ -44,13 +45,16 @@ class MessageService:
 
         try:
             buttons = await config.get_reaction_buttons()
+            counts = [0] * len(buttons)
             sent = await self.bot.send_message(
-                channel_id, text, reply_markup=get_interactive_post_kb(0, buttons)
+                channel_id,
+                text,
+                reply_markup=get_interactive_post_kb(0, buttons, counts),
             )
             await self.bot.edit_message_reply_markup(
                 channel_id,
                 sent.message_id,
-                reply_markup=get_interactive_post_kb(sent.message_id, buttons),
+                reply_markup=get_interactive_post_kb(sent.message_id, buttons, counts),
             )
             if channel_type == "vip":
                 vip_reactions = await config.get_vip_reactions()
@@ -66,7 +70,15 @@ class MessageService:
 
     async def register_reaction(
         self, user_id: int, message_id: int, reaction_type: str
-    ) -> ButtonReaction:
+    ) -> ButtonReaction | None:
+        stmt = select(ButtonReaction).where(
+            ButtonReaction.message_id == message_id,
+            ButtonReaction.user_id == user_id,
+        )
+        result = await self.session.execute(stmt)
+        if result.scalar():
+            return None
+
         reaction = ButtonReaction(
             message_id=message_id,
             user_id=user_id,
@@ -76,3 +88,20 @@ class MessageService:
         await self.session.commit()
         await self.session.refresh(reaction)
         return reaction
+
+    async def get_reaction_counts(
+        self, message_id: int, buttons: list[str] | None = None
+    ) -> list[int]:
+        """Return counts for each reaction button on a message."""
+        stmt = (
+            select(ButtonReaction.reaction_type, func.count())
+            .where(ButtonReaction.message_id == message_id)
+            .group_by(ButtonReaction.reaction_type)
+        )
+        result = await self.session.execute(stmt)
+        rows = result.all()
+        counts_map = {r[0]: r[1] for r in rows}
+        if buttons is None:
+            buttons = await ConfigService(self.session).get_reaction_buttons()
+        counts = [counts_map.get(f"r{idx}", 0) for idx in range(len(buttons))]
+        return counts
