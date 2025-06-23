@@ -7,6 +7,7 @@ from aiogram.exceptions import (
     TelegramForbiddenError,
     TelegramAPIError,
 )
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
@@ -15,6 +16,8 @@ from .channel_service import ChannelService
 from database.models import ButtonReaction
 from keyboards.common import get_interactive_post_kb
 from utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
+
+logger = logging.getLogger(__name__)
 
 
 class MessageService:
@@ -70,13 +73,23 @@ class MessageService:
             if channel_type == "vip":
                 vip_reactions = await config.get_vip_reactions()
                 if vip_reactions:
-                    await self.bot.set_message_reaction(
-                        str(channel_id),
-                        str(sent.message_id),
-                        [ReactionTypeEmoji(emoji=r) for r in vip_reactions],
-                    )
+                    try:
+                        await self.bot.set_message_reaction(
+                            str(channel_id),
+                            str(sent.message_id),
+                            [ReactionTypeEmoji(emoji=r) for r in vip_reactions],
+                        )
+                    except TelegramAPIError as e:
+                        logger.error(
+                            f"Error setting reactions for message {sent.message_id} in {channel_id}: {e}",
+                            exc_info=True,
+                        )
             return sent
-        except (TelegramBadRequest, TelegramForbiddenError, TelegramAPIError):
+        except (TelegramBadRequest, TelegramForbiddenError, TelegramAPIError) as e:
+            logger.error(
+                f"Failed to send interactive post to channel {channel_id}: {e}",
+                exc_info=True,
+            )
             return False
 
     async def register_reaction(
