@@ -61,14 +61,14 @@ class MessageService:
 
             )
             counts = await self.get_reaction_counts(sent.message_id)
+            markup_to_edit = get_interactive_post_kb(
+                sent.message_id, buttons, counts, channel_id
+            )
+            logger.debug("Markup being sent for edit: %s", markup_to_edit)
             await self.bot.edit_message_reply_markup(
                 str(channel_id),
                 str(sent.message_id),
-                reply_markup=get_interactive_post_kb(
-
-                    sent.message_id, buttons, counts, channel_id
-
-                ),
+                reply_markup=markup_to_edit,
             )
             if channel_type == "vip":
                 vip_reactions = await config.get_vip_reactions()
