@@ -59,6 +59,10 @@ class User(AsyncAttrs, Base):
     # Channel reactions tracking
     channel_reactions = Column(JSON, default={})  # {'message_id': True}
 
+    # VIP membership validation caching
+    is_vip = Column(Boolean, default=False)
+    vip_last_checked = Column(DateTime, nullable=True)
+
 
 class Reward(AsyncAttrs, Base):
     """Rewards unlocked by reaching a number of points."""
