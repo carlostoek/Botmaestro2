@@ -99,8 +99,6 @@ class SubscriptionService:
             else:
                 user.vip_expires_at = new_exp
             user.last_reminder_sent_at = None
-            user.is_vip = True
-            user.vip_last_checked = now
 
         await self.session.commit()
         logger.info(f"Extended VIP subscription for user {user_id} by {days} days")
@@ -117,8 +115,6 @@ class SubscriptionService:
         if user:
             user.role = "free"
             user.vip_expires_at = None
-            user.is_vip = False
-            user.vip_last_checked = now
 
         if bot:
             config_service = ConfigService(self.session)
@@ -150,12 +146,9 @@ class SubscriptionService:
                 user.role = "vip"
                 user.vip_expires_at = expires_at
                 user.last_reminder_sent_at = None
-                user.is_vip = True
             else:
                 user.role = "free"
                 user.vip_expires_at = expires_at
-                user.is_vip = False
-            user.vip_last_checked = datetime.utcnow()
 
         await self.session.commit()
         logger.info(
