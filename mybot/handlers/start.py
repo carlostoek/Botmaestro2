@@ -9,7 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User
 from utils.text_utils import sanitize_text
 from utils.menu_manager import menu_manager
-from utils.menu_factory import menu_factory 
+from utils.menu_factory import menu_factory
+from utils.messages import BOT_MESSAGES
 from utils.user_roles import clear_role_cache, is_admin
 from services.tenant_service import TenantService
 import logging
@@ -83,8 +84,8 @@ async def cmd_start(message: Message, session: AsyncSession):
         text, keyboard = await menu_factory.create_menu("admin_main", user_id, session, message.bot)
         
         # Personalizar mensaje de bienvenida para admin al iniciar
-        welcome_prefix = "👑 **¡Bienvenido, Administrador!**\n\n"
-        text = welcome_prefix + text.split('\n\n', 1)[-1] # Mantiene el texto del menú, pero reemplaza el saludo inicial
+        welcome_prefix = BOT_MESSAGES["admin_welcome_prefix"]
+        text = welcome_prefix + text.split('\n\n', 1)[-1]
 
         await menu_manager.show_menu(
             message,
@@ -99,18 +100,11 @@ async def cmd_start(message: Message, session: AsyncSession):
     # Lógica para usuarios no-administradores (VIP, Free)
     try:
         text, keyboard = await menu_factory.create_menu("main", user_id, session, message.bot)
-        
+
         if is_new_user:
-            welcome_prefix = "🌟 **¡Bienvenido!**\n\n"
-            if "suscripción vip" in text.lower() or "experiencia premium" in text.lower():
-                welcome_prefix = "✨ **¡Bienvenido, Miembro VIP!**\n\n"
-            
-            text = welcome_prefix + text
+            await message.answer(BOT_MESSAGES["start_welcome_new_user"])
         else:
-            if "suscripción vip" in text.lower() or "experiencia premium" in text.lower():
-                text = "✨ **Bienvenido de vuelta**\n\n" + text.split('\n\n', 1)[-1]
-            else:
-                text = "🌟 **¡Hola de nuevo!**\n\n" + text.split('\n\n', 1)[-1]
+            await message.answer(BOT_MESSAGES["start_welcome_returning_user"])
         
         await menu_manager.show_menu(
             message, 

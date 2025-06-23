@@ -31,6 +31,7 @@ from utils.menu_creators import (
     create_ranking_menu
 )
 from utils.text_utils import sanitize_text # Asegúrate de que esta importación exista y sea correcta
+from utils.messages import MENU_TEXTS
 
 logger = logging.getLogger(__name__)
 
@@ -75,24 +76,18 @@ class MenuFactory:
         """Create the main menu based on user role."""
         if role == "admin":
             return (
-                "🛠️ **Panel de Administración**\n\n"
-                "Bienvenido al centro de control del bot. Desde aquí puedes gestionar "
-                "todos los aspectos del sistema.",
-                get_admin_main_kb()
+                MENU_TEXTS["admin_main"],
+                get_admin_main_kb(),
             )
         elif role == "vip":
             return (
-                "✨ **Bienvenido al Diván de Diana**\n\n"
-                "Tu suscripción VIP te da acceso completo a todas las funciones. "
-                "¡Disfruta de la experiencia premium!",
-                get_vip_main_kb()
+                MENU_TEXTS["vip_main"],
+                get_vip_main_kb(),
             )
-        else: # Covers "free" and any other unrecognized roles
+        else:  # Covers "free" and any other unrecognized roles
             return (
-                "🌟 **Bienvenido a los Kinkys**\n\n"
-                "Explora nuestro contenido gratuito y descubre todo lo que tenemos para ti. "
-                "¿Listo para una experiencia única?",
-                get_subscription_kb()
+                MENU_TEXTS["free_main"],
+                get_subscription_kb(),
             )
     
     async def _create_setup_menu(

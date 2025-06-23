@@ -7,15 +7,16 @@ from utils.user_roles import get_user_role
 from keyboards.admin_main_kb import get_admin_main_kb
 from keyboards.vip_main_kb import get_vip_main_kb
 from keyboards.subscription_kb import get_subscription_kb
+from utils.messages import MENU_TEXTS
 
 
 def _menu_details(role: str):
     """Return (text, keyboard, state) for the given role."""
     if role == "admin":
-        return "Panel de Administración", get_admin_main_kb(), "admin_main"
+        return MENU_TEXTS["admin_main"], get_admin_main_kb(), "admin_main"
     if role == "vip":
-        return "Bienvenido al Diván de Diana", get_vip_main_kb(), "vip_main"
-    return "Bienvenido a los Kinkys", get_subscription_kb(), "free_main"
+        return MENU_TEXTS["vip_main"], get_vip_main_kb(), "vip_main"
+    return MENU_TEXTS["free_main"], get_subscription_kb(), "free_main"
 
 # Cache to store the latest menu message for each user
 MENU_CACHE: dict[int, tuple[int, int]] = {}

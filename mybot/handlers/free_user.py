@@ -7,6 +7,7 @@ from keyboards.subscription_kb import (
     get_free_info_kb,
     get_free_game_kb,
 )
+from utils.messages import BOT_MESSAGES
 from utils.user_roles import is_admin, is_vip
 
 router = Router()
@@ -17,7 +18,7 @@ async def subscription_menu(message: Message):
     if is_admin(message.from_user.id) or await is_vip(message.bot, message.from_user.id):
         return
     await message.answer(
-        "Bienvenido a los kinkys",
+        BOT_MESSAGES["free_welcome"],
         reply_markup=get_subscription_kb(),
     )
 
@@ -27,7 +28,7 @@ async def show_info(callback: CallbackQuery):
     """Display the info section for free users."""
     await callback.answer()
     await callback.message.edit_text(
-        "Información del canal gratuito.",
+        BOT_MESSAGES["free_info_text"],
         reply_markup=get_free_info_kb(),
     )
 
@@ -36,7 +37,7 @@ async def show_info(callback: CallbackQuery):
 async def free_game(callback: CallbackQuery):
     """Placeholder mini game for free users."""
     await callback.message.edit_text(
-        "Mini Juego Kinky (versión gratuita)",
+        BOT_MESSAGES["free_game_title"],
         reply_markup=get_free_game_kb(),
     )
     await callback.answer()
