@@ -376,9 +376,15 @@ async def manage_subs(callback: CallbackQuery, session: AsyncSession):
         builder.row(*nav)
     builder.row(InlineKeyboardButton(text="🔙 Volver", callback_data="admin_vip"))
 
+    config_service = ConfigService(session)
+    vip_channel_id = await config_service.get_vip_channel_id()
+    text = "👥 Suscriptores VIP activos:"
+    if vip_channel_id:
+        text += f"\nCanal VIP: {vip_channel_id}"
+
     await update_menu(
         callback,
-        "👥 Suscriptores VIP activos:",
+        text,
         builder.as_markup(),
         session,
         "admin_vip_manage",
@@ -430,17 +436,62 @@ async def vip_profile(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data.startswith("vip_edit_"))
-async def vip_edit(callback: CallbackQuery, state: FSMContext):
+async def vip_edit(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not is_admin(callback.from_user.id):
         return await callback.answer()
     user_id = int(callback.data.split("_")[-1])
     await state.update_data(target_user=user_id)
+    user = await session.get(User, user_id)
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="📅 Cambiar fecha", callback_data="vip_edit_date")
+    if user and user.role == "vip":
+        builder.button(text="🔄 Cambiar a Free", callback_data="vip_edit_role")
+    else:
+        builder.button(text="🔄 Cambiar a VIP", callback_data="vip_edit_role")
+    builder.button(text="🔙 Volver", callback_data="vip_manage")
+    builder.adjust(1)
+
+    await callback.message.answer(
+        "Selecciona una opción de edición:",
+        reply_markup=builder.as_markup(),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "vip_edit_date")
+async def vip_edit_date(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    data = await state.get_data()
+    user_id = data.get("target_user")
+    if not user_id:
+        return await callback.answer("Usuario no especificado", show_alert=True)
     await callback.message.answer(
         "Ingresa la nueva fecha de expiración (DD/MM/AAAA) o 0 para ilimitado:",
         reply_markup=get_back_keyboard("vip_manage"),
     )
     await state.set_state(AdminVipSubscriberStates.waiting_for_new_date)
     await callback.answer()
+
+
+@router.callback_query(F.data == "vip_edit_role")
+async def vip_edit_role(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    data = await state.get_data()
+    user_id = data.get("target_user")
+    if not user_id:
+        return await callback.answer("Usuario no especificado", show_alert=True)
+    user = await session.get(User, user_id)
+    sub_service = SubscriptionService(session)
+    if user and user.role == "vip":
+        await sub_service.revoke_subscription(user_id, bot=callback.bot)
+        await callback.answer("Rol cambiado a Free", show_alert=True)
+    else:
+        await sub_service.set_subscription_expiration(user_id, None)
+        await callback.answer("Rol cambiado a VIP", show_alert=True)
+    await state.clear()
 
 
 @router.message(AdminVipSubscriberStates.waiting_for_days)
