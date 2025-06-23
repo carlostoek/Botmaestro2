@@ -315,8 +315,13 @@ async def confirm_vip_channel_post(callback: CallbackQuery, state: FSMContext, s
     elif sent is False:
         reply = "❌ No se pudo publicar en el canal. Revisa los permisos del bot."
     else:
-        reply = f"✅ Mensaje publicado con ID {sent.message_id}"
-    await callback.message.edit_text(reply, reply_markup=get_admin_vip_kb())
+        reply = "✅ Mensaje enviado correctamente."
+
+    await send_clean_message(
+        callback.message,
+        reply,
+        reply_markup=get_back_keyboard("admin_vip"),
+    )
     await state.clear()
     await callback.answer()
 
