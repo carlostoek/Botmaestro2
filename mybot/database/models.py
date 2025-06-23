@@ -399,6 +399,29 @@ class AuctionParticipant(AsyncAttrs, Base):
     last_notified_at = Column(DateTime, nullable=True)
 
 
+class MiniGameUsage(AsyncAttrs, Base):
+    """Track daily usage of minigames per user."""
+
+    __tablename__ = "minigame_usage"
+
+    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    game = Column(String, primary_key=True)
+    free_used_at = Column(DateTime, nullable=True)
+    extra_uses = Column(Integer, default=0)
+
+
+class Purchase(AsyncAttrs, Base):
+    """Record purchases made by users."""
+
+    __tablename__ = "purchases"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    item = Column(String, nullable=False)
+    amount = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+
+
 # Funciones para manejar el estado del menú del usuario
 async def get_user_menu_state(session, user_id: int) -> str:
     result = await session.execute(select(User).where(User.id == user_id))

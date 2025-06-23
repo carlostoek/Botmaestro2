@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.message_service import MessageService
+from services.mission_service import MissionService
 
 router = Router()
 
@@ -22,5 +23,13 @@ async def handle_interactive_post_callback(
 
     service = MessageService(session, bot)
     await service.register_reaction(callback.from_user.id, message_id, reaction_type)
+    mission_service = MissionService(session)
+    await mission_service.complete_mission(
+        callback.from_user.id,
+        f"reaction_msg_{message_id}",
+        reaction_type=reaction_type,
+        target_message_id=message_id,
+        bot=bot,
+    )
     await callback.answer("\u2757 Gracias por reaccionar!")
 
