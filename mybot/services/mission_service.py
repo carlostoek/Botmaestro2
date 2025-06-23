@@ -11,6 +11,7 @@ from database.models import (
     UserChallengeProgress,
 )
 from utils.text_utils import sanitize_text
+from utils.messages import BOT_MESSAGES
 import logging
 
 logger = logging.getLogger(__name__)
@@ -168,6 +169,9 @@ class MissionService:
         target_value: int,
         reward_points: int,
         duration_days: int = 0,
+        *,
+        requires_action: bool = False,
+        action_data: dict | None = None,
     ) -> Mission:
         mission_id = f"{mission_type}_{sanitize_text(name).lower().replace(' ', '_').replace('.', '').replace(',', '')}"
         new_mission = Mission(
@@ -179,11 +183,32 @@ class MissionService:
             target_value=target_value,
             duration_days=duration_days,
             is_active=True,
+            requires_action=requires_action,
+            action_data=action_data,
         )
         self.session.add(new_mission)
         await self.session.commit()
         await self.session.refresh(new_mission)
         return new_mission
+
+    async def ensure_reaction_mission(
+        self, message_id: int, reward_points: int = 1
+    ) -> Mission:
+        """Create a reaction mission for a specific message if it doesn't exist."""
+        mission_id = f"reaction_msg_{message_id}"
+        mission = await self.session.get(Mission, mission_id)
+        if mission:
+            return mission
+        return await self.create_mission(
+            name=BOT_MESSAGES.get("auto_mission_reaction_name", "Reaccionar a la publicación"),
+            description=BOT_MESSAGES.get("auto_mission_reaction_desc", "Pulsa cualquier reacción para completar la misión."),
+            mission_type="reaction",
+            target_value=1,
+            reward_points=reward_points,
+            duration_days=0,
+            requires_action=True,
+            action_data={"target_message_id": message_id},
+        )
 
     async def toggle_mission_status(self, mission_id: str, status: bool) -> bool:
         mission = await self.session.get(Mission, mission_id)

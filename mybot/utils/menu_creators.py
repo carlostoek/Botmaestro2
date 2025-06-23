@@ -12,11 +12,12 @@ from utils.keyboard_utils import (
     get_reward_keyboard,
     get_ranking_keyboard
 )
-from utils.message_utils import get_profile_message, get_ranking_message
+from utils.message_utils import get_profile_message
 from services.mission_service import MissionService
 from services.reward_service import RewardService
-from services.point_service import PointService
 from keyboards.auction_kb import get_auction_main_kb
+from utils.messages import BOT_MESSAGES
+from utils.text_utils import anonymize_username
 
 async def create_profile_menu(user_id: int, session: AsyncSession) -> Tuple[str, InlineKeyboardMarkup]:
     """Create the profile menu for a user."""
@@ -88,9 +89,23 @@ async def create_auction_menu(user_id: int, session: AsyncSession) -> Tuple[str,
     return text, get_auction_main_kb()
 
 async def create_ranking_menu(user_id: int, session: AsyncSession) -> Tuple[str, InlineKeyboardMarkup]:
-    """Create the ranking menu for a user."""
-    point_service = PointService(session)
-    top_users = await point_service.get_top_users(limit=10)
-    
-    ranking_text = await get_ranking_message(top_users)
+    """Create the weekly reaction ranking menu for a user."""
+    from services.reaction_service import ReactionService
+
+    reaction_service = ReactionService(session)
+    top_users = await reaction_service.get_weekly_top_users(limit=3)
+
+    if not top_users:
+        ranking_text = BOT_MESSAGES["weekly_no_data"]
+    else:
+        lines = [BOT_MESSAGES["weekly_ranking_title"]]
+        for i, (user, count) in enumerate(top_users, start=1):
+            display = anonymize_username(user, -1)
+            lines.append(
+                BOT_MESSAGES["weekly_ranking_entry"].format(
+                    rank=i, username=display, count=count
+                )
+            )
+        ranking_text = "\n".join(lines)
+
     return ranking_text, get_ranking_keyboard()

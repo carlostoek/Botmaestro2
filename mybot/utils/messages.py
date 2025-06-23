@@ -45,6 +45,9 @@ BOT_MESSAGES = {
     "ranking_title": "🏆 *Tabla de Posiciones*",
     "ranking_entry": "#{rank}. @{username} - Puntos: `{points}`, Nivel: `{level}`",
     "no_ranking_data": "Aún no hay datos en el ranking. ¡Sé el primero en aparecer!",
+    "weekly_ranking_title": "🏆 Ranking Semanal de Reacciones",
+    "weekly_ranking_entry": "#{rank}. {username} - Reacciones: {count}",
+    "weekly_no_data": "Aún no hay reacciones registradas esta semana.",
     "back_to_main_menu": "Has regresado al centro del Diván. Elige por dónde seguir explorando.",
     # Botones
     "profile_achievements_button_text": "🏅 Mis Logros",
@@ -86,8 +89,15 @@ BOT_MESSAGES = {
     "daily_gift_disabled": "Regalos diarios deshabilitados.",
     "minigames_disabled": "Minijuegos deshabilitados.",
     "dice_points": "Ganaste {points} puntos lanzando el dado.",
+    "roulette_no_free": "Ya usaste tu tiro gratis. Compra giros extra.",
+    "roulette_result": "Resultado {score}, ganaste {points} puntos.",
+    "roulette_bought": "Tiro extra comprado.",
+    "roulette_buy_fail": "No tienes puntos suficientes.",
     "trivia_correct": "¡Correcto! +5 puntos",
     "trivia_wrong": "Respuesta incorrecta.",
+    "reto_start": "Reacciona a {target} publicaciones en {seconds} segundos.",
+    "reto_success": "¡Reto completado!",
+    "reto_failed": "No completaste el reto y perdiste puntos.",
     "unrecognized_command_text": "Comando no reconocido. Aquí está el menú principal:",
     # Notificaciones de gamificación
     "challenge_completed": "🎯 ¡Desafío {challenge_type} completado! +{points} puntos",
@@ -105,6 +115,8 @@ BOT_MESSAGES = {
     "level_created": "✅ Nivel creado correctamente.",
     "level_updated": "✅ Nivel actualizado.",
     "level_deleted": "❌ Nivel eliminado.",
+    "auto_mission_reaction_name": "Reaccionar a la publicación",
+    "auto_mission_reaction_desc": "Pulsa cualquier reacción para completar la misión.",
 }
 
 # Textos descriptivos para las insignias disponibles en el sistema.

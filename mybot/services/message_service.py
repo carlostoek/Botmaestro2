@@ -9,6 +9,7 @@ from .config_service import ConfigService
 from database.models import ButtonReaction
 from keyboards.common import get_interactive_post_kb
 from utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
+from services.mission_service import MissionService
 
 
 class MessageService:
@@ -60,6 +61,9 @@ class MessageService:
                         sent.message_id,
                         [ReactionTypeEmoji(emoji=r) for r in vip_reactions],
                     )
+            # Create a reaction mission for this post
+            mission_service = MissionService(self.session)
+            await mission_service.ensure_reaction_mission(sent.message_id)
             return sent
         except (TelegramBadRequest, TelegramForbiddenError, TelegramAPIError):
             return False
