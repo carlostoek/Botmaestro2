@@ -177,8 +177,8 @@ class FreeChannelService:
             try:
                 # Aprobar la solicitud en Telegram
                 await self.bot.approve_chat_join_request(
-                    request.chat_id, 
-                    request.user_id
+                    str(request.chat_id),
+                    str(request.user_id)
                 )
                 
                 # Marcar como aprobada en la base de datos
@@ -194,7 +194,7 @@ class FreeChannelService:
                 
                 try:
                     await self.bot.send_message(
-                        request.user_id,
+                        str(request.user_id),
                         welcome_message,
                         parse_mode="Markdown"
                     )
@@ -294,7 +294,7 @@ class FreeChannelService:
                 
                 if media_group:
                     messages = await self.bot.send_media_group(
-                        chat_id=free_channel_id,
+                        chat_id=str(free_channel_id),
                         media=media_group,
                         protect_content=protect_content
                     )
@@ -309,7 +309,7 @@ class FreeChannelService:
                 
                 if media_type == 'photo':
                     sent_message = await self.bot.send_photo(
-                        chat_id=free_channel_id,
+                        chat_id=str(free_channel_id),
                         photo=file_id,
                         caption=text,
                         reply_markup=reply_markup,
@@ -318,7 +318,7 @@ class FreeChannelService:
                     )
                 elif media_type == 'video':
                     sent_message = await self.bot.send_video(
-                        chat_id=free_channel_id,
+                        chat_id=str(free_channel_id),
                         video=file_id,
                         caption=text,
                         reply_markup=reply_markup,
@@ -327,7 +327,7 @@ class FreeChannelService:
                     )
                 elif media_type == 'document':
                     sent_message = await self.bot.send_document(
-                        chat_id=free_channel_id,
+                        chat_id=str(free_channel_id),
                         document=file_id,
                         caption=text,
                         reply_markup=reply_markup,
@@ -336,7 +336,7 @@ class FreeChannelService:
                     )
                 elif media_type == 'audio':
                     sent_message = await self.bot.send_audio(
-                        chat_id=free_channel_id,
+                        chat_id=str(free_channel_id),
                         audio=file_id,
                         caption=text,
                         reply_markup=reply_markup,
@@ -346,7 +346,7 @@ class FreeChannelService:
                 else:
                     # Fallback a mensaje de texto
                     sent_message = await self.bot.send_message(
-                        chat_id=free_channel_id,
+                        chat_id=str(free_channel_id),
                         text=text,
                         reply_markup=reply_markup,
                         protect_content=protect_content,
@@ -355,7 +355,7 @@ class FreeChannelService:
             else:
                 # Mensaje de texto simple
                 sent_message = await self.bot.send_message(
-                    chat_id=free_channel_id,
+                    chat_id=str(free_channel_id),
                     text=text,
                     reply_markup=reply_markup,
                     protect_content=protect_content,
@@ -401,10 +401,10 @@ class FreeChannelService:
                 
                 # Información del canal
                 try:
-                    chat_info = await self.bot.get_chat(free_channel_id)
+                    chat_info = await self.bot.get_chat(str(free_channel_id))
                     stats["channel_title"] = chat_info.title
                     stats["channel_username"] = chat_info.username
-                    stats["channel_member_count"] = await self.bot.get_chat_member_count(free_channel_id)
+                    stats["channel_member_count"] = await self.bot.get_chat_member_count(str(free_channel_id))
                 except Exception as e:
                     logger.warning(f"Could not get channel info: {e}")
                     

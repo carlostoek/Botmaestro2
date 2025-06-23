@@ -52,15 +52,15 @@ class MessageService:
         try:
             buttons = await channel_service.get_reactions(channel_id)
             sent = await self.bot.send_message(
-                channel_id,
+                str(channel_id),
                 text,
                 reply_markup=get_interactive_post_kb(0, buttons, None, channel_id),
 
             )
             counts = await self.get_reaction_counts(sent.message_id)
             await self.bot.edit_message_reply_markup(
-                channel_id,
-                sent.message_id,
+                str(channel_id),
+                str(sent.message_id),
                 reply_markup=get_interactive_post_kb(
 
                     sent.message_id, buttons, counts, channel_id
@@ -71,8 +71,8 @@ class MessageService:
                 vip_reactions = await config.get_vip_reactions()
                 if vip_reactions:
                     await self.bot.set_message_reaction(
-                        channel_id,
-                        sent.message_id,
+                        str(channel_id),
+                        str(sent.message_id),
                         [ReactionTypeEmoji(emoji=r) for r in vip_reactions],
                     )
             return sent
@@ -125,8 +125,8 @@ class MessageService:
         buttons = await config.get_reaction_buttons()
         try:
             await self.bot.edit_message_reply_markup(
-                chat_id,
-                message_id,
+                str(chat_id),
+                str(message_id),
  
                 reply_markup=get_interactive_post_kb(
                     message_id,
