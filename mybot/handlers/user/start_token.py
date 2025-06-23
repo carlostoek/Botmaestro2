@@ -94,9 +94,14 @@ async def start_with_token(message: Message, command: CommandObject, session: As
             logger.error(f"Failed to create VIP invite link: {e}")
             invite_link = None
 
-    # Send welcome message with invite link
+    # Mensaje inicial de la Señorita Kinky
+    await message.answer(
+        BOT_MESSAGES["vip_first_welcome"]
+    )
+
+    # Mensaje posterior del Mayordomo con detalles e invitación
     if invite_link:
-        welcome_msg = (
+        butler_msg = (
             f"🎉 ¡Bienvenido al VIP!\n\n"
             f"Tu suscripción VIP ha sido activada por {duration} días.\n"
             f"Expira el: {expires_at.strftime('%d/%m/%Y %H:%M')}\n\n"
@@ -104,14 +109,14 @@ async def start_with_token(message: Message, command: CommandObject, session: As
             f"⚠️ Este enlace es personal y expira en 24 horas."
         )
     else:
-        welcome_msg = (
+        butler_msg = (
             f"🎉 ¡Suscripción VIP activada!\n\n"
             f"Duración: {duration} días\n"
             f"Expira el: {expires_at.strftime('%d/%m/%Y %H:%M')}\n\n"
-            f"Usa /vip_menu para acceder a tus beneficios VIP."
+            f"Usa /vip_menu para acceder a sus beneficios VIP."
         )
 
-    await message.answer(welcome_msg)
+    await message.answer(butler_msg)
     logger.info(f"VIP activation completed for user {user_id}")
 
     # Clear role cache again to ensure the new role is detected immediately
