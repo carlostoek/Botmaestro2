@@ -105,7 +105,7 @@ class MessageService:
             )
 
             .where(ButtonReaction.message_id == message_id)
-            
+            .
         )
         result = await self.session.execute(stmt)
         return {row[0]: row[1] for row in result.all()}
