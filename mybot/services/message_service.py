@@ -105,7 +105,7 @@ class MessageService:
             )
 
             .where(ButtonReaction.message_id == message_id)
-            .
+            .group_by(ButtonReaction.reaction_type)
         )
         result = await self.session.execute(stmt)
         return {row[0]: row[1] for row in result.all()}
@@ -128,7 +128,6 @@ class MessageService:
                     buttons,
                     counts,
                 ),
-=
             )
         except TelegramBadRequest:
             pass
