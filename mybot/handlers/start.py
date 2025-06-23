@@ -12,6 +12,9 @@ from utils.menu_manager import menu_manager
 from utils.menu_factory import menu_factory 
 from utils.user_roles import clear_role_cache, is_admin
 from services.tenant_service import TenantService
+from services.subscription_service import SubscriptionService
+from services.config_service import ConfigService
+from utils.config import VIP_CHANNEL_ID
 import logging
 
 logger = logging.getLogger(__name__)
@@ -62,7 +65,31 @@ async def cmd_start(message: Message, session: AsyncSession):
         if updated:
             await session.commit()
             logger.info(f"Updated user info: {user_id}")
-    
+
+    # --- Verify VIP channel membership and update role if necessary ---
+    config_service = ConfigService(session)
+    vip_channel_id = await config_service.get_vip_channel_id()
+    if not vip_channel_id:
+        vip_channel_id = VIP_CHANNEL_ID
+
+    if vip_channel_id:
+        try:
+            member = await message.bot.get_chat_member(vip_channel_id, user_id)
+            in_channel = member.status in {"member", "administrator", "creator"}
+        except Exception as e:
+            logger.warning(
+                f"Failed VIP membership check for user {user_id}: {e}"
+            )
+            in_channel = False
+
+        if not in_channel and user.role == "vip":
+            sub_service = SubscriptionService(session)
+            await sub_service.revoke_subscription(user_id)
+            clear_role_cache(user_id)
+            logger.info(
+                f"User {user_id} removed from VIP role due to missing channel"
+            )
+
     # Check if this is an admin
     if is_admin(user_id):
         tenant_service = TenantService(session)
