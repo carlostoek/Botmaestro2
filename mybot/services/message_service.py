@@ -54,8 +54,7 @@ class MessageService:
             sent = await self.bot.send_message(
                 channel_id,
                 text,
-- 
-                reply_markup=get_interactive_post_kb(0, buttons, channel_id),
+                reply_markup=get_interactive_post_kb(0, buttons, None, channel_id),
 
             )
             counts = await self.get_reaction_counts(sent.message_id)
@@ -64,7 +63,7 @@ class MessageService:
                 sent.message_id,
                 reply_markup=get_interactive_post_kb(
 
-                    sent.message_id, buttons, channel_id
+                    sent.message_id, buttons, counts, channel_id
 
                 ),
             )
