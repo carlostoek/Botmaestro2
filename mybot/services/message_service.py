@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from aiogram import Bot
 from aiogram.types import Message, ReactionTypeEmoji
-from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError, TelegramAPIError
+from aiogram.exceptions import (
+    TelegramBadRequest,
+    TelegramForbiddenError,
+    TelegramAPIError,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from .config_service import ConfigService
 from .channel_service import ChannelService
@@ -50,13 +54,18 @@ class MessageService:
             sent = await self.bot.send_message(
                 channel_id,
                 text,
+- 
                 reply_markup=get_interactive_post_kb(0, buttons, channel_id),
+
             )
+            counts = await self.get_reaction_counts(sent.message_id)
             await self.bot.edit_message_reply_markup(
                 channel_id,
                 sent.message_id,
                 reply_markup=get_interactive_post_kb(
+
                     sent.message_id, buttons, channel_id
+
                 ),
             )
             if channel_type == "vip":
@@ -91,3 +100,40 @@ class MessageService:
         await self.session.commit()
         await self.session.refresh(reaction)
         return reaction
+
+    async def get_reaction_counts(self, message_id: int) -> dict[str, int]:
+        """Return reaction counts for the given message."""
+        stmt = (
+
+            select(
+                ButtonReaction.reaction_type,
+                func.count(ButtonReaction.id),
+            )
+
+            .where(ButtonReaction.message_id == message_id)
+            .group_by(ButtonReaction.reaction_type)
+        )
+        result = await self.session.execute(stmt)
+        return {row[0]: row[1] for row in result.all()}
+
+
+    async def update_reaction_markup(
+        self, chat_id: int, message_id: int
+    ) -> None:
+        """Update the inline keyboard with reaction counts."""
+        counts = await self.get_reaction_counts(message_id)
+        config = ConfigService(self.session)
+        buttons = await config.get_reaction_buttons()
+        try:
+            await self.bot.edit_message_reply_markup(
+                chat_id,
+                message_id,
+ 
+                reply_markup=get_interactive_post_kb(
+                    message_id,
+                    buttons,
+                    counts,
+                ),
+            )
+        except TelegramBadRequest:
+            pass
