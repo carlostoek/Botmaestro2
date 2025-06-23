@@ -7,7 +7,6 @@ from aiogram.exceptions import (
     TelegramForbiddenError,
     TelegramAPIError,
 )
-import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
@@ -16,8 +15,6 @@ from .channel_service import ChannelService
 from database.models import ButtonReaction
 from keyboards.common import get_interactive_post_kb
 from utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
-
-logger = logging.getLogger(__name__)
 
 
 class MessageService:
@@ -55,41 +52,31 @@ class MessageService:
         try:
             buttons = await channel_service.get_reactions(channel_id)
             sent = await self.bot.send_message(
-                str(channel_id),
+                channel_id,
                 text,
                 reply_markup=get_interactive_post_kb(0, buttons, None, channel_id),
 
             )
             counts = await self.get_reaction_counts(sent.message_id)
-            markup_to_edit = get_interactive_post_kb(
-                sent.message_id, buttons, counts, channel_id
-            )
-            logger.debug("Markup being sent for edit: %s", markup_to_edit)
             await self.bot.edit_message_reply_markup(
-                str(channel_id),
-                str(sent.message_id),
-                reply_markup=markup_to_edit,
+                channel_id,
+                sent.message_id,
+                reply_markup=get_interactive_post_kb(
+
+                    sent.message_id, buttons, counts, channel_id
+
+                ),
             )
             if channel_type == "vip":
                 vip_reactions = await config.get_vip_reactions()
                 if vip_reactions:
-                    try:
-                        await self.bot.set_message_reaction(
-                            str(channel_id),
-                            str(sent.message_id),
-                            [ReactionTypeEmoji(emoji=r) for r in vip_reactions],
-                        )
-                    except TelegramAPIError as e:
-                        logger.error(
-                            f"Error setting reactions for message {sent.message_id} in {channel_id}: {e}",
-                            exc_info=True,
-                        )
+                    await self.bot.set_message_reaction(
+                        channel_id,
+                        sent.message_id,
+                        [ReactionTypeEmoji(emoji=r) for r in vip_reactions],
+                    )
             return sent
-        except (TelegramBadRequest, TelegramForbiddenError, TelegramAPIError) as e:
-            logger.error(
-                f"Failed to send interactive post to channel {channel_id}: {e}",
-                exc_info=True,
-            )
+        except (TelegramBadRequest, TelegramForbiddenError, TelegramAPIError):
             return False
 
     async def register_reaction(
@@ -138,8 +125,8 @@ class MessageService:
         buttons = await config.get_reaction_buttons()
         try:
             await self.bot.edit_message_reply_markup(
-                str(chat_id),
-                str(message_id),
+                chat_id,
+                message_id,
  
                 reply_markup=get_interactive_post_kb(
                     message_id,

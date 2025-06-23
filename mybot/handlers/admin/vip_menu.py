@@ -293,11 +293,10 @@ async def vip_send_channel_post(callback: CallbackQuery, state: FSMContext):
 async def process_vip_channel_post(message: Message, state: FSMContext, session: AsyncSession, bot: Bot):
     if not is_admin(message.from_user.id):
         return
-    text = message.text or ""
-    await state.update_data(post_text=text)
+    await state.update_data(post_text=message.text)
     await send_clean_message(
         message,
-        f"📋 **Previsualización:**\n{text}\n\n¿Deseas publicarlo en el canal VIP?",
+        f"📋 **Previsualización:**\n{message.text}\n\n¿Deseas publicarlo en el canal VIP?",
         reply_markup=get_post_confirmation_keyboard(),
     )
     await state.set_state(AdminContentStates.confirming_channel_post)
@@ -308,7 +307,7 @@ async def confirm_vip_channel_post(callback: CallbackQuery, state: FSMContext, s
     if not is_admin(callback.from_user.id):
         return await callback.answer()
     data = await state.get_data()
-    text = str(data.get("post_text") or "")
+    text = data.get("post_text")
     service = MessageService(session, bot)
     sent = await service.send_interactive_post(text, "vip")
     if sent is None:
