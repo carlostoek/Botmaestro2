@@ -176,6 +176,25 @@ async def vip_badges(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
 
+@router.callback_query(F.data == "vip_minigames")
+async def vip_minigames(callback: CallbackQuery, session: AsyncSession):
+    if await get_user_role(callback.bot, callback.from_user.id, session=session) != "vip":
+        await callback.answer(
+            BOT_MESSAGES.get(
+                "vip_members_only",
+                "Esta sección está disponible solo para miembros VIP.",
+            ),
+            show_alert=True,
+        )
+        return
+    from keyboards.minigames_kb import get_minigames_kb
+
+    await callback.message.edit_text(
+        "Selecciona un minijuego:", reply_markup=get_minigames_kb()
+    )
+    await callback.answer()
+
+
 @router.callback_query(F.data == "vip_game")
 async def vip_game(callback: CallbackQuery, session: AsyncSession):
     if await get_user_role(callback.bot, callback.from_user.id, session=session) != "vip":

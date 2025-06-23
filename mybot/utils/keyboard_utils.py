@@ -18,6 +18,7 @@ def get_main_menu_keyboard():
         [InlineKeyboardButton(text="🎁 Recompensas", callback_data="menu:rewards")],
         [InlineKeyboardButton(text="🏛️ Subastas", callback_data="auction_main")],
         [InlineKeyboardButton(text="🏆 Ranking", callback_data="menu:ranking")],
+        [InlineKeyboardButton(text="🕹 Minijuegos", callback_data="vip_minigames")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
