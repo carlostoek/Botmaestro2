@@ -45,6 +45,7 @@ export VIP_SCHEDULER_INTERVAL="3600"    # Segundos entre verificaciones VIP
 
 ```bash
 python scripts/init_db.py
+python scripts/migrate_vip_columns.py  # Agrega columnas is_vip y vip_last_checked
 ```
 
 ### 4. Ejecutar el Bot
