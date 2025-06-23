@@ -22,51 +22,38 @@ def is_admin(user_id: int) -> bool:
     return user_id in ADMIN_IDS
 
 
-async def is_vip_member(
-    bot: Bot,
-    user_id: int,
-    session: AsyncSession | None = None,
-    *,
-    force_check: bool = False,
-) -> bool:
-    """Check if the user should be considered a VIP.
-
-    Membership is cached in the ``users`` table using the ``is_vip`` and
-    ``vip_last_checked`` fields. If the last validation was less than
-    30 minutes ago and ``force_check`` is False, the cached value is used.
-    """
+async def is_vip_member(bot: Bot, user_id: int, session: AsyncSession | None = None) -> bool:
+    """Check if the user should be considered a VIP."""
     from services.config_service import ConfigService
 
-    now = datetime.utcnow()
-    db_value: bool | None = None
-    user: User | None = None
-
+    # First check database subscription status
     if session:
         try:
+            # Check if user has active VIP subscription in database
             user = await session.get(User, user_id)
-            if user and not force_check and user.vip_last_checked and (now - user.vip_last_checked) < timedelta(minutes=30):
-                logger.debug(
-                    f"Using cached VIP status for {user_id}: {user.is_vip}"
-                )
-                return bool(user.is_vip)
-
-            # Preserve possible subscription based status
-            if user and user.role == "vip" and (
-                user.vip_expires_at is None or user.vip_expires_at > now
-            ):
-                db_value = True
-
+            if user and user.role == "vip":
+                # Check if subscription is still valid
+                if user.vip_expires_at is None or user.vip_expires_at > datetime.utcnow():
+                    logger.debug(f"User {user_id} is VIP via database record")
+                    return True
+                else:
+                    # Subscription expired, update role
+                    user.role = "free"
+                    await session.commit()
+                    logger.info(f"User {user_id} VIP subscription expired, updated to free")
+            
+            # Also check VipSubscription table
             stmt = select(VipSubscription).where(VipSubscription.user_id == user_id)
             result = await session.execute(stmt)
             subscription = result.scalar_one_or_none()
-            if subscription and (
-                subscription.expires_at is None or subscription.expires_at > now
-            ):
-                db_value = True
+            if subscription:
+                if subscription.expires_at is None or subscription.expires_at > datetime.utcnow():
+                    logger.debug(f"User {user_id} is VIP via subscription table")
+                    return True
+                else:
+                    logger.debug(f"User {user_id} subscription expired")
         except Exception as e:
-            logger.error(
-                f"Error checking VIP status in database for user {user_id}: {e}"
-            )
+            logger.error(f"Error checking VIP status in database for user {user_id}: {e}")
 
     # Fallback to channel membership check
     vip_channel_id = VIP_CHANNEL_ID
@@ -86,23 +73,11 @@ async def is_vip_member(
     try:
         member = await bot.get_chat_member(vip_channel_id, user_id)
         is_member = member.status in {"member", "administrator", "creator"}
-        logger.debug(
-            f"User {user_id} channel membership check: {is_member} (status: {member.status})"
-        )
-        if session and user:
-            user.is_vip = is_member
-            user.vip_last_checked = now
-            await session.commit()
-        return is_member or bool(db_value)
+        logger.debug(f"User {user_id} channel membership check: {is_member} (status: {member.status})")
+        return is_member
     except Exception as e:
-        logger.warning(
-            f"Error checking channel membership for user {user_id}: {e}"
-        )
-        if session and user:
-            user.is_vip = False
-            user.vip_last_checked = now
-            await session.commit()
-        return bool(db_value)
+        logger.warning(f"Error checking channel membership for user {user_id}: {e}")
+        return False
 
 
 async def get_points_multiplier(bot: Bot, user_id: int, session: AsyncSession | None = None) -> int:
