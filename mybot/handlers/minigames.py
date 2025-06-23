@@ -61,3 +61,28 @@ async def trivia_answer(callback: CallbackQuery, session: AsyncSession, bot: Bot
     else:
         await callback.message.edit_text(BOT_MESSAGES.get("trivia_wrong", "Respuesta incorrecta."))
     await callback.answer()
+
+
+@router.callback_query(F.data == "play_dice")
+async def play_dice_cb(callback: CallbackQuery, session: AsyncSession, bot: Bot):
+    config = ConfigService(session)
+    if (await config.get_value("minigames_enabled")) == "false":
+        return await callback.answer(BOT_MESSAGES.get("minigames_disabled", "Minijuegos deshabilitados."), show_alert=True)
+    dice_msg = await bot.send_dice(callback.message.chat.id)
+    score = dice_msg.dice.value
+    await PointService(session).add_points(callback.from_user.id, score, bot=bot)
+    await callback.answer(BOT_MESSAGES.get("dice_points", "Ganaste {points} puntos").format(points=score), show_alert=True)
+
+
+@router.callback_query(F.data == "play_trivia")
+async def play_trivia_cb(callback: CallbackQuery, session: AsyncSession):
+    config = ConfigService(session)
+    if (await config.get_value("minigames_enabled")) == "false":
+        return await callback.answer(BOT_MESSAGES.get("minigames_disabled", "Minijuegos deshabilitados."), show_alert=True)
+    q = random.choice(TRIVIA)
+    buttons = [
+        [InlineKeyboardButton(text=opt, callback_data="trivia_correct" if i == q["answer"] else "trivia_wrong")]
+        for i, opt in enumerate(q["opts"])
+    ]
+    await callback.message.edit_text(q["q"], reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons))
+    await callback.answer()
