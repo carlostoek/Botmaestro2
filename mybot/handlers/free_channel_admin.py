@@ -345,7 +345,7 @@ async def confirm_and_send_post(callback: CallbackQuery, state: FSMContext, sess
     sent_message = await free_service.send_message_to_channel(
         text=data.get("post_text", ""),
         protect_content=protect_content,
-        reply_markup=get_interactive_post_kb(0, buttons, channel_id),
+        reply_markup=get_interactive_post_kb(0, buttons, None, channel_id),
         media_files=data.get("media_files", [])
     )
 
@@ -354,7 +354,7 @@ async def confirm_and_send_post(callback: CallbackQuery, state: FSMContext, sess
             channel_id,
             sent_message.message_id,
             reply_markup=get_interactive_post_kb(
-                sent_message.message_id, buttons, channel_id
+                sent_message.message_id, buttons, None, channel_id
             ),
         )
     
