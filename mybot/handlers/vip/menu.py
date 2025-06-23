@@ -13,7 +13,6 @@ from utils.keyboard_utils import (
     get_main_menu_keyboard,
     get_missions_keyboard,
 )
-from keyboards.minigames_kb import get_minigames_kb
 from keyboards.vip_main_kb import get_vip_main_kb
 from utils.messages import BOT_MESSAGES
 from utils.message_utils import get_profile_message
@@ -257,24 +256,6 @@ async def gain_points(callback: CallbackQuery, session: AsyncSession):
             "Participa en misiones y actividades para ganar puntos."
         ),
         reply_markup=get_back_keyboard("vip_game")
-    )
-    await callback.answer()
-
-
-@router.callback_query(F.data == "game_minigames")
-async def game_minigames(callback: CallbackQuery, session: AsyncSession):
-    if await get_user_role(callback.bot, callback.from_user.id, session=session) != "vip":
-        await callback.answer(
-            BOT_MESSAGES.get(
-                "vip_members_only",
-                "Esta sección está disponible solo para miembros VIP."
-            ),
-            show_alert=True,
-        )
-        return
-
-    await callback.message.edit_text(
-        "Elige un minijuego:", reply_markup=get_minigames_kb("vip_game")
     )
     await callback.answer()
 

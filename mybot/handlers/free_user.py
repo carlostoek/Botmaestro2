@@ -11,7 +11,6 @@ from keyboards.subscription_kb import get_free_main_menu_kb, get_vip_explore_kb
 from keyboards.packs_kb import get_packs_list_kb, get_pack_detail_kb
 from utils.messages import BOT_MESSAGES
 from utils.keyboard_utils import get_back_keyboard
-from keyboards.minigames_kb import get_minigames_kb
 from utils.notify_admins import notify_admins
 
 router = Router()
@@ -107,7 +106,7 @@ async def cb_free_game(callback: CallbackQuery, session: AsyncSession):
     await menu_manager.update_menu(
         callback,
         BOT_MESSAGES.get("FREE_GAME_TEXT", "Mini juego"),
-        get_minigames_kb("free_main_menu"),
+        get_back_keyboard("free_main_menu"),
         session,
         "free_game",
     )
