@@ -17,14 +17,9 @@ def get_interactive_post_kb(
     counts: dict[str, int] | None = None,
     channel_id: int | None = None,
 ) -> InlineKeyboardMarkup:
-    """Return a keyboard with reaction buttons for channel posts.
-
-    The markup is always returned as an ``InlineKeyboardMarkup`` instance even
-    when no buttons are provided.
-    """
-    texts = [t for t in (buttons or DEFAULT_REACTION_BUTTONS) if t]
+    """Keyboard with reaction buttons for channel posts."""
+    texts = buttons if buttons else DEFAULT_REACTION_BUTTONS
     builder = InlineKeyboardBuilder()
-
     for idx, text in enumerate(texts[:10]):
         count = counts.get(f"r{idx}", 0) if counts else 0
         display = f"{text} {count}" if counts else text
@@ -33,8 +28,5 @@ def get_interactive_post_kb(
         else:
             cb_data = f"ip_r{idx}_{message_id}"
         builder.button(text=display, callback_data=cb_data)
-
-    if texts:
-        builder.adjust(min(len(texts[:10]), 5))
-
+    builder.adjust(len(texts[:10]))
     return builder.as_markup()
