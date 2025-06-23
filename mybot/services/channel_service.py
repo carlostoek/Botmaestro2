@@ -24,6 +24,41 @@ class ChannelService:
         await self.session.refresh(channel)
         return channel
 
+    async def set_reactions(
+        self, chat_id: int, reactions: list[str], points: list[float] | None = None
+    ) -> Channel:
+        channel = await self.session.get(Channel, chat_id)
+        if not channel:
+            channel = Channel(id=chat_id)
+            self.session.add(channel)
+        channel.reactions = ";".join(reactions)
+        if points is not None:
+            channel.reaction_points = ";".join(str(p) for p in points)
+        await self.session.commit()
+        await self.session.refresh(channel)
+        return channel
+
+    async def get_reactions(self, chat_id: int) -> list[str]:
+        channel = await self.session.get(Channel, chat_id)
+        if channel and channel.reactions:
+            texts = [t.strip() for t in channel.reactions.split(";") if t.strip()]
+            if texts:
+                return texts[:10]
+        from utils.config import DEFAULT_REACTION_BUTTONS
+
+        return DEFAULT_REACTION_BUTTONS
+
+    async def get_reaction_points(self, chat_id: int) -> list[float]:
+        channel = await self.session.get(Channel, chat_id)
+        if channel and channel.reaction_points:
+            try:
+                pts = [float(p) for p in channel.reaction_points.split(";") if p.strip()]
+                return pts[:10]
+            except ValueError:
+                pass
+        reactions = await self.get_reactions(chat_id)
+        return [0.5] * len(reactions)
+
     async def list_channels(self) -> list[Channel]:
         result = await self.session.execute(select(Channel))
         return list(result.scalars().all())

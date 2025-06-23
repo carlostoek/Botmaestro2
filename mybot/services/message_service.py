@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from .config_service import ConfigService
+from .channel_service import ChannelService
 from database.models import ButtonReaction
 from keyboards.common import get_interactive_post_kb
 from utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
@@ -29,6 +30,7 @@ class MessageService:
         errors.
         """
         config = ConfigService(self.session)
+        channel_service = ChannelService(self.session)
         channel_type = channel_type.lower()
         if channel_type == "vip":
             channel_id = await config.get_vip_channel_id()
@@ -44,14 +46,18 @@ class MessageService:
             return None
 
         try:
-            buttons = await config.get_reaction_buttons()
+            buttons = await channel_service.get_reactions(channel_id)
             sent = await self.bot.send_message(
-                channel_id, text, reply_markup=get_interactive_post_kb(0, buttons)
+                channel_id,
+                text,
+                reply_markup=get_interactive_post_kb(0, buttons, channel_id),
             )
             await self.bot.edit_message_reply_markup(
                 channel_id,
                 sent.message_id,
-                reply_markup=get_interactive_post_kb(sent.message_id, buttons),
+                reply_markup=get_interactive_post_kb(
+                    sent.message_id, buttons, channel_id
+                ),
             )
             if channel_type == "vip":
                 vip_reactions = await config.get_vip_reactions()

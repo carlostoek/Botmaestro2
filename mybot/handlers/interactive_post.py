@@ -3,6 +3,8 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.message_service import MessageService
+from services.channel_service import ChannelService
+from services.config_service import ConfigService
 
 router = Router()
 
@@ -12,14 +14,25 @@ async def handle_interactive_post_callback(
     callback: CallbackQuery, session: AsyncSession, bot: Bot
 ):
     parts = callback.data.split("_")
-    if len(parts) < 3:
-        return await callback.answer()
-    reaction_type = parts[1]  # e.g. 'r0'
-    try:
-        message_id = int(parts[2])
-    except ValueError:
-        return await callback.answer()
-
+    channel_id = None
+    if len(parts) == 4:
+        # New format: ip_<channel_id>_r<idx>_<message_id>
+        try:
+            channel_id = int(parts[1])
+            reaction_type = parts[2]
+            message_id = int(parts[3])
+        except ValueError:
+            return await callback.answer()
+    elif len(parts) >= 3:
+        # Legacy format without channel id
+        reaction_type = parts[1]
+        try:
+            message_id = int(parts[2])
+        except ValueError:
+            return await callback.answer()
+        config = ConfigService(session)
+        channel_id = await config.get_vip_channel_id()
+    
     service = MessageService(session, bot)
 
     reaction = await service.register_reaction(
@@ -32,11 +45,10 @@ async def handle_interactive_post_callback(
 
         return
     from services.point_service import PointService
-    from services.config_service import ConfigService
     from utils.messages import BOT_MESSAGES
 
-    config = ConfigService(session)
-    points_list = await config.get_reaction_points()
+    channel_service = ChannelService(session)
+    points_list = await channel_service.get_reaction_points(channel_id)
     idx = 0
     try:
         idx = int(reaction_type[1:])

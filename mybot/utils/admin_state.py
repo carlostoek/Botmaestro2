@@ -65,6 +65,9 @@ class AdminConfigStates(StatesGroup):
 
     waiting_for_reaction_buttons = State()
     waiting_for_reaction_points = State()
+    waiting_for_reaction_channel = State()
+    waiting_for_channel_reaction_buttons = State()
+    waiting_for_channel_reaction_points = State()
     waiting_for_vip_reactions = State()
     waiting_for_channel_choice = State()
     waiting_for_channel_interval = State()

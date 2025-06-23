@@ -12,6 +12,7 @@ from keyboards.admin_config_kb import (
     get_channel_type_kb,
     get_config_done_kb,
     get_reaction_confirm_kb,
+    get_reaction_channel_kb,
 )
 from utils.keyboard_utils import get_back_keyboard
 from services.config_service import ConfigService
@@ -39,16 +40,37 @@ async def config_menu(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
 
-@router.callback_query(F.data == "config_reaction_buttons")
-async def prompt_reaction_buttons(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
+@router.callback_query(F.data == "config_channel_reactions")
+async def select_reaction_channel(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
     if not is_admin(callback.from_user.id):
         return await callback.answer()
+    await callback.message.edit_text(
+        "¿Qué canal deseas configurar?",
+        reply_markup=get_reaction_channel_kb(),
+    )
+    await state.set_state(AdminConfigStates.waiting_for_reaction_channel)
+    await callback.answer()
+
+
+@router.callback_query(AdminConfigStates.waiting_for_reaction_channel, F.data.startswith("reaction_channel_"))
+async def prompt_channel_reaction_buttons(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    choice = callback.data.split("_")[-1]
+    config = ConfigService(session)
+    if choice == "vip":
+        channel_id = await config.get_vip_channel_id()
+    else:
+        channel_id = await config.get_free_channel_id()
+    if channel_id is None:
+        await callback.answer("Canal no configurado", show_alert=True)
+        return
     await callback.message.edit_text(
         "Envía el emoji para la primera reacción:",
         reply_markup=get_back_keyboard("admin_config"),
     )
-    await state.update_data(reactions=[], reaction_points=[])
-    await state.set_state(AdminConfigStates.waiting_for_reaction_buttons)
+    await state.update_data(reaction_channel_id=channel_id, reactions=[], reaction_points=[])
+    await state.set_state(AdminConfigStates.waiting_for_channel_reaction_buttons)
     await callback.answer()
 
 
@@ -65,7 +87,12 @@ async def prompt_vip_reactions(callback: CallbackQuery, session: AsyncSession, s
     await callback.answer()
 
 
-@router.message(AdminConfigStates.waiting_for_reaction_buttons)
+@router.message(
+    StateFilter(
+        AdminConfigStates.waiting_for_reaction_buttons,
+        AdminConfigStates.waiting_for_channel_reaction_buttons,
+    )
+)
 async def set_reaction_buttons(message: Message, state: FSMContext, session: AsyncSession):
     if not is_admin(message.from_user.id):
         return
@@ -81,10 +108,18 @@ async def set_reaction_buttons(message: Message, state: FSMContext, session: Asy
     reactions.append(message.text.strip())
     await state.update_data(reactions=reactions, reaction_points=points)
     await message.answer("Ingresa los puntos para esta reacción:")
-    await state.set_state(AdminConfigStates.waiting_for_reaction_points)
+    if await state.get_state() == AdminConfigStates.waiting_for_channel_reaction_buttons.state:
+        await state.set_state(AdminConfigStates.waiting_for_channel_reaction_points)
+    else:
+        await state.set_state(AdminConfigStates.waiting_for_reaction_points)
 
 
-@router.message(AdminConfigStates.waiting_for_reaction_points)
+@router.message(
+    StateFilter(
+        AdminConfigStates.waiting_for_reaction_points,
+        AdminConfigStates.waiting_for_channel_reaction_points,
+    )
+)
 async def set_reaction_points_value(message: Message, state: FSMContext, session: AsyncSession):
     if not is_admin(message.from_user.id):
         return
@@ -103,7 +138,11 @@ async def set_reaction_points_value(message: Message, state: FSMContext, session
     else:
         text = "Reacción registrada. Envía otro emoji o presiona Aceptar."
     await message.answer(text, reply_markup=get_reaction_confirm_kb())
-    await state.set_state(AdminConfigStates.waiting_for_reaction_buttons)
+    current_state = await state.get_state()
+    if current_state == AdminConfigStates.waiting_for_channel_reaction_points.state:
+        await state.set_state(AdminConfigStates.waiting_for_channel_reaction_buttons)
+    else:
+        await state.set_state(AdminConfigStates.waiting_for_reaction_buttons)
 
 
 @router.message(AdminConfigStates.waiting_for_vip_reactions)
@@ -132,6 +171,8 @@ async def set_vip_reactions(message: Message, state: FSMContext, session: AsyncS
     StateFilter(
         AdminConfigStates.waiting_for_reaction_buttons,
         AdminConfigStates.waiting_for_reaction_points,
+        AdminConfigStates.waiting_for_channel_reaction_buttons,
+        AdminConfigStates.waiting_for_channel_reaction_points,
     ),
     F.data == "save_reactions",
 )
@@ -144,12 +185,15 @@ async def save_reaction_buttons_callback(callback: CallbackQuery, state: FSMCont
     if not reactions:
         await callback.answer("Debes ingresar al menos una reacción.", show_alert=True)
         return
-    service = ConfigService(session)
-
-    await service.set_reaction_buttons(reactions)
-
-    if points:
-        await service.set_reaction_points(points)
+    channel_id = data.get("reaction_channel_id")
+    if channel_id:
+        channel_service = ChannelService(session)
+        await channel_service.set_reactions(channel_id, reactions, points if points else None)
+    else:
+        service = ConfigService(session)
+        await service.set_reaction_buttons(reactions)
+        if points:
+            await service.set_reaction_points(points)
     await callback.message.edit_text(
         "Botones de reacción actualizados.", reply_markup=get_admin_config_kb()
     )
