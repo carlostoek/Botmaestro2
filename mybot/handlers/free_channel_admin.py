@@ -12,7 +12,7 @@ from utils.menu_manager import menu_manager
 from services.free_channel_service import FreeChannelService
 from services.config_service import ConfigService
 from services.channel_service import ChannelService
-from keyboards.common import get_interactive_post_kb
+from keyboards.common import get_interactive_post_kb, get_back_kb
 from keyboards.free_channel_admin_kb import (
     get_free_channel_admin_kb,
     get_wait_time_selection_kb,
@@ -361,20 +361,29 @@ async def confirm_and_send_post(callback: CallbackQuery, state: FSMContext, sess
     if sent_message:
         protection_text = "con protección" if protect_content else "sin protección"
         media_count = len(data.get("media_files", []))
-        
-        await callback.message.edit_text(
-            f"✅ **Contenido Publicado**\n\n"
-            f"El contenido ha sido enviado al canal gratuito {protection_text}.\n\n"
-            f"📝 **ID del mensaje**: {sent_message.message_id}\n"
-            f"📎 **Archivos incluidos**: {media_count}",
-            reply_markup=get_free_channel_admin_kb(True)
+
+        await menu_manager.show_menu(
+            callback.message,
+            (
+                "✅ **Contenido Publicado**\n\n"
+                f"El contenido ha sido enviado al canal gratuito {protection_text}.\n\n"
+                f"📝 **ID del mensaje**: {sent_message.message_id}\n"
+                f"📎 **Archivos incluidos**: {media_count}"
+            ),
+            get_back_kb("admin_free_channel"),
+            session,
+            "admin_free_channel",
         )
     else:
-        await callback.message.edit_text(
-            f"❌ **Error al Publicar**\n\n"
-            f"No se pudo enviar el contenido al canal. Verifica que el bot "
-            f"tenga permisos de administrador en el canal.",
-            reply_markup=get_free_channel_admin_kb(True)
+        await menu_manager.show_menu(
+            callback.message,
+            (
+                "❌ **Error al Publicar**\n\n"
+                "No se pudo enviar el contenido al canal. Verifica que el bot tenga permisos de administrador en el canal."
+            ),
+            get_back_kb("admin_free_channel"),
+            session,
+            "admin_free_channel",
         )
     
     await state.clear()
