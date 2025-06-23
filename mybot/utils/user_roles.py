@@ -23,39 +23,10 @@ def is_admin(user_id: int) -> bool:
 
 
 async def is_vip_member(bot: Bot, user_id: int, session: AsyncSession | None = None) -> bool:
-    """Check if the user should be considered a VIP."""
+    """Determine if the user is VIP by checking channel membership and update the database accordingly."""
     from services.config_service import ConfigService
 
-    # First check database subscription status
-    if session:
-        try:
-            # Check if user has active VIP subscription in database
-            user = await session.get(User, user_id)
-            if user and user.role == "vip":
-                # Check if subscription is still valid
-                if user.vip_expires_at is None or user.vip_expires_at > datetime.utcnow():
-                    logger.debug(f"User {user_id} is VIP via database record")
-                    return True
-                else:
-                    # Subscription expired, update role
-                    user.role = "free"
-                    await session.commit()
-                    logger.info(f"User {user_id} VIP subscription expired, updated to free")
-            
-            # Also check VipSubscription table
-            stmt = select(VipSubscription).where(VipSubscription.user_id == user_id)
-            result = await session.execute(stmt)
-            subscription = result.scalar_one_or_none()
-            if subscription:
-                if subscription.expires_at is None or subscription.expires_at > datetime.utcnow():
-                    logger.debug(f"User {user_id} is VIP via subscription table")
-                    return True
-                else:
-                    logger.debug(f"User {user_id} subscription expired")
-        except Exception as e:
-            logger.error(f"Error checking VIP status in database for user {user_id}: {e}")
-
-    # Fallback to channel membership check
+    # Determine the VIP channel to check
     vip_channel_id = VIP_CHANNEL_ID
     if session:
         try:
@@ -68,16 +39,50 @@ async def is_vip_member(bot: Bot, user_id: int, session: AsyncSession | None = N
 
     if not vip_channel_id:
         logger.debug(f"No VIP channel configured, user {user_id} is not VIP")
-        return False
+        vip_channel_id = None
 
-    try:
-        member = await bot.get_chat_member(vip_channel_id, user_id)
-        is_member = member.status in {"member", "administrator", "creator"}
-        logger.debug(f"User {user_id} channel membership check: {is_member} (status: {member.status})")
-        return is_member
-    except Exception as e:
-        logger.warning(f"Error checking channel membership for user {user_id}: {e}")
-        return False
+    # Check channel membership first
+    is_member = False
+    if vip_channel_id:
+        try:
+            member = await bot.get_chat_member(vip_channel_id, user_id)
+            is_member = member.status in {"member", "administrator", "creator"}
+            logger.debug(
+                f"User {user_id} channel membership check: {is_member} (status: {member.status})"
+            )
+        except Exception as e:
+            logger.warning(f"Error checking channel membership for user {user_id}: {e}")
+
+    # Update database role based on membership
+    if session:
+        try:
+            user = await session.get(User, user_id)
+            if user:
+                new_role = "vip" if is_member else "free"
+                if user.role != new_role:
+                    user.role = new_role
+                    await session.commit()
+                    logger.info(f"User {user_id} role updated to {new_role} based on channel membership")
+        except Exception as e:
+            logger.error(f"Error updating user role for {user_id}: {e}")
+
+    if is_member:
+        return True
+
+    # If membership check failed or user not in channel, optionally fall back to database
+    if session:
+        try:
+            # Check if there is an active subscription in the database
+            stmt = select(VipSubscription).where(VipSubscription.user_id == user_id)
+            result = await session.execute(stmt)
+            subscription = result.scalar_one_or_none()
+            if subscription and (subscription.expires_at is None or subscription.expires_at > datetime.utcnow()):
+                logger.debug(f"User {user_id} considered VIP via subscription table fallback")
+                return True
+        except Exception as e:
+            logger.error(f"Error checking VIP status in database for user {user_id}: {e}")
+
+    return False
 
 
 async def get_points_multiplier(bot: Bot, user_id: int, session: AsyncSession | None = None) -> int:
@@ -96,17 +101,11 @@ async def get_user_role(
 ) -> str:
     """Return the role for the given user (admin, vip or free)."""
     now = time.time()
-    cached = _ROLE_CACHE.get(user_id)
-    
-    # Use cache only for non-admin users and only for 2 minutes
-    if cached and now < cached[1] and not is_admin(user_id):
-        logger.debug(f"Using cached role for user {user_id}: {cached[0]}")
-        return cached[0]
 
     # Check admin first (highest priority)
     if is_admin(user_id):
         role = "admin"
-        _ROLE_CACHE[user_id] = (role, now + 120)  # cache for 2 minutes
+        _ROLE_CACHE[user_id] = (role, now + 30)  # store for reference
         logger.debug(f"User {user_id} is admin")
         return role
     
@@ -122,7 +121,7 @@ async def get_user_role(
         logger.error(f"Error determining user role for {user_id}: {e}")
         role = "free"
 
-    _ROLE_CACHE[user_id] = (role, now + 120)  # cache for 2 minutes
+    _ROLE_CACHE[user_id] = (role, now + 30)  # store for reference
     return role
 
 

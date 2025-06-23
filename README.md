@@ -39,6 +39,7 @@ export DATABASE_URL="sqlite+aiosqlite:///gamification.db"  # Conexión a BD
 export VIP_POINTS_MULTIPLIER="2"        # Multiplicador de puntos VIP
 export CHANNEL_SCHEDULER_INTERVAL="30"  # Segundos entre verificaciones de canal
 export VIP_SCHEDULER_INTERVAL="3600"    # Segundos entre verificaciones VIP
+# La membresía VIP se valida también cada vez que el usuario interactúa con el bot
 ```
 
 ### 3. Inicialización de la Base de Datos
@@ -87,6 +88,7 @@ Accede al panel de administración con `/admin_menu` para:
 - **Multiplicadores Mejorados**: Puntos adicionales por actividades
 - **Subastas Exclusivas**: Participación en subastas en tiempo real
 - **Contenido Premium**: Acceso a canales y funciones exclusivas
+- **Verificación Constante**: El bot comprueba en cada interacción si sigues en el canal VIP
 
 ### 🆓 Usuarios Gratuitos
 - **Gamificación Lite**: Sistema reducido pero funcional
