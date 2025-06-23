@@ -351,10 +351,13 @@ async def confirm_and_send_post(callback: CallbackQuery, state: FSMContext, sess
 
     if sent_message:
         await callback.bot.edit_message_reply_markup(
-            channel_id,
-            sent_message.message_id,
+            str(channel_id),
+            str(sent_message.message_id),
             reply_markup=get_interactive_post_kb(
-                sent_message.message_id, buttons, None, channel_id
+                sent_message.message_id,
+                buttons,
+                None,
+                channel_id,
             ),
         )
     

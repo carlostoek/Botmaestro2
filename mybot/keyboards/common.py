@@ -13,12 +13,12 @@ def get_back_kb(callback_data: str = "admin_back"):
 
 def get_interactive_post_kb(
     message_id: int,
-    buttons: list[str] | None = None,
+    raw_reactions_data: list[str] | None = None,
     counts: dict[str, int] | None = None,
     channel_id: int | None = None,
 ) -> InlineKeyboardMarkup:
-    """Keyboard with reaction buttons for channel posts."""
-    texts = buttons if buttons else DEFAULT_REACTION_BUTTONS
+    """Build the inline keyboard for interactive posts."""
+    texts = raw_reactions_data if raw_reactions_data else DEFAULT_REACTION_BUTTONS
     builder = InlineKeyboardBuilder()
     for idx, text in enumerate(texts[:10]):
         count = counts.get(f"r{idx}", 0) if counts else 0
@@ -27,6 +27,7 @@ def get_interactive_post_kb(
             cb_data = f"ip_{channel_id}_r{idx}_{message_id}"
         else:
             cb_data = f"ip_r{idx}_{message_id}"
+        cb_data = cb_data[:64]
         builder.button(text=display, callback_data=cb_data)
     builder.adjust(len(texts[:10]))
     return builder.as_markup()

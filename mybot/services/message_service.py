@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from aiogram import Bot
 from aiogram.types import Message, ReactionTypeEmoji
+import logging
 from aiogram.exceptions import (
     TelegramBadRequest,
     TelegramForbiddenError,
@@ -21,6 +22,7 @@ class MessageService:
     def __init__(self, session: AsyncSession, bot: Bot):
         self.session = session
         self.bot = bot
+        self.logger = logging.getLogger(__name__)
 
     async def send_interactive_post(
         self,
@@ -49,34 +51,42 @@ class MessageService:
         if not channel_id:
             return None
 
+        text = (text or "").strip()
+        if not text:
+            text = "Este es un post interactivo. ¡Reacciona!"
+
         try:
-            buttons = await channel_service.get_reactions(channel_id)
+            reactions = await channel_service.get_reactions(channel_id)
+            markup = get_interactive_post_kb(0, reactions, None, channel_id)
             sent = await self.bot.send_message(
-                channel_id,
+                str(channel_id),
                 text,
-                reply_markup=get_interactive_post_kb(0, buttons, None, channel_id),
-
+                reply_markup=markup,
             )
+
             counts = await self.get_reaction_counts(sent.message_id)
-            await self.bot.edit_message_reply_markup(
-                channel_id,
+            markup = get_interactive_post_kb(
                 sent.message_id,
-                reply_markup=get_interactive_post_kb(
-
-                    sent.message_id, buttons, counts, channel_id
-
-                ),
+                reactions,
+                counts,
+                channel_id,
+            )
+            await self.bot.edit_message_reply_markup(
+                str(channel_id),
+                str(sent.message_id),
+                reply_markup=markup,
             )
             if channel_type == "vip":
                 vip_reactions = await config.get_vip_reactions()
                 if vip_reactions:
                     await self.bot.set_message_reaction(
-                        channel_id,
-                        sent.message_id,
+                        str(channel_id),
+                        str(sent.message_id),
                         [ReactionTypeEmoji(emoji=r) for r in vip_reactions],
                     )
             return sent
-        except (TelegramBadRequest, TelegramForbiddenError, TelegramAPIError):
+        except (TelegramBadRequest, TelegramForbiddenError, TelegramAPIError) as e:
+            self.logger.error(f"Error de Telegram API: {e}", exc_info=True)
             return False
 
     async def register_reaction(
@@ -125,9 +135,8 @@ class MessageService:
         buttons = await config.get_reaction_buttons()
         try:
             await self.bot.edit_message_reply_markup(
-                chat_id,
-                message_id,
- 
+                str(chat_id),
+                str(message_id),
                 reply_markup=get_interactive_post_kb(
                     message_id,
                     buttons,

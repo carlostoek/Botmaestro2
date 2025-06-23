@@ -31,19 +31,23 @@ class ChannelService:
         if not channel:
             channel = Channel(id=chat_id)
             self.session.add(channel)
-        channel.reactions = ";".join(reactions)
+        channel.reactions = reactions
         if points is not None:
-            channel.reaction_points = ";".join(str(p) for p in points)
+            channel.reaction_points = [float(p) for p in points]
         await self.session.commit()
         await self.session.refresh(channel)
         return channel
 
     async def get_reactions(self, chat_id: int) -> list[str]:
+        """Return raw reaction texts configured for the channel."""
         channel = await self.session.get(Channel, chat_id)
         if channel and channel.reactions:
-            texts = [t.strip() for t in channel.reactions.split(";") if t.strip()]
-            if texts:
-                return texts[:10]
+            try:
+                reactions = [str(r).strip() for r in channel.reactions if str(r).strip()]
+                if reactions:
+                    return reactions[:10]
+            except (TypeError, ValueError):
+                pass
         from utils.config import DEFAULT_REACTION_BUTTONS
 
         return DEFAULT_REACTION_BUTTONS
@@ -52,9 +56,9 @@ class ChannelService:
         channel = await self.session.get(Channel, chat_id)
         if channel and channel.reaction_points:
             try:
-                pts = [float(p) for p in channel.reaction_points.split(";") if p.strip()]
-                return pts[:10]
-            except ValueError:
+                points = [float(p) for p in channel.reaction_points]
+                return points[:10]
+            except (TypeError, ValueError):
                 pass
         reactions = await self.get_reactions(chat_id)
         return [0.5] * len(reactions)

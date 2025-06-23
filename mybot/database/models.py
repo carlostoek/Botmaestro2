@@ -298,8 +298,8 @@ class Channel(AsyncAttrs, Base):
     __tablename__ = "channels"
     id = Column(BigInteger, primary_key=True)  # Telegram chat ID
     title = Column(String, nullable=True)
-    reactions = Column(String, nullable=True)
-    reaction_points = Column(String, nullable=True)
+    reactions = Column(JSON, nullable=True)
+    reaction_points = Column(JSON, nullable=True)
 
 
 class PendingChannelRequest(AsyncAttrs, Base):
