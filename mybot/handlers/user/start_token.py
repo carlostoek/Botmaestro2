@@ -10,9 +10,12 @@ from utils.text_utils import sanitize_text
 from services.token_service import TokenService
 from services.subscription_service import SubscriptionService
 from utils.menu_utils import send_temporary_reply
+from utils.menu_manager import menu_manager
+from utils.menu_factory import menu_factory
 from services.achievement_service import AchievementService
 from services.config_service import ConfigService
 from utils.user_roles import clear_role_cache
+from utils.messages import SENORITA_KINKY_TEXTS, MAYORDOMO_TEXTS
 import logging
 
 logger = logging.getLogger(__name__)
@@ -94,24 +97,28 @@ async def start_with_token(message: Message, command: CommandObject, session: As
             logger.error(f"Failed to create VIP invite link: {e}")
             invite_link = None
 
-    # Send welcome message with invite link
+    # Mensaje inicial de la Señorita Kinky
+    await message.answer(SENORITA_KINKY_TEXTS["vip_welcome"])
+
+    # Detalles de activación proporcionados por el Mayordomo
     if invite_link:
-        welcome_msg = (
-            f"🎉 ¡Bienvenido al VIP!\n\n"
-            f"Tu suscripción VIP ha sido activada por {duration} días.\n"
-            f"Expira el: {expires_at.strftime('%d/%m/%Y %H:%M')}\n\n"
-            f"🔗 Únete a nuestro canal VIP exclusivo:\n{invite_link}\n\n"
-            f"⚠️ Este enlace es personal y expira en 24 horas."
+        butler_msg = MAYORDOMO_TEXTS["vip_activation_with_invite"].format(
+            duration=duration,
+            expires_at=expires_at.strftime('%d/%m/%Y %H:%M'),
+            invite_link=invite_link,
         )
     else:
-        welcome_msg = (
-            f"🎉 ¡Suscripción VIP activada!\n\n"
-            f"Duración: {duration} días\n"
-            f"Expira el: {expires_at.strftime('%d/%m/%Y %H:%M')}\n\n"
-            f"Usa /vip_menu para acceder a tus beneficios VIP."
+        butler_msg = MAYORDOMO_TEXTS["vip_activation_no_invite"].format(
+            duration=duration,
+            expires_at=expires_at.strftime('%d/%m/%Y %H:%M'),
         )
 
-    await message.answer(welcome_msg)
+    await message.answer(butler_msg)
+
+    # Mostrar el menú principal VIP guiado por el Mayordomo
+    text, keyboard = await menu_factory.create_menu("vip_main", user_id, session, bot)
+    await menu_manager.show_menu(message, text, keyboard, session, "vip_main")
+
     logger.info(f"VIP activation completed for user {user_id}")
 
     # Clear role cache again to ensure the new role is detected immediately

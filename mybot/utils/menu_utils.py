@@ -6,21 +6,21 @@ from database.models import set_user_menu_state
 from utils.user_roles import get_user_role
 from keyboards.admin_main_kb import get_admin_main_kb
 from keyboards.vip_main_kb import get_vip_main_kb
-from utils.messages import BOT_MESSAGES
+from utils.messages import BOT_MESSAGES, MENU_TEXTS
 from keyboards.subscription_kb import get_free_main_menu_kb
 
 
 def _menu_details(role: str):
     """Return (text, keyboard, state) for the given role."""
     if role == "admin":
-        return "Panel de Administración", get_admin_main_kb(), "admin_main"
+        return MENU_TEXTS.get("welcome_admin", "Panel de Administración"), get_admin_main_kb(), "admin_main"
     if role == "vip":
         return (
-            BOT_MESSAGES["start_welcome_returning_user"],
+            MENU_TEXTS.get("welcome_vip", "Bienvenido"),
             get_vip_main_kb(),
             "vip_main",
         )
-    return "Bienvenido a los Kinkys", get_free_main_menu_kb(), "free_main"
+    return MENU_TEXTS.get("welcome_generic", "Bienvenido"), get_free_main_menu_kb(), "free_main"
 
 # Cache to store the latest menu message for each user
 MENU_CACHE: dict[int, tuple[int, int]] = {}

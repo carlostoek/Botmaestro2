@@ -51,11 +51,11 @@ async def cb_free_gift(callback: CallbackQuery, session: AsyncSession):
     await message.answer(
         "🎁 Antes de dejarte pasar... ¿puedes completar esta prueba rápida?\n\n📌 Sígueme en mis redes y desbloquea tu regalo."
     )
-    await message.answer("📡 Verificando Instagram...")
+    await message.answer(BOT_MESSAGES["verification_instagram"])
     await asyncio.sleep(2)
-    await message.answer("🔄 Reintentando conexión...")
+    await message.answer(BOT_MESSAGES["retry_connection"])
     await asyncio.sleep(2)
-    await message.answer("✅ ¡Perfecto! Instagram verificado.")
+    await message.answer(BOT_MESSAGES["instagram_verified"])
     await asyncio.sleep(1)
     await message.answer(
 

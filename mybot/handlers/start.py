@@ -11,6 +11,7 @@ from utils.text_utils import sanitize_text
 from utils.menu_manager import menu_manager
 from utils.menu_factory import menu_factory 
 from utils.user_roles import clear_role_cache, is_admin
+from utils.messages import MENU_TEXTS
 from services.tenant_service import TenantService
 import logging
 
@@ -83,7 +84,7 @@ async def cmd_start(message: Message, session: AsyncSession):
         text, keyboard = await menu_factory.create_menu("admin_main", user_id, session, message.bot)
         
         # Personalizar mensaje de bienvenida para admin al iniciar
-        welcome_prefix = "👑 **¡Bienvenido, Administrador!**\n\n"
+        welcome_prefix = MENU_TEXTS["welcome_admin"]
         text = welcome_prefix + text.split('\n\n', 1)[-1] # Mantiene el texto del menú, pero reemplaza el saludo inicial
 
         await menu_manager.show_menu(
@@ -101,16 +102,16 @@ async def cmd_start(message: Message, session: AsyncSession):
         text, keyboard = await menu_factory.create_menu("main", user_id, session, message.bot)
         
         if is_new_user:
-            welcome_prefix = "🌟 **¡Bienvenido!**\n\n"
+            welcome_prefix = MENU_TEXTS["welcome_generic"]
             if "suscripción vip" in text.lower() or "experiencia premium" in text.lower():
-                welcome_prefix = "✨ **¡Bienvenido, Miembro VIP!**\n\n"
+                welcome_prefix = MENU_TEXTS["welcome_vip"]
             
             text = welcome_prefix + text
         else:
             if "suscripción vip" in text.lower() or "experiencia premium" in text.lower():
-                text = "✨ **Bienvenido de vuelta**\n\n" + text.split('\n\n', 1)[-1]
+                text = MENU_TEXTS["welcome_vip"] + text.split('\n\n', 1)[-1]
             else:
-                text = "🌟 **¡Hola de nuevo!**\n\n" + text.split('\n\n', 1)[-1]
+                text = MENU_TEXTS["welcome_back"] + text.split('\n\n', 1)[-1]
         
         await menu_manager.show_menu(
             message, 
