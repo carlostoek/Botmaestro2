@@ -7,6 +7,15 @@ class ReactionService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def get_user_reaction_count(self, user_id: int, *, since: datetime | None = None) -> int:
+        """Return number of reactions by a user optionally since a datetime."""
+        stmt = select(func.count(ButtonReaction.id)).where(ButtonReaction.user_id == user_id)
+        if since:
+            stmt = stmt.where(ButtonReaction.created_at >= since)
+        result = await self.session.execute(stmt)
+        count = result.scalar()
+        return count or 0
+
     async def get_weekly_top_users(self, limit: int = 3) -> list[tuple[User, int]]:
         week_start = datetime.utcnow() - timedelta(days=7)
         stmt = (

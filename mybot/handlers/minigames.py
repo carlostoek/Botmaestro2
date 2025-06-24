@@ -1,6 +1,7 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from services.config_service import ConfigService
 from services.point_service import PointService
@@ -101,16 +102,66 @@ async def reto_or_recompensa(message: Message, session: AsyncSession, bot: Bot):
         return
     target = 3
     seconds = 30
-    await message.answer(BOT_MESSAGES.get("reto_start", "Reacciona a {target} publicaciones en {seconds} segundos.").format(target=target, seconds=seconds))
-    await asyncio.sleep(seconds)
+    await message.answer(
+        BOT_MESSAGES.get("reto_start", "Reacciona a {target} publicaciones en {seconds} segundos.").format(
+            target=target, seconds=seconds
+        )
+    )
     reaction_service = ReactionService(session)
-    top = await reaction_service.get_weekly_top_users(limit=1)
-    count = 0
-    if top and top[0][0].id == message.from_user.id:
-        count = top[0][1]
+    start = datetime.utcnow()
+    await asyncio.sleep(seconds)
+    count = await reaction_service.get_user_reaction_count(message.from_user.id, since=start)
     if count >= target:
         await PointService(session).add_points(message.from_user.id, 10, bot=bot)
-        await message.answer(BOT_MESSAGES.get("reto_success", "¡Reto completado!") )
+        await message.answer(
+            BOT_MESSAGES.get("reto_success", "¡Reto completado!"),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text=BOT_MESSAGES.get("reto_improve", "Mejorar recompensa (+5 puntos)"),
+                            callback_data="reto_improve",
+                        )
+                    ]
+                ]
+            ),
+        )
     else:
+        await message.answer(
+            BOT_MESSAGES.get("reto_failed", "No completaste el reto y perdiste puntos."),
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text=BOT_MESSAGES.get("reto_avoid", "Evitar penalización (5 puntos)"),
+                            callback_data="reto_avoid",
+                        )
+                    ]
+                ]
+            ),
+        )
         await PointService(session).deduct_points(message.from_user.id, 5)
-        await message.answer(BOT_MESSAGES.get("reto_failed", "No completaste el reto y perdiste puntos."))
+
+
+@router.callback_query(F.data == "reto_improve")
+async def reto_improve_callback(callback: CallbackQuery, session: AsyncSession, bot: Bot):
+    """Handle reward upgrade purchase."""
+    point_service = PointService(session)
+    success = await point_service.deduct_points(callback.from_user.id, 5)
+    if success:
+        await point_service.add_points(callback.from_user.id, 10, bot=bot)
+        await callback.message.edit_text(BOT_MESSAGES.get("reto_upgraded", "¡Recompensa mejorada!"))
+    else:
+        await callback.answer(BOT_MESSAGES.get("reto_no_points", "No tienes puntos suficientes."), show_alert=True)
+
+
+@router.callback_query(F.data == "reto_avoid")
+async def reto_avoid_callback(callback: CallbackQuery, session: AsyncSession, bot: Bot):
+    """Allow user to pay to avoid the penalty."""
+    point_service = PointService(session)
+    success = await point_service.deduct_points(callback.from_user.id, 5)
+    if success:
+        await point_service.add_points(callback.from_user.id, 5, bot=None)
+        await callback.message.edit_text(BOT_MESSAGES.get("reto_penalty_avoided", "Penalización evitada."))
+    else:
+        await callback.answer(BOT_MESSAGES.get("reto_no_points", "No tienes puntos suficientes."), show_alert=True)

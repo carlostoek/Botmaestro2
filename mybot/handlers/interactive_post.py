@@ -32,5 +32,7 @@ async def handle_interactive_post_callback(
         target_message_id=message_id,
         bot=bot,
     )
+    await mission_service.update_progress(callback.from_user.id, "reaction", bot=bot)
+    await mission_service.increment_challenge_progress(callback.from_user.id, "reactions", bot=bot)
     await callback.answer(BOT_MESSAGES["reaction_thanks"])
 
