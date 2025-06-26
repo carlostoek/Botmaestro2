@@ -70,7 +70,7 @@ async def mission_view_details(callback: CallbackQuery, session: AsyncSession):
         "🔹 **Descripción:**",
         f"💬 {mission.description or '-'}",
         "",
-        f"🔸 **Tipo de Misión:** `{mission.type}`",
+        f"🔸 **Tipo de Misión:** `{mission.mission_type}`",
         f"🔸 **Puntos que Ganas:** {points_text}",
         f"🔸 **Estado:** {status_text}",
     ]

@@ -272,7 +272,7 @@ async def admin_select_mission_type(callback: CallbackQuery, state: FSMContext):
         "login": "login_streak",
         "custom": "custom",
     }
-    await state.update_data(type=mapping.get(m_type, m_type))
+    await state.update_data(mission_type=mapping.get(m_type, m_type))
     await callback.message.edit_text("📊 Cantidad requerida")
     await state.set_state(AdminMissionStates.creating_mission_target)
     await callback.answer()
@@ -320,7 +320,7 @@ async def admin_process_duration(message: Message, state: FSMContext, session: A
     await mission_service.create_mission(
         data["name"],
         data["description"],
-        data["type"],
+        data["mission_type"],
         data["target"],
         data["reward"],
         days,

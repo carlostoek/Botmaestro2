@@ -32,7 +32,7 @@ class MissionService:
         """
         stmt = select(Mission).where(Mission.is_active == True)
         if mission_type:
-            stmt = stmt.where(Mission.type == mission_type)
+            stmt = stmt.where(Mission.mission_type == mission_type)
         result = await self.session.execute(stmt)
         missions = [m for m in result.scalars().all() if not m.duration_days or (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()]
 
@@ -82,20 +82,20 @@ class MissionService:
         """
         mission_completion_record = user.missions_completed.get(mission.id)
         
-        if mission.type == "one_time":
+        if mission.mission_type == "one_time":
             if mission_completion_record:
                 return True, "already_completed"
-        elif mission.type == "daily":
+        elif mission.mission_type == "daily":
             if mission_completion_record:
                 last_completed = datetime.datetime.fromisoformat(mission_completion_record)
                 if (datetime.datetime.now() - last_completed) < datetime.timedelta(days=1):
                     return True, "daily_limit_reached"
-        elif mission.type == "weekly":
+        elif mission.mission_type == "weekly":
             if mission_completion_record:
                 last_completed = datetime.datetime.fromisoformat(mission_completion_record)
                 if (datetime.datetime.now() - last_completed) < datetime.timedelta(weeks=1):
                     return True, "weekly_limit_reached"
-        elif mission.type == "reaction":
+        elif mission.mission_type == "reaction":
             # For reaction missions, check if already completed once
             if mission_completion_record:
                 return True, "already_completed"
@@ -145,9 +145,9 @@ class MissionService:
         await point_service.add_points(user_id, mission.reward_points, bot=bot)
 
         # Update last reset timestamps for daily/weekly missions
-        if mission.type == "daily":
+        if mission.mission_type == "daily":
             user.last_daily_mission_reset = datetime.datetime.now()
-        elif mission.type == "weekly":
+        elif mission.mission_type == "weekly":
             user.last_weekly_mission_reset = datetime.datetime.now()
 
         # Desbloqueo de pistas de lore vinculadas a la misión
@@ -187,7 +187,7 @@ class MissionService:
             )
 
         logger.info(
-            f"User {user_id} successfully completed mission {mission_id} (Type: {mission.type}, Message: {target_message_id})."
+            f"User {user_id} successfully completed mission {mission_id} (Type: {mission.mission_type}, Message: {target_message_id})."
         )
         return True, mission
 
@@ -209,7 +209,7 @@ class MissionService:
             description=sanitize_text(description),
             channel_type=channel_type,
             reward_points=reward_points,
-            type=mission_type,
+            mission_type=mission_type,
             target_value=target_value,
             duration_days=duration_days,
             requires_action=requires_action,
