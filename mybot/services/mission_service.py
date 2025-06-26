@@ -1,4 +1,3 @@
-# services/mission_service.py
 import datetime
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -53,7 +52,7 @@ class MissionService:
         """Return missions of type 'daily' that are active today."""
         return await self.get_active_missions(user_id=user_id, mission_type="daily")
 
-    async def get_mission_by_id(self, mission_id: str) -> Mission | None:
+    async def get_mission_by_id(self, mission_id: int) -> Mission | None: # Changed type hint to int
         return await self.session.get(Mission, mission_id)
 
     async def get_active_mission(
@@ -80,7 +79,7 @@ class MissionService:
         or if it's a one-time mission already completed.
         Returns (is_completed_for_period, reason_if_completed)
         """
-        mission_completion_record = user.missions_completed.get(mission.id)
+        mission_completion_record = user.missions_completed.get(str(mission.id)) # Use str(mission.id) for dict key
         
         if mission.mission_type == "one_time":
             if mission_completion_record:
@@ -97,7 +96,22 @@ class MissionService:
                     return True, "weekly_limit_reached"
         elif mission.mission_type == "reaction":
             # For reaction missions, check if already completed once
-            if mission_completion_record:
+            # If the mission is reaction, it should have action_data with target_message_id
+            if mission.action_data and mission.action_data.get("target_message_id") == target_message_id:
+                # Check if the specific reaction mission related to this message_id is completed
+                # This ensures a user can react to multiple *different* interactive posts
+                # but only complete the specific mission linked to *this* post once.
+                user_mission_entry_stmt = select(UserMissionEntry).where(
+                    UserMissionEntry.user_id == user.id,
+                    UserMissionEntry.mission_id == mission.id,
+                    UserMissionEntry.completed == True
+                )
+                existing_entry = (await self.session.execute(user_mission_entry_stmt)).scalar_one_or_none()
+                if existing_entry:
+                    return True, "already_completed_reaction_for_this_post"
+            # If no specific target_message_id is provided, or it doesn't match the mission's action_data
+            # then a general check for any completion record for this mission ID
+            elif mission_completion_record: # Fallback if action_data not perfectly matched or missing
                 return True, "already_completed"
         
         return False, "" # Not completed for current period or not a one-time mission
@@ -105,7 +119,7 @@ class MissionService:
     async def complete_mission(
         self,
         user_id: int,
-        mission_id: str,
+        mission_id: int, # Changed type hint to int
         reaction_type: str = None,
         target_message_id: int = None,
         *,
@@ -128,9 +142,24 @@ class MissionService:
             logger.info(f"User {user_id} attempted to complete mission {mission_id} but it was already completed ({reason}).")
             return False, None
 
-        # Add mission to user's completed list with timestamp
+        # Ensure user has a UserMissionEntry for this mission
+        user_mission_entry_stmt = select(UserMissionEntry).where(
+            UserMissionEntry.user_id == user_id,
+            UserMissionEntry.mission_id == mission.id
+        )
+        user_mission_entry = (await self.session.execute(user_mission_entry_stmt)).scalar_one_or_none()
+
+        if not user_mission_entry:
+            user_mission_entry = UserMissionEntry(user_id=user_id, mission_id=mission.id)
+            self.session.add(user_mission_entry)
+        
+        # Mark as completed
+        user_mission_entry.completed = True
+        user_mission_entry.completed_at = datetime.datetime.utcnow() # Use UTC for consistency
+
+        # Add mission to user's completed list with timestamp (for reset logic in User model)
         now = datetime.datetime.now().isoformat()
-        user.missions_completed[mission.id] = now
+        user.missions_completed[str(mission.id)] = now # Ensure mission.id is stored as string key
         
 
         # Add points to user. Event multiplier should be handled by PointService or calling context.
@@ -198,30 +227,34 @@ class MissionService:
         mission_type: str,
         target_value: int,
         reward_points: int,
+        reward_type: str = "points", # Added reward_type with a default
         duration_days: int = 0,
         channel_type: str = "vip",
         *,
         requires_action: bool = False,
         action_data: dict | None = None,
+        unlocks_lore_piece_code: str | None = None, # Added this to pass to model
     ) -> Mission:
         new_mission = Mission(
             name=sanitize_text(name),
             description=sanitize_text(description),
             channel_type=channel_type,
             reward_points=reward_points,
+            reward_type=reward_type, # Pass the new reward_type
             mission_type=mission_type,
             target_value=target_value,
             duration_days=duration_days,
             requires_action=requires_action,
             action_data=action_data,
             is_active=True,
+            unlocks_lore_piece_code=unlocks_lore_piece_code, # Pass unlocks_lore_piece_code
         )
         self.session.add(new_mission)
         await self.session.commit()
         await self.session.refresh(new_mission)
         return new_mission
 
-    async def toggle_mission_status(self, mission_id: str, status: bool) -> bool:
+    async def toggle_mission_status(self, mission_id: int, status: bool) -> bool: # Changed type hint to int
         mission = await self.session.get(Mission, mission_id)
         if mission:
             mission.is_active = status
@@ -229,7 +262,7 @@ class MissionService:
             return True
         return False
 
-    async def update_mission(self, mission_id: str, **fields) -> Mission | None:
+    async def update_mission(self, mission_id: int, **fields) -> Mission | None: # Changed type hint to int
         """Update mission fields and return the updated mission."""
         mission = await self.session.get(Mission, mission_id)
         if not mission:
@@ -287,7 +320,7 @@ class MissionService:
                     )
         await self.session.commit()
 
-    async def delete_mission(self, mission_id: str) -> bool:
+    async def delete_mission(self, mission_id: int) -> bool: # Changed type hint to int
         mission = await self.session.get(Mission, mission_id)
         if mission:
             await self.session.delete(mission)
@@ -325,3 +358,4 @@ class MissionService:
                 await self.point_service.add_points(user_id, 100, bot=bot)
         await self.session.commit()
         return completed
+
