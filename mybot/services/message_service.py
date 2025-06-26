@@ -14,7 +14,7 @@ import logging
 
 from .config_service import ConfigService
 from .channel_service import ChannelService
-from database.models import ButtonReaction
+from database.models import ButtonReaction, Mission # Import Mission to query for it
 from keyboards.inline_post_kb import get_reaction_kb
 from services.message_registry import store_message
 from utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
@@ -107,17 +107,21 @@ class MessageService:
 
             from services.mission_service import MissionService
             mission_service = MissionService(self.session)
-            await mission_service.create_mission(
+            
+            # Create the mission and get its actual integer ID
+            created_mission = await mission_service.create_mission(
                 name=f"Reaccionar {real_message_id}",
                 description="Reacciona a la publicaci\u00f3n para ganar puntos",
                 mission_type="reaction",
                 target_value=1,
                 reward_points=1,
+                reward_type="points", # Explicitly pass reward_type
                 duration_days=7,
                 channel_type=channel_type,
                 requires_action=True,
                 action_data={"target_message_id": real_message_id},
             )
+            logger.info(f"Created mission with ID: {created_mission.id}") # Log the actual ID
             return sent
         except (TelegramBadRequest, TelegramForbiddenError, TelegramAPIError) as e:
             logger.error(
@@ -148,14 +152,27 @@ class MessageService:
 
         from services.mission_service import MissionService
         mission_service = MissionService(self.session)
-        mission_id = f"reaction_reaccionar_{message_id}"
-        await mission_service.complete_mission(
-            user_id,
-            mission_id,
-            reaction_type=reaction_type,
-            target_message_id=message_id,
-            bot=self.bot,
+        
+        # Find the reaction mission associated with this message_id
+        # Assuming action_data is JSON and contains target_message_id
+        # And mission_type is 'reaction'
+        mission_stmt = select(Mission).where(
+            Mission.mission_type == "reaction",
+            Mission.action_data["target_message_id"].astext == str(message_id) # Cast to text for JSON comparison
         )
+        mission = (await self.session.execute(mission_stmt)).scalar_one_or_none()
+
+        if mission:
+            await mission_service.complete_mission(
+                user_id,
+                mission.id, # Pass the actual integer ID of the mission
+                reaction_type=reaction_type,
+                target_message_id=message_id,
+                bot=self.bot,
+            )
+        else:
+            logger.warning(f"No reaction mission found for message_id: {message_id}")
+
         from services.minigame_service import MiniGameService
         await MiniGameService(self.session).record_reaction(user_id, self.bot)
 
@@ -216,3 +233,4 @@ class MessageService:
         )
         result = await self.session.execute(stmt)
         return result.all()
+
