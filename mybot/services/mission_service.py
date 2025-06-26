@@ -203,9 +203,7 @@ class MissionService:
         requires_action: bool = False,
         action_data: dict | None = None,
     ) -> Mission:
-        mission_id = f"{mission_type}_{sanitize_text(name).lower().replace(' ', '_').replace('.', '').replace(',', '')}"
         new_mission = Mission(
-            id=mission_id,
             name=sanitize_text(name),
             description=sanitize_text(description),
             reward_points=reward_points,
