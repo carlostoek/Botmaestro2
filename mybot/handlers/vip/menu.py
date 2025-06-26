@@ -6,21 +6,21 @@ from aiogram.filters import Command
 
 from datetime import datetime
 
-from utils.user_roles import get_user_role
-from utils.menu_utils import send_menu, update_menu, send_temporary_reply
-from utils.keyboard_utils import (
+from ...utils.user_roles import get_user_role
+from ...utils.menu_utils import send_menu, update_menu, send_temporary_reply
+from ...utils.keyboard_utils import (
     get_back_keyboard,
     get_main_menu_keyboard,
     get_missions_keyboard,
 )
-from keyboards.vip_main_kb import get_vip_main_kb
-from utils.messages import BOT_MESSAGES
-from utils.message_utils import get_profile_message
-from services.subscription_service import SubscriptionService
-from services.mission_service import MissionService
-from services.achievement_service import AchievementService
-from database.models import User, UserBadge, set_user_menu_state
-from utils.text_utils import sanitize_text
+from ...keyboards.vip_main_kb import get_vip_main_kb
+from ...utils.messages import BOT_MESSAGES
+from ...utils.message_utils import get_profile_message
+from ...services.subscription_service import SubscriptionService
+from ...services.mission_service import MissionService
+from ...services.achievement_service import AchievementService
+from ...database.models import User, UserBadge, set_user_menu_state
+from ...utils.text_utils import sanitize_text
 
 router = Router()
 

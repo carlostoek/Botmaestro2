@@ -5,18 +5,18 @@ Separated to avoid circular imports and improve maintainability.
 from typing import Tuple
 from aiogram.types import InlineKeyboardMarkup
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User
-from utils.keyboard_utils import (
+from ..database.models import User
+from .keyboard_utils import (
     get_profile_keyboard,
     get_missions_keyboard,
     get_reward_keyboard,
     get_ranking_keyboard
 )
-from utils.message_utils import get_profile_message, get_ranking_message
-from services.mission_service import MissionService
-from services.reward_service import RewardService
-from services.point_service import PointService
-from keyboards.auction_kb import get_auction_main_kb
+from .message_utils import get_profile_message, get_ranking_message
+from ..services.mission_service import MissionService
+from ..services.reward_service import RewardService
+from ..services.point_service import PointService
+from ..keyboards.auction_kb import get_auction_main_kb
 
 async def create_profile_menu(user_id: int, session: AsyncSession) -> Tuple[str, InlineKeyboardMarkup]:
     """Create the profile menu for a user."""

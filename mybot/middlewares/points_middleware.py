@@ -5,9 +5,9 @@ try:
 except ImportError:  # Fallback for older aiogram
     MessageReactionUpdated = object
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User
-from services.point_service import PointService
-from utils.messages import BOT_MESSAGES
+from ..database.models import User
+from ..services.point_service import PointService
+from ..utils.messages import BOT_MESSAGES
 import logging
 import datetime
 
@@ -22,7 +22,7 @@ class PointsMiddleware(BaseMiddleware):
             return await handler(event, data)
 
         service = PointService(session)
-        from services.mission_service import MissionService
+        from ..services.mission_service import MissionService
         mission_service = MissionService(session)
 
         try:

@@ -3,7 +3,7 @@ import datetime
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from database.models import (
+from ..database.models import (
     User,
     UserMissionEntry,
     Challenge,
@@ -11,8 +11,8 @@ from database.models import (
     LorePiece,
     UserLorePiece,
 )
-from mybot.models import Mission
-from utils.text_utils import sanitize_text
+from ..models import Mission
+from ..utils.text_utils import sanitize_text
 import logging
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ MISSION_PLACEHOLDER: list = []
 class MissionService:
     def __init__(self, session: AsyncSession):
         self.session = session
-        from services.point_service import PointService
+        from .point_service import PointService
         self.point_service = PointService(session)
 
     async def get_active_missions(self, user_id: int = None, mission_type: str = None) -> list[Mission]:
@@ -139,7 +139,7 @@ class MissionService:
         # If it's inside PointService, this is fine.
         point_service = self.point_service # assuming point_service is still available in __init__
         if not hasattr(self, 'point_service'): # Fallback if not initialized in __init__
-             from services.point_service import PointService
+             from .point_service import PointService
              point_service = PointService(self.session)
 
         await point_service.add_points(user_id, mission.reward_points, bot=bot)
@@ -176,8 +176,8 @@ class MissionService:
         await self.session.refresh(user)
 
         if bot:
-            from utils.message_utils import get_mission_completed_message
-            from utils.keyboard_utils import get_mission_completed_keyboard
+            from ..utils.message_utils import get_mission_completed_message
+            from ..utils.keyboard_utils import get_mission_completed_keyboard
 
             text = await get_mission_completed_message(mission)
             await bot.send_message(
@@ -274,8 +274,8 @@ class MissionService:
                 record.completed_at = datetime.datetime.utcnow()
                 await self.point_service.add_points(user_id, mission.reward_points, bot=bot)
                 if bot:
-                    from utils.message_utils import get_mission_completed_message
-                    from utils.keyboard_utils import get_mission_completed_keyboard
+                    from ..utils.message_utils import get_mission_completed_message
+                    from ..utils.keyboard_utils import get_mission_completed_keyboard
 
                     text = await get_mission_completed_message(mission)
                     await bot.send_message(

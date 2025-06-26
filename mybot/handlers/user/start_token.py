@@ -5,15 +5,15 @@ from aiogram.types import Message
 from aiogram.filters.command import CommandObject
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User
-from utils.text_utils import sanitize_text
-from services.token_service import TokenService
-from services.subscription_service import SubscriptionService
-from utils.menu_utils import send_temporary_reply
-from utils.messages import BOT_MESSAGES
-from services.achievement_service import AchievementService
-from services.config_service import ConfigService
-from utils.user_roles import clear_role_cache
+from ...database.models import User
+from ...utils.text_utils import sanitize_text
+from ...services.token_service import TokenService
+from ...services.subscription_service import SubscriptionService
+from ...utils.menu_utils import send_temporary_reply
+from ...utils.messages import BOT_MESSAGES
+from ...services.achievement_service import AchievementService
+from ...services.config_service import ConfigService
+from ...utils.user_roles import clear_role_cache
 import logging
 
 logger = logging.getLogger(__name__)

@@ -4,9 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
 
-from database.models import PendingChannelRequest, BotConfig
-from services.config_service import ConfigService
-from services.free_channel_service import FreeChannelService
+from ..database.models import PendingChannelRequest, BotConfig
+from ..services.config_service import ConfigService
+from ..services.free_channel_service import FreeChannelService
 
 router = Router()
 

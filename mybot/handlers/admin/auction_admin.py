@@ -4,10 +4,10 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 
-from utils.user_roles import is_admin
-from utils.menu_utils import update_menu, send_temporary_reply
-from utils.admin_state import AdminAuctionStates
-from keyboards.admin_auction_kb import (
+from ...utils.user_roles import is_admin
+from ...utils.menu_utils import update_menu, send_temporary_reply
+from ...utils.admin_state import AdminAuctionStates
+from ...keyboards.admin_auction_kb import (
     get_admin_auction_main_kb,
     get_auction_duration_kb,
     get_auction_settings_kb,
@@ -16,9 +16,9 @@ from keyboards.admin_auction_kb import (
     get_auction_action_kb,
     get_auction_confirm_action_kb
 )
-from keyboards.common import get_back_kb
-from services.auction_service import AuctionService
-from utils.text_utils import format_time_remaining, format_points, anonymize_username
+from ...keyboards.common import get_back_kb
+from ...services.auction_service import AuctionService
+from ...utils.text_utils import format_time_remaining, format_points, anonymize_username
 import logging
 
 logger = logging.getLogger(__name__)
@@ -432,7 +432,7 @@ async def auction_statistics(callback: CallbackQuery, session: AsyncSession):
     
     # Get statistics
     from sqlalchemy import func
-    from database.models import Auction, Bid
+    from ...database.models import Auction, Bid
     
     # Total auctions
     total_stmt = select(func.count()).select_from(Auction)

@@ -4,12 +4,12 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from utils.user_roles import is_admin
-from utils.pagination import get_paginated_list
-from utils.keyboard_utils import get_admin_badge_list_keyboard, get_back_keyboard
-from utils.message_utils import safe_edit_message
-from services.badge_service import BadgeService
-from database.models import Badge
+from ...utils.user_roles import is_admin
+from ...utils.pagination import get_paginated_list
+from ...utils.keyboard_utils import get_admin_badge_list_keyboard, get_back_keyboard
+from ...utils.message_utils import safe_edit_message
+from ...services.badge_service import BadgeService
+from ...database.models import Badge
 
 router = Router()
 

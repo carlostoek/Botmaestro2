@@ -14,10 +14,10 @@ import logging
 
 from .config_service import ConfigService
 from .channel_service import ChannelService
-from database.models import ButtonReaction
-from keyboards.inline_post_kb import get_reaction_kb
-from services.message_registry import store_message
-from utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
+from ..database.models import ButtonReaction
+from ..keyboards.inline_post_kb import get_reaction_kb
+from .message_registry import store_message
+from ..utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ class MessageService:
                             exc_info=True,
                         )
 
-            from services.mission_service import MissionService
+            from .mission_service import MissionService
             mission_service = MissionService(self.session)
             await mission_service.create_mission(
                 name=f"Reaccionar {real_message_id}",
@@ -145,7 +145,7 @@ class MessageService:
         await self.session.commit()
         await self.session.refresh(reaction)
 
-        from services.mission_service import MissionService
+        from .mission_service import MissionService
         mission_service = MissionService(self.session)
         mission_id = f"reaction_reaccionar_{message_id}"
         await mission_service.complete_mission(
@@ -155,7 +155,7 @@ class MessageService:
             target_message_id=message_id,
             bot=self.bot,
         )
-        from services.minigame_service import MiniGameService
+        from .minigame_service import MiniGameService
         await MiniGameService(self.session).record_reaction(user_id, self.bot)
 
         return reaction

@@ -5,9 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 import datetime
 
-from utils.user_roles import is_admin
-from utils.menu_utils import update_menu, send_temporary_reply
-from utils.keyboard_utils import (
+from ...utils.user_roles import is_admin
+from ...utils.menu_utils import update_menu, send_temporary_reply
+from ...utils.keyboard_utils import (
     get_admin_manage_users_keyboard,
     get_admin_users_list_keyboard,
     get_back_keyboard,
@@ -24,7 +24,7 @@ from utils.keyboard_utils import (
 )
 from .missions_admin import show_missions_page
 from .levels_admin import show_levels_page
-from utils.admin_state import (
+from ...utils.admin_state import (
     AdminUserStates,
     AdminMissionStates,
     AdminBadgeStates,
@@ -32,15 +32,15 @@ from utils.admin_state import (
     AdminRewardStates,
     AdminLevelStates,
 )
-from services.mission_service import MissionService
-from services.reward_service import RewardService
-from services.level_service import LevelService
-from database.models import User, Level
-from mybot.models import Mission
-from services.point_service import PointService
-from services.config_service import ConfigService
-from services.badge_service import BadgeService
-from utils.messages import BOT_MESSAGES
+from ...services.mission_service import MissionService
+from ...services.reward_service import RewardService
+from ...services.level_service import LevelService
+from ...database.models import User, Level
+from ...models import Mission
+from ...services.point_service import PointService
+from ...services.config_service import ConfigService
+from ...services.badge_service import BadgeService
+from ...utils.messages import BOT_MESSAGES
 
 router = Router()
 

@@ -2,12 +2,12 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.exceptions import TelegramBadRequest
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import set_user_menu_state
-from utils.user_roles import get_user_role
-from keyboards.admin_main_kb import get_admin_main_kb
-from keyboards.vip_main_kb import get_vip_main_kb
-from utils.messages import BOT_MESSAGES
-from keyboards.subscription_kb import get_free_main_menu_kb
+from ..database.models import set_user_menu_state
+from .user_roles import get_user_role
+from ..keyboards.admin_main_kb import get_admin_main_kb
+from ..keyboards.vip_main_kb import get_vip_main_kb
+from .messages import BOT_MESSAGES
+from ..keyboards.subscription_kb import get_free_main_menu_kb
 
 
 def _menu_details(role: str):

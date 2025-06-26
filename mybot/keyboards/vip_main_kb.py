@@ -1,6 +1,6 @@
 """Keyboard helpers for VIP menus."""
 
-from utils.keyboard_utils import get_main_menu_keyboard
+from ..utils.keyboard_utils import get_main_menu_keyboard
 
 
 def get_vip_main_kb():

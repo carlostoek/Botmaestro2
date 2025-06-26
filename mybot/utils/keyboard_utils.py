@@ -5,8 +5,8 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
     KeyboardButton,
 )
-from database.models import User
-from utils.messages import BOT_MESSAGES
+from ..database.models import User
+from .messages import BOT_MESSAGES
 
 
 def get_main_menu_keyboard():

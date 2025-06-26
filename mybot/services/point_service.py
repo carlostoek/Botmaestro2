@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import User, UserStats
-from utils.user_roles import get_points_multiplier
+from ..database.models import User, UserStats
+from ..utils.user_roles import get_points_multiplier
 from aiogram import Bot
-from services.level_service import LevelService
-from services.achievement_service import AchievementService
-from services.event_service import EventService
+from .level_service import LevelService
+from .achievement_service import AchievementService
+from .event_service import EventService
 import datetime
 import logging
 

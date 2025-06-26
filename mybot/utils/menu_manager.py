@@ -8,7 +8,7 @@ from typing import Dict, Optional, Tuple, Any
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 from aiogram.exceptions import TelegramBadRequest, TelegramAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User, set_user_menu_state
+from ..database.models import User, set_user_menu_state
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +221,7 @@ class MenuManager:
             logger.debug(f"User {user_id} has no navigation history. Falling back to default: '{default_menu_state}'.")
         
         # Import here to avoid circular imports
-        from utils.menu_factory import menu_factory # Usa la instancia global si existe
+        from .menu_factory import menu_factory  # Usa la instancia global si existe
         
         try:
             # create_menu necesita 'bot' para ciertas lógicas de texto/teclado.

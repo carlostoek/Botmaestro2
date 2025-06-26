@@ -6,17 +6,17 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart, Command
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from keyboards.admin_main_kb import get_admin_main_kb
-from utils.user_roles import is_admin
-from utils.menu_manager import menu_manager
-from utils.menu_factory import menu_factory
-from services.tenant_service import TenantService
-from services import get_admin_statistics
-from database.models import Tariff, Token
+from ...keyboards.admin_main_kb import get_admin_main_kb
+from ...utils.user_roles import is_admin
+from ...utils.menu_manager import menu_manager
+from ...utils.menu_factory import menu_factory
+from ...services.tenant_service import TenantService
+from ...services import get_admin_statistics
+from ...database.models import Tariff, Token
 from uuid import uuid4
 from sqlalchemy import select
-from utils.messages import BOT_MESSAGES
-from utils.keyboard_utils import get_admin_manage_content_keyboard # Importar la función del teclado
+from ...utils.messages import BOT_MESSAGES
+from ...utils.keyboard_utils import get_admin_manage_content_keyboard  # Importar la función del teclado
 
 import logging
 

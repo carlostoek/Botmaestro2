@@ -3,7 +3,7 @@ from aiogram.types import InlineKeyboardMarkup
 from typing import Dict
 import logging
 
-from utils.config import DEFAULT_REACTION_BUTTONS
+from ..utils.config import DEFAULT_REACTION_BUTTONS
 
 logger = logging.getLogger(__name__)
 

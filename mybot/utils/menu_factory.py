@@ -5,11 +5,11 @@ Centralizes menu creation logic for better maintainability.
 from typing import Tuple, Optional
 from aiogram.types import InlineKeyboardMarkup
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils.user_roles import get_user_role
-from keyboards.admin_main_kb import get_admin_main_kb
-from keyboards.vip_main_kb import get_vip_main_kb
-from keyboards.subscription_kb import get_free_main_menu_kb
-from keyboards.setup_kb import (
+from .user_roles import get_user_role
+from ..keyboards.admin_main_kb import get_admin_main_kb
+from ..keyboards.vip_main_kb import get_vip_main_kb
+from ..keyboards.subscription_kb import get_free_main_menu_kb
+from ..keyboards.setup_kb import (
     get_setup_main_kb, 
     get_setup_channels_kb, 
     get_setup_complete_kb,
@@ -17,20 +17,20 @@ from keyboards.setup_kb import (
     get_setup_tariffs_kb,
     get_setup_confirmation_kb,
 )
-from database.models import User
+from ..database.models import User
 import logging
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder # Importar InlineKeyboardBuilder
 
 # Importar creadores de menú específicos (asegúrate de que estos archivos existen)
-from utils.menu_creators import (
+from .menu_creators import (
     create_profile_menu,
     create_missions_menu,
     create_rewards_menu,
     create_auction_menu,
     create_ranking_menu
 )
-from utils.text_utils import sanitize_text # Asegúrate de que esta importación exista y sea correcta
+from .text_utils import sanitize_text  # Asegúrate de que esta importación exista y sea correcta
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,9 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.ext.asyncio import AsyncSession
-from services.config_service import ConfigService
-from services.point_service import PointService
-from utils.messages import BOT_MESSAGES
+from ..services.config_service import ConfigService
+from ..services.point_service import PointService
+from ..utils.messages import BOT_MESSAGES
 import random
 
 router = Router()
@@ -14,7 +14,7 @@ async def play_roulette(message: Message, session: AsyncSession, bot: Bot):
     if (await config.get_value("minigames_enabled")) == "false":
         await message.answer(BOT_MESSAGES.get("minigames_disabled", "Minijuegos deshabilitados."))
         return
-    from services.minigame_service import MiniGameService
+    from ..services.minigame_service import MiniGameService
     service = MiniGameService(session)
     score = await service.play_roulette(message.from_user.id, bot)
     await message.answer(BOT_MESSAGES.get("dice_points", "Ganaste {points} puntos").format(points=score))
@@ -25,7 +25,7 @@ async def start_reaction_challenge(message: Message, session: AsyncSession, bot:
     if (await config.get_value("minigames_enabled")) == "false":
         await message.answer(BOT_MESSAGES.get("minigames_disabled", "Minijuegos deshabilitados."))
         return
-    from services.minigame_service import MiniGameService
+    from ..services.minigame_service import MiniGameService
     service = MiniGameService(session)
     challenge = await service.start_reaction_challenge(message.from_user.id, reactions=3)
     await message.answer(

@@ -6,7 +6,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import Update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.user_service import UserService
+from ..services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 

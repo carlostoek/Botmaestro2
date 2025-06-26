@@ -4,13 +4,13 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from utils.user_roles import is_admin
-from utils.menu_utils import update_menu, send_temporary_reply
-from keyboards.admin_channels_kb import get_admin_channels_kb, get_wait_time_kb
-from keyboards.common import get_back_kb
-from services.channel_service import ChannelService
-from services.config_service import ConfigService
-from database.models import BotConfig
+from ...utils.user_roles import is_admin
+from ...utils.menu_utils import update_menu, send_temporary_reply
+from ...keyboards.admin_channels_kb import get_admin_channels_kb, get_wait_time_kb
+from ...keyboards.common import get_back_kb
+from ...services.channel_service import ChannelService
+from ...services.config_service import ConfigService
+from ...database.models import BotConfig
 
 router = Router()
 

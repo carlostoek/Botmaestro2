@@ -4,13 +4,13 @@ from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.message_service import MessageService
-from services.channel_service import ChannelService
-from services.message_registry import validate_message
-from utils.messages import BOT_MESSAGES
-from lexicon.lucien_messages import LUCIEN_MESSAGES
+from ..services.message_service import MessageService
+from ..services.channel_service import ChannelService
+from ..services.message_registry import validate_message
+from ..utils.messages import BOT_MESSAGES
+from ..lexicon.lucien_messages import LUCIEN_MESSAGES
 import random
-from utils.config import FREE_CHANNEL_ID
+from ..utils.config import FREE_CHANNEL_ID
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -67,13 +67,13 @@ async def handle_reaction_callback(
         )
         return
 
-    from services.point_service import PointService
+    from ..services.point_service import PointService
 
     points_dict = await channel_service.get_reaction_points(channel_id)
     points = float(points_dict.get(reaction_type, 0.0))
 
     await PointService(session).add_points(callback.from_user.id, points, bot=bot)
-    from services.mission_service import MissionService
+    from ..services.mission_service import MissionService
     mission_service = MissionService(session)
     await mission_service.update_progress(callback.from_user.id, "reaction", bot=bot)
 
@@ -86,7 +86,7 @@ async def handle_reaction_callback(
             callback.from_user.id, mission.id, bot=bot
         )
         if completed:
-            from services.backpack_service import BackpackService
+            from ..services.backpack_service import BackpackService
 
             backpack = BackpackService(session)
             if not await backpack.has_any_item(callback.from_user.id):

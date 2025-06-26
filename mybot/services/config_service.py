@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import ConfigEntry
-from utils.text_utils import sanitize_text
+from ..database.models import ConfigEntry
+from ..utils.text_utils import sanitize_text
 
 
 class ConfigService:
@@ -60,7 +60,7 @@ class ConfigService:
             texts = [t.strip() for t in value.split(";") if t.strip()]
             if texts:
                 return texts[:10]
-        from utils.config import DEFAULT_REACTION_BUTTONS
+        from ..utils.config import DEFAULT_REACTION_BUTTONS
 
         return DEFAULT_REACTION_BUTTONS
 

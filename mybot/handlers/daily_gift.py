@@ -1,9 +1,9 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
-from services.daily_gift_service import DailyGiftService
-from services.config_service import ConfigService
-from utils.messages import BOT_MESSAGES
+from ..services.daily_gift_service import DailyGiftService
+from ..services.config_service import ConfigService
+from ..utils.messages import BOT_MESSAGES
 
 router = Router()
 

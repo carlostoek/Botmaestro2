@@ -5,15 +5,15 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
-from utils.user_roles import is_admin
-from utils.menu_manager import menu_manager
-from utils.admin_state import AdminConfigStates
-from utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
-from keyboards.admin_channel_config_kb import get_save_and_cancel_kb
-from keyboards.admin_main_kb import get_admin_main_kb
-from keyboards.admin_vip_channel_kb import get_admin_vip_channel_kb
-from keyboards.free_channel_admin_kb import get_free_channel_admin_kb
-from services.channel_service import ChannelService
+from ...utils.user_roles import is_admin
+from ...utils.menu_manager import menu_manager
+from ...utils.admin_state import AdminConfigStates
+from ...utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID
+from ...keyboards.admin_channel_config_kb import get_save_and_cancel_kb
+from ...keyboards.admin_main_kb import get_admin_main_kb
+from ...keyboards.admin_vip_channel_kb import get_admin_vip_channel_kb
+from ...keyboards.free_channel_admin_kb import get_free_channel_admin_kb
+from ...services.channel_service import ChannelService
 
 logger = logging.getLogger(__name__)
 router = Router()

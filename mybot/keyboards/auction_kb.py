@@ -1,6 +1,6 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardMarkup
-from utils.text_utils import format_points
+from ..utils.text_utils import format_points
 
 
 def get_auction_main_kb():

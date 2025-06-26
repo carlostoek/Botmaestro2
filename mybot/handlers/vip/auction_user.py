@@ -4,9 +4,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from utils.user_roles import get_user_role
-from utils.menu_utils import update_menu, send_temporary_reply
-from keyboards.auction_kb import (
+from ...utils.user_roles import get_user_role
+from ...utils.menu_utils import update_menu, send_temporary_reply
+from ...keyboards.auction_kb import (
     get_auction_main_kb,
     get_auction_list_kb,
     get_auction_details_kb,
@@ -15,9 +15,9 @@ from keyboards.auction_kb import (
     get_auction_notifications_kb,
     get_bid_history_kb
 )
-from services.auction_service import AuctionService
-from database.models import User, AuctionParticipant
-from utils.text_utils import format_points, format_time_remaining, anonymize_username
+from ...services.auction_service import AuctionService
+from ...database.models import User, AuctionParticipant
+from ...utils.text_utils import format_points, format_time_remaining, anonymize_username
 import logging
 
 logger = logging.getLogger(__name__)

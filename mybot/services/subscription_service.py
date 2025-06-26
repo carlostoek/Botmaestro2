@@ -5,9 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from aiogram import Bot
 
-from services.config_service import ConfigService
+from .config_service import ConfigService
 
-from database.models import VipSubscription, User, Token, Tariff
+from ..database.models import VipSubscription, User, Token, Tariff
 import logging
 
 logger = logging.getLogger(__name__)

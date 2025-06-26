@@ -3,9 +3,9 @@ from aiogram import Router, Bot, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 
-from utils.config import Config
-from utils.user_roles import is_admin
-from keyboards.publication_test_kb import (
+from ..utils.config import Config
+from ..utils.user_roles import is_admin
+from ..keyboards.publication_test_kb import (
     get_publication_test_kb,
     get_publication_test_completed_kb,
 )

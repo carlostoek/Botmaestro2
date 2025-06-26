@@ -1,6 +1,6 @@
 import logging
 from aiogram import Bot
-from utils.config import ADMIN_IDS
+from .config import ADMIN_IDS
 
 
 async def notify_admins(bot: Bot, text: str) -> None:

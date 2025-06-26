@@ -9,15 +9,15 @@ from aiogram import Bot
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import (
+from ..database.models import (
     Auction, 
     Bid, 
     AuctionParticipant, 
     User, 
     AuctionStatus
 )
-from utils.text_utils import anonymize_username, format_points, format_time_remaining
-from services.point_service import PointService
+from ..utils.text_utils import anonymize_username, format_points, format_time_remaining
+from .point_service import PointService
 
 logger = logging.getLogger(__name__)
 

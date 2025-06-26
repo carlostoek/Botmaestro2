@@ -6,10 +6,10 @@ import logging
 from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import ConfigEntry, User, Tariff
-from services.config_service import ConfigService
-from services.channel_service import ChannelService
-from utils.text_utils import sanitize_text
+from ..database.models import ConfigEntry, User, Tariff
+from .config_service import ConfigService
+from .channel_service import ChannelService
+from ..utils.text_utils import sanitize_text
 
 logger = logging.getLogger(__name__)
 
@@ -78,8 +78,8 @@ class TenantService:
             tariffs = result.scalars().all()
             
             # Check gamification setup (basic missions, levels, etc.)
-            from services.mission_service import MissionService
-            from services.level_service import LevelService
+            from .mission_service import MissionService
+            from .level_service import LevelService
             
             mission_service = MissionService(self.session)
             level_service = LevelService(self.session)
@@ -166,9 +166,9 @@ class TenantService:
             Dict with setup results
         """
         try:
-            from services.mission_service import MissionService
-            from services.level_service import LevelService
-            from services.achievement_service import AchievementService
+            from .mission_service import MissionService
+            from .level_service import LevelService
+            from .achievement_service import AchievementService
             
             mission_service = MissionService(self.session)
             level_service = LevelService(self.session)

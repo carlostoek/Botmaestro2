@@ -2,7 +2,7 @@ from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from .config import ADMIN_IDS, VIP_CHANNEL_ID
-from database.models import User, VipSubscription
+from ..database.models import User, VipSubscription
 import os
 import time
 from typing import Dict, Tuple
@@ -24,7 +24,7 @@ def is_admin(user_id: int) -> bool:
 
 async def is_vip_member(bot: Bot, user_id: int, session: AsyncSession | None = None) -> bool:
     """Check if the user should be considered a VIP."""
-    from services.config_service import ConfigService
+    from ..services.config_service import ConfigService
 
     # First check database subscription status
     if session:

@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import Reward, User, UserReward
-from utils.text_utils import sanitize_text
-from utils.messages import BOT_MESSAGES
+from ..database.models import Reward, User, UserReward
+from ..utils.text_utils import sanitize_text
+from ..utils.messages import BOT_MESSAGES
 import logging
 
 logger = logging.getLogger(__name__)

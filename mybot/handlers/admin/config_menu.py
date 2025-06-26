@@ -4,21 +4,21 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.enums.chat_type import ChatType
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils.user_roles import is_admin
-from utils.menu_utils import update_menu
-from keyboards.admin_config_kb import (
+from ...utils.user_roles import is_admin
+from ...utils.menu_utils import update_menu
+from ...keyboards.admin_config_kb import (
     get_admin_config_kb,
     get_scheduler_config_kb,
     get_channel_type_kb,
     get_config_done_kb,
     get_reaction_confirm_kb,
 )
-from utils.keyboard_utils import get_back_keyboard
-from services.config_service import ConfigService
-from services.channel_service import ChannelService
-from services.scheduler import run_channel_request_check, run_vip_subscription_check
-from database.setup import get_session
-from utils.admin_state import AdminConfigStates
+from ...utils.keyboard_utils import get_back_keyboard
+from ...services.config_service import ConfigService
+from ...services.channel_service import ChannelService
+from ...services.scheduler import run_channel_request_check, run_vip_subscription_check
+from ...database.setup import get_session
+from ...utils.admin_state import AdminConfigStates
 from aiogram.fsm.context import FSMContext
 
 router = Router()

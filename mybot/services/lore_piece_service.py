@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from database.models import LorePiece
-from utils.text_utils import sanitize_text
+from ..database.models import LorePiece
+from ..utils.text_utils import sanitize_text
 import logging
 
 logger = logging.getLogger(__name__)

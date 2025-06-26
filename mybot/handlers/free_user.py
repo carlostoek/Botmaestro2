@@ -5,13 +5,13 @@ from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from utils.user_roles import get_user_role
-from utils.menu_manager import menu_manager
-from keyboards.subscription_kb import get_free_main_menu_kb, get_vip_explore_kb
-from keyboards.packs_kb import get_packs_list_kb, get_pack_detail_kb
-from utils.messages import BOT_MESSAGES
-from utils.keyboard_utils import get_back_keyboard
-from utils.notify_admins import notify_admins
+from ..utils.user_roles import get_user_role
+from ..utils.menu_manager import menu_manager
+from ..keyboards.subscription_kb import get_free_main_menu_kb, get_vip_explore_kb
+from ..keyboards.packs_kb import get_packs_list_kb, get_pack_detail_kb
+from ..utils.messages import BOT_MESSAGES
+from ..utils.keyboard_utils import get_back_keyboard
+from ..utils.notify_admins import notify_admins
 
 router = Router()
 logger = logging.getLogger(__name__)

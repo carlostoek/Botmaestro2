@@ -4,16 +4,16 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from utils.user_roles import is_admin
-from utils.menu_utils import update_menu
-from keyboards.admin_event_kb import (
+from ...utils.user_roles import is_admin
+from ...utils.menu_utils import update_menu
+from ...keyboards.admin_event_kb import (
     get_admin_event_main_kb,
     get_event_menu_kb,
     get_raffle_menu_kb,
 )
-from keyboards.common import get_back_kb
-from utils.admin_state import AdminEventStates, AdminRaffleStates
-from services import EventService, RaffleService
+from ...keyboards.common import get_back_kb
+from ...utils.admin_state import AdminEventStates, AdminRaffleStates
+from ...services import EventService, RaffleService
 
 router = Router()
 

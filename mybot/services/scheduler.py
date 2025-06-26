@@ -5,12 +5,12 @@ from aiogram import Bot
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from sqlalchemy import select
 
-from database.models import PendingChannelRequest, BotConfig, User
-from utils.config import CHANNEL_SCHEDULER_INTERVAL, VIP_SCHEDULER_INTERVAL
-from services.config_service import ConfigService
-from services.auction_service import AuctionService
-from services.free_channel_service import FreeChannelService
-from services.subscription_service import SubscriptionService
+from ..database.models import PendingChannelRequest, BotConfig, User
+from ..utils.config import CHANNEL_SCHEDULER_INTERVAL, VIP_SCHEDULER_INTERVAL
+from .config_service import ConfigService
+from .auction_service import AuctionService
+from .free_channel_service import FreeChannelService
+from .subscription_service import SubscriptionService
 
 
 async def run_channel_request_check(bot: Bot, session_factory: async_sessionmaker[AsyncSession]):

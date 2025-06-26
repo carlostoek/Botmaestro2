@@ -3,10 +3,10 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import Bot
 from aiogram.filters import Command
 
-from keyboards.admin_kb import get_admin_kb
-from utils.user_roles import is_admin
-from services.scheduler import run_channel_request_check, run_vip_subscription_check
-from database.setup import get_session
+from ..keyboards.admin_kb import get_admin_kb
+from ..utils.user_roles import is_admin
+from ..services.scheduler import run_channel_request_check, run_vip_subscription_check
+from ..database.setup import get_session
 
 router = Router()
 

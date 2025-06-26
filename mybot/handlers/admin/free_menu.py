@@ -1,9 +1,9 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils.user_roles import is_admin
-from utils.menu_utils import update_menu
-from keyboards.common import get_back_kb
+from ...utils.user_roles import is_admin
+from ...utils.menu_utils import update_menu
+from ...keyboards.common import get_back_kb
 
 router = Router()
 

@@ -5,20 +5,20 @@ from aiogram.types import InlineKeyboardButton
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from utils.user_roles import is_admin, is_vip_member
-from keyboards.admin_vip_kb import get_admin_vip_kb
-from keyboards.admin_vip_config_kb import (
+from ...utils.user_roles import is_admin, is_vip_member
+from ...keyboards.admin_vip_kb import get_admin_vip_kb
+from ...keyboards.admin_vip_config_kb import (
     get_admin_vip_config_kb,
     get_tariff_select_kb,
     get_vip_messages_kb,
 )
-from keyboards.admin_vip_channel_kb import get_admin_vip_channel_kb
-from utils.keyboard_utils import (
+from ...keyboards.admin_vip_channel_kb import get_admin_vip_channel_kb
+from ...utils.keyboard_utils import (
     get_back_keyboard,
     get_main_menu_keyboard,
     get_post_confirmation_keyboard,
 )
-from services import (
+from ...services import (
     SubscriptionService,
     ConfigService,
     TokenService,
@@ -27,23 +27,23 @@ from services import (
     AchievementService,
     MissionService,
 )
-from database.models import User, Tariff
-from utils.message_utils import get_profile_message
-from utils.text_utils import sanitize_text, escape_markdown_v2
-from utils.admin_state import (
+from ...database.models import User, Tariff
+from ...utils.message_utils import get_profile_message
+from ...utils.text_utils import sanitize_text, escape_markdown_v2
+from ...utils.admin_state import (
     AdminVipMessageStates,
     AdminManualBadgeStates,
     AdminContentStates,
     AdminVipSubscriberStates,
 )
 from aiogram.fsm.context import FSMContext
-from utils.menu_utils import (
+from ...utils.menu_utils import (
     update_menu,
     send_temporary_reply,
     send_clean_message,
 )
-from services.message_service import MessageService
-from database.models import set_user_menu_state
+from ...services.message_service import MessageService
+from ...database.models import set_user_menu_state
 import logging
 
 logger = logging.getLogger(__name__)

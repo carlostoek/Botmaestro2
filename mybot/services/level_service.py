@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from aiogram import Bot
 
-from database.models import User, Level, LorePiece, UserLorePiece
-from utils.messages import BOT_MESSAGES
+from ..database.models import User, Level, LorePiece, UserLorePiece
+from ..utils.messages import BOT_MESSAGES
 import logging
 
 logger = logging.getLogger(__name__)

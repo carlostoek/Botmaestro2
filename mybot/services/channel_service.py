@@ -5,9 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Union
 
-from database.models import Channel
-from utils.text_utils import sanitize_text
-from utils.config import DEFAULT_REACTION_BUTTONS
+from ..database.models import Channel
+from ..utils.text_utils import sanitize_text
+from ..utils.config import DEFAULT_REACTION_BUTTONS
 
 logger = logging.getLogger(__name__)
 

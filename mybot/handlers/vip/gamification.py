@@ -7,17 +7,17 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User
-from utils.text_utils import sanitize_text
-from utils.menu_manager import menu_manager
-from utils.menu_factory import menu_factory
-from utils.user_roles import get_user_role
-from services.point_service import PointService
-from services.achievement_service import AchievementService
-from services.mission_service import MissionService
-from services.reward_service import RewardService
-from utils.messages import BOT_MESSAGES
-from services.message_service import MessageService
+from ...database.models import User
+from ...utils.text_utils import sanitize_text
+from ...utils.menu_manager import menu_manager
+from ...utils.menu_factory import menu_factory
+from ...utils.user_roles import get_user_role
+from ...services.point_service import PointService
+from ...services.achievement_service import AchievementService
+from ...services.mission_service import MissionService
+from ...services.reward_service import RewardService
+from ...utils.messages import BOT_MESSAGES
+from ...services.message_service import MessageService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -104,8 +104,8 @@ async def show_user_level(callback: CallbackQuery, session: AsyncSession):
         await callback.answer("Debes iniciar con /start", show_alert=True)
         return
 
-    from services.level_service import get_next_level_info
-    from utils.messages import NIVEL_TEMPLATE
+    from ...services.level_service import get_next_level_info
+    from ...utils.messages import NIVEL_TEMPLATE
     
     info = get_next_level_info(int(user.points))
     text = NIVEL_TEMPLATE.format(
@@ -172,7 +172,7 @@ async def handle_mission_details_callback(callback: CallbackQuery, session: Asyn
             await callback.answer("Misión no encontrada.", show_alert=True)
             return
 
-        from utils.message_utils import get_mission_details_message
+        from ...utils.message_utils import get_mission_details_message
         from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
         
         mission_details_message = await get_mission_details_message(mission)
@@ -439,7 +439,7 @@ async def show_weekly_ranking(message: Message, session: AsyncSession, bot: Bot)
         return
     msg_service = MessageService(session, bot)
     ranking = await msg_service.get_weekly_reaction_ranking()
-    from utils.message_utils import get_weekly_reaction_ranking_message
+    from ...utils.message_utils import get_weekly_reaction_ranking_message
     text = await get_weekly_reaction_ranking_message(ranking, session, user_id)
     await message.answer(text)
     

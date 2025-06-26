@@ -7,12 +7,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from utils.user_roles import is_admin
-from utils.menu_manager import menu_manager
-from services.free_channel_service import FreeChannelService
-from services.config_service import ConfigService
-from keyboards.inline_post_kb import get_reaction_kb
-from keyboards.free_channel_admin_kb import (
+from ..utils.user_roles import is_admin
+from ..utils.menu_manager import menu_manager
+from ..services.free_channel_service import FreeChannelService
+from ..services.config_service import ConfigService
+from ..keyboards.inline_post_kb import get_reaction_kb
+from ..keyboards.free_channel_admin_kb import (
     get_free_channel_admin_kb,
     get_wait_time_selection_kb,
     get_channel_post_options_kb,

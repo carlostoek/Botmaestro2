@@ -10,10 +10,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from utils.user_roles import is_admin
-from utils.menu_manager import menu_manager
-from services.tenant_service import TenantService
-from keyboards.setup_kb import (
+from ..utils.user_roles import is_admin
+from ..utils.menu_manager import menu_manager
+from ..services.tenant_service import TenantService
+from ..keyboards.setup_kb import (
     get_setup_main_kb,
     get_setup_channels_kb,
     get_setup_gamification_kb,
@@ -22,10 +22,10 @@ from keyboards.setup_kb import (
     get_channel_detection_kb,
     get_setup_confirmation_kb
 )
-from utils.text_utils import sanitize_text
+from ..utils.text_utils import sanitize_text
 
 # Importar menu_factory para crear menús específicos si es necesario
-from utils.menu_factory import menu_factory 
+from ..utils.menu_factory import menu_factory
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -701,7 +701,7 @@ async def handle_admin_kinky_game_button(callback: CallbackQuery, session: Async
     if not is_admin(callback.from_user.id):
         return await callback.answer("Acceso denegado", show_alert=True)
     
-    from utils.keyboard_utils import get_admin_manage_content_keyboard # Asegurarse de la importación
+    from ..utils.keyboard_utils import get_admin_manage_content_keyboard  # Asegurarse de la importación
     
     text = "🎲 **Panel de Gestión de Gamificación Kinky**\n\n" \
            "¡Bienvenido al centro de control de todos tus juegos y actividades! " \

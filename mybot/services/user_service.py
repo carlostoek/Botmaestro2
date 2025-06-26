@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User
-from utils.text_utils import sanitize_text
+from ..database.models import User
+from ..utils.text_utils import sanitize_text
 
 logger = logging.getLogger(__name__)
 

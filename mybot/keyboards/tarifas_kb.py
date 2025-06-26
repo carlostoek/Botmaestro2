@@ -2,7 +2,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 from typing import Sequence
-from database.models import Tariff
+from ..database.models import Tariff
 
 
 def get_tarifas_kb(tariffs: Sequence[Tariff] | None = None):
