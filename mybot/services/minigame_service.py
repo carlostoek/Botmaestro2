@@ -1,7 +1,8 @@
 import datetime
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import UserStats, MiniGamePlay, Mission, UserMissionEntry
+from database.models import UserStats, MiniGamePlay, UserMissionEntry
+from mybot.models import Mission
 from .point_service import PointService
 from .mission_service import MissionService
 
@@ -42,11 +43,11 @@ class MiniGameService:
         mission_name = f"Reaction Challenge {user_id}"
         description = f"Reacciona {reactions} veces en {duration_minutes} minutos"
         mission = await ms.create_mission(
-            mission_name,
-            description,
-            "reaction_challenge",
-            reactions,
-            reward,
+            name=mission_name,
+            description=description,
+            mission_type="reaction_challenge",
+            target_value=reactions,
+            reward_points=reward,
             duration_days=0,
             requires_action=False,
             action_data={"duration_minutes": duration_minutes, "penalty_points": penalty},

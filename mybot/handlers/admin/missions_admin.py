@@ -10,7 +10,8 @@ from utils.keyboard_utils import get_admin_mission_list_keyboard, get_back_keybo
 from utils.admin_state import AdminMissionStates, MissionAdminStates
 from utils.message_utils import safe_edit_message
 from services.mission_service import MissionService
-from database.models import Mission, LorePiece
+from mybot.models import Mission
+from database.models import LorePiece
 
 router = Router()
 
@@ -70,7 +71,7 @@ async def mission_view_details(callback: CallbackQuery, session: AsyncSession):
         "🔹 **Descripción:**",
         f"💬 {mission.description or '-'}",
         "",
-        f"🔸 **Tipo de Misión:** `{mission.type}`",
+        f"🔸 **Tipo de Misión:** `{mission.mission_type}`",
         f"🔸 **Puntos que Ganas:** {points_text}",
         f"🔸 **Estado:** {status_text}",
     ]

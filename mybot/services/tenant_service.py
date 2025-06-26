@@ -211,12 +211,12 @@ class TenantService:
             created_missions = []
             for mission_data in default_missions:
                 mission = await mission_service.create_mission(
-                    mission_data["name"],
-                    mission_data["description"],
-                    mission_data["mission_type"],
-                    mission_data["target_value"],
-                    mission_data["reward_points"],
-                    mission_data["duration_days"]
+                    name=mission_data["name"],
+                    description=mission_data["description"],
+                    mission_type=mission_data["mission_type"],
+                    target_value=mission_data["target_value"],
+                    reward_points=mission_data["reward_points"],
+                    duration_days=mission_data["duration_days"]
                 )
                 created_missions.append(mission.name)
             
