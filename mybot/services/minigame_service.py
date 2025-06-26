@@ -37,7 +37,15 @@ class MiniGameService:
         await self.session.commit()
         return score
 
-    async def start_reaction_challenge(self, user_id: int, reactions: int, duration_minutes: int = 10, reward: int = 5, penalty: int = 2) -> Mission:
+    async def start_reaction_challenge(
+        self,
+        user_id: int,
+        reactions: int,
+        duration_minutes: int = 10,
+        reward: int = 5,
+        penalty: int = 2,
+        channel_type: str = "vip",
+    ) -> Mission:
         ms = MissionService(self.session)
         mission_name = f"Reaction Challenge {user_id}"
         description = f"Reacciona {reactions} veces en {duration_minutes} minutos"
@@ -48,6 +56,7 @@ class MiniGameService:
             reactions,
             reward,
             duration_days=0,
+            channel_type=channel_type,
             requires_action=False,
             action_data={"duration_minutes": duration_minutes, "penalty_points": penalty},
         )

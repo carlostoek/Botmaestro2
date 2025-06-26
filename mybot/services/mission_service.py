@@ -199,6 +199,7 @@ class MissionService:
         target_value: int,
         reward_points: int,
         duration_days: int = 0,
+        channel_type: str = "vip",
         *,
         requires_action: bool = False,
         action_data: dict | None = None,
@@ -206,6 +207,7 @@ class MissionService:
         new_mission = Mission(
             name=sanitize_text(name),
             description=sanitize_text(description),
+            channel_type=channel_type,
             reward_points=reward_points,
             type=mission_type,
             target_value=target_value,

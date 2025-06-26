@@ -43,6 +43,7 @@ async def main() -> None:
                     m.get("target_value", 1),
                     m["reward_points"],
                     m.get("duration_days", 0),
+                    channel_type="vip",
                 )
     print("Database initialised")
 
