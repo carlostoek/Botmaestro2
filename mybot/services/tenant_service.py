@@ -216,8 +216,8 @@ class TenantService:
                     mission_data["mission_type"],
                     mission_data["target_value"],
                     mission_data["reward_points"],
-                    mission_data["duration_days"],
-                    channel_type="vip"
+                    duration_days=mission_data["duration_days"],
+                    channel_type="vip",
                 )
                 created_missions.append(mission.name)
             

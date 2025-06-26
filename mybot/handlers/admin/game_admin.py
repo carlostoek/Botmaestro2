@@ -21,6 +21,7 @@ from utils.keyboard_utils import (
     get_admin_content_minigames_keyboard,
     get_badge_selection_keyboard,
     get_reward_type_keyboard,
+    get_mission_reward_type_keyboard,
 )
 from .missions_admin import show_missions_page
 from .levels_admin import show_levels_page
@@ -293,11 +294,11 @@ async def admin_process_target(message: Message, state: FSMContext):
         return
     await state.update_data(target=value)
     await message.answer("🏆 Recompensa en puntos")
-    await state.set_state(AdminMissionStates.creating_mission_reward)
+    await state.set_state(AdminMissionStates.creating_mission_reward_points)
 
 
-@router.message(AdminMissionStates.creating_mission_reward)
-async def admin_process_reward(message: Message, state: FSMContext):
+@router.message(AdminMissionStates.creating_mission_reward_points)
+async def admin_process_reward_points(message: Message, state: FSMContext):
     if not is_admin(message.from_user.id):
         return
     try:
@@ -305,7 +306,59 @@ async def admin_process_reward(message: Message, state: FSMContext):
     except ValueError:
         await message.answer("Ingresa un número válido de puntos:")
         return
-    await state.update_data(reward=points)
+    await state.update_data(reward_points=points)
+    # Preguntar por el tipo de recompensa adicional
+    await message.answer(
+        "Selecciona el tipo de recompensa adicional:",
+        reply_markup=get_mission_reward_type_keyboard(),
+    )
+    await state.set_state(AdminMissionStates.creating_mission_reward_type)
+
+
+@router.callback_query(F.data.startswith("mission_reward_type_"))
+async def admin_select_mission_reward_type(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+
+    selected_type = callback.data.split("mission_reward_type_")[-1]
+    await state.update_data(reward_type=selected_type)
+
+    if selected_type == "points":
+        await callback.message.edit_text("⏳ Duración (en días, 0 para permanente)")
+        await state.set_state(AdminMissionStates.creating_mission_duration)
+    elif selected_type == "text":
+        await callback.message.edit_text("Ingresa el texto de la recompensa:")
+        await state.set_state(AdminMissionStates.creating_mission_reward_content)
+    elif selected_type == "photo":
+        await callback.message.edit_text("Envía la imagen para la recompensa:")
+        await state.set_state(AdminMissionStates.creating_mission_reward_content)
+    elif selected_type == "video":
+        await callback.message.edit_text("Envía el video para la recompensa:")
+        await state.set_state(AdminMissionStates.creating_mission_reward_content)
+
+    await callback.answer()
+
+
+@router.message(AdminMissionStates.creating_mission_reward_content)
+async def admin_process_reward_content(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+
+    data = await state.get_data()
+    reward_type = data.get("reward_type")
+    reward_content = None
+
+    if reward_type == "text":
+        reward_content = message.text
+    elif reward_type == "photo" and message.photo:
+        reward_content = message.photo[-1].file_id
+    elif reward_type == "video" and message.video:
+        reward_content = message.video.file_id
+    else:
+        await send_temporary_reply(message, f"Por favor, envía un {reward_type} válido.")
+        return
+
+    await state.update_data(reward_content=reward_content)
     await message.answer("⏳ Duración (en días, 0 para permanente)")
     await state.set_state(AdminMissionStates.creating_mission_duration)
 
@@ -326,8 +379,9 @@ async def admin_process_duration(message: Message, state: FSMContext, session: A
         data["description"],
         data["mission_type"],
         data["target"],
-        data["reward"],
-        reward_type="points", # Explicitly pass reward_type here
+        data["reward_points"],
+        reward_type=data.get("reward_type", "points"),
+        reward_content=data.get("reward_content"),
         duration_days=days,
         channel_type="vip",
     )

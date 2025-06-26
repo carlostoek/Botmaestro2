@@ -107,6 +107,10 @@ class Mission(AsyncAttrs, Base):
     description = Column(Text, nullable=False)
     channel_type = Column(String, nullable=False, default="vip")
     reward_points = Column(Integer, default=0)
+    # Tipo de recompensa adicional: "points", "text", "photo", "video", etc.
+    reward_type = Column(String, default="points")
+    # Contenido o identificador asociado a la recompensa
+    reward_content = Column(Text, nullable=True)
     mission_type = Column("mission_type", String, default="one_time")
     target_value = Column(Integer, default=1)
     duration_days = Column(Integer, default=0)

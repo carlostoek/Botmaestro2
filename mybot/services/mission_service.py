@@ -227,7 +227,8 @@ class MissionService:
         mission_type: str,
         target_value: int,
         reward_points: int,
-        reward_type: str = "points", # Added reward_type with a default
+        reward_type: str = "points",
+        reward_content: str | None = None,
         duration_days: int = 0,
         channel_type: str = "vip",
         *,
@@ -240,7 +241,8 @@ class MissionService:
             description=sanitize_text(description),
             channel_type=channel_type,
             reward_points=reward_points,
-            reward_type=reward_type, # Pass the new reward_type
+            reward_type=reward_type,
+            reward_content=reward_content,
             mission_type=mission_type,
             target_value=target_value,
             duration_days=duration_days,
