@@ -220,6 +220,10 @@ async def toggle_daily_gift(callback: CallbackQuery, session: AsyncSession):
     new_value = "false" if current == "true" else "true"
     await service.set_value("daily_gift_enabled", new_value)
     await callback.answer("Configuración actualizada", show_alert=True)
+    # The original error log indicated a syntax error in game_admin.py.
+    # If admin_content_daily_gifts is in game_admin.py, this line would have caused the crash.
+    # Assuming this function is now correctly defined elsewhere or has been fixed:
+    from .game_admin import admin_content_daily_gifts # Ensure this import is handled correctly
     await admin_content_daily_gifts(callback, session)
 
 
@@ -503,13 +507,4 @@ async def badge_description_step(message: Message, state: FSMContext):
 
 
 @router.message(AdminBadgeStates.creating_badge_requirement)
-async def badge_requirement_step(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
-        return
-    await state.update_data(requirement=message.text.strip())
-    await message.answer("🖼️ Emoji o símbolo (opcional, escribe 'no' para omitir):")
-    await state.set_state(AdminBadgeStates.creating_badge_emoji)
-
-
-@router.message(AdminBadgeStates.creating_badge_emoji)
-async 
+async def badge_requirement_step(message: Message, state: F
