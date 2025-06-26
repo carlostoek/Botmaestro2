@@ -19,7 +19,9 @@ class Mission(AsyncAttrs, Base):
     name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     channel_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    mission_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    mission_type: Mapped[str] = mapped_column(
+        "mission_type", String(50), nullable=False
+    )
     reward_type: Mapped[str] = mapped_column(String(50), nullable=False)
     reward_amount: Mapped[float] = mapped_column(Integer, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

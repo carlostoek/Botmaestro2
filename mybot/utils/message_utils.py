@@ -127,7 +127,7 @@ async def get_mission_details_message(mission: Mission) -> str:
         mission_name=mission.name,
         mission_description=mission.description,
         points_reward=mission.reward_points,
-        mission_type=mission.type.capitalize(),
+        mission_type=mission.mission_type.capitalize(),
     )
 
 
