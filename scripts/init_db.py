@@ -37,12 +37,12 @@ async def main() -> None:
         if not existing:
             for m in DEFAULT_MISSIONS:
                 await mission_service.create_mission(
-                    m["name"],
-                    m["description"],
-                    m["mission_type"],
-                    m.get("target_value", 1),
-                    m["reward_points"],
-                    m.get("duration_days", 0),
+                    name=m["name"],
+                    description=m["description"],
+                    mission_type=m["mission_type"],
+                    target_value=m.get("target_value", 1),
+                    reward_points=m["reward_points"],
+                    duration_days=m.get("duration_days", 0),
                 )
     print("Database initialised")
 

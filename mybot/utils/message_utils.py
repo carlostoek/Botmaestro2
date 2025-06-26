@@ -2,7 +2,8 @@
 from aiogram.types import Message, InlineKeyboardMarkup
 from aiogram.exceptions import TelegramBadRequest
 import logging
-from database.models import User, Mission, Reward, UserAchievement
+from database.models import User, Reward, UserAchievement
+from mybot.models import Mission
 from services.level_service import LevelService
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -127,7 +128,7 @@ async def get_mission_details_message(mission: Mission) -> str:
         mission_name=mission.name,
         mission_description=mission.description,
         points_reward=mission.reward_points,
-        mission_type=mission.type.capitalize(),
+        mission_type=mission.mission_type.capitalize(),
     )
 
 

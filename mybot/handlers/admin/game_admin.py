@@ -35,7 +35,8 @@ from utils.admin_state import (
 from services.mission_service import MissionService
 from services.reward_service import RewardService
 from services.level_service import LevelService
-from database.models import User, Mission, Level
+from database.models import User, Level
+from mybot.models import Mission
 from services.point_service import PointService
 from services.config_service import ConfigService
 from services.badge_service import BadgeService
@@ -318,12 +319,12 @@ async def admin_process_duration(message: Message, state: FSMContext, session: A
     data = await state.get_data()
     mission_service = MissionService(session)
     await mission_service.create_mission(
-        data["name"],
-        data["description"],
-        data["type"],
-        data["target"],
-        data["reward"],
-        days,
+        name=data["name"],
+        description=data["description"],
+        mission_type=data["type"],
+        target_value=data["target"],
+        reward_points=data["reward"],
+        duration_days=days,
     )
     await message.answer(
         "✅ Misión creada correctamente", reply_markup=get_admin_content_missions_keyboard()

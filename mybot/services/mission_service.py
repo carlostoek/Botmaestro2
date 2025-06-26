@@ -4,7 +4,6 @@ import random
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from database.models import (
-    Mission,
     User,
     UserMissionEntry,
     Challenge,
@@ -12,6 +11,7 @@ from database.models import (
     LorePiece,
     UserLorePiece,
 )
+from mybot.models import Mission
 from utils.text_utils import sanitize_text
 import logging
 
@@ -32,7 +32,7 @@ class MissionService:
         """
         stmt = select(Mission).where(Mission.is_active == True)
         if mission_type:
-            stmt = stmt.where(Mission.type == mission_type)
+            stmt = stmt.where(Mission.mission_type == mission_type)
         result = await self.session.execute(stmt)
         missions = [m for m in result.scalars().all() if not m.duration_days or (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()]
 
@@ -80,22 +80,22 @@ class MissionService:
         or if it's a one-time mission already completed.
         Returns (is_completed_for_period, reason_if_completed)
         """
-        mission_completion_record = user.missions_completed.get(mission.id)
-        
-        if mission.type == "one_time":
+        mission_completion_record = user.missions_completed.get(str(mission.id))
+
+        if mission.mission_type == "one_time":
             if mission_completion_record:
                 return True, "already_completed"
-        elif mission.type == "daily":
+        elif mission.mission_type == "daily":
             if mission_completion_record:
                 last_completed = datetime.datetime.fromisoformat(mission_completion_record)
                 if (datetime.datetime.now() - last_completed) < datetime.timedelta(days=1):
                     return True, "daily_limit_reached"
-        elif mission.type == "weekly":
+        elif mission.mission_type == "weekly":
             if mission_completion_record:
                 last_completed = datetime.datetime.fromisoformat(mission_completion_record)
                 if (datetime.datetime.now() - last_completed) < datetime.timedelta(weeks=1):
                     return True, "weekly_limit_reached"
-        elif mission.type == "reaction":
+        elif mission.mission_type == "reaction":
             # For reaction missions, check if already completed once
             if mission_completion_record:
                 return True, "already_completed"
@@ -105,7 +105,7 @@ class MissionService:
     async def complete_mission(
         self,
         user_id: int,
-        mission_id: str,
+        mission_id: int | str,
         reaction_type: str = None,
         target_message_id: int = None,
         *,
@@ -116,7 +116,7 @@ class MissionService:
         Returns (True, mission_object) on success, (False, None) on failure.
         """
         user = await self.session.get(User, user_id)
-        mission = await self.session.get(Mission, mission_id)
+        mission = await self.session.get(Mission, int(mission_id))
 
         if not user or not mission or not mission.is_active:
             logger.warning(f"Failed to complete mission: User {user_id} or mission {mission_id} not found or inactive.")
@@ -130,7 +130,7 @@ class MissionService:
 
         # Add mission to user's completed list with timestamp
         now = datetime.datetime.now().isoformat()
-        user.missions_completed[mission.id] = now
+        user.missions_completed[str(mission.id)] = now
         
 
         # Add points to user. Event multiplier should be handled by PointService or calling context.
@@ -145,9 +145,9 @@ class MissionService:
         await point_service.add_points(user_id, mission.reward_points, bot=bot)
 
         # Update last reset timestamps for daily/weekly missions
-        if mission.type == "daily":
+        if mission.mission_type == "daily":
             user.last_daily_mission_reset = datetime.datetime.now()
-        elif mission.type == "weekly":
+        elif mission.mission_type == "weekly":
             user.last_weekly_mission_reset = datetime.datetime.now()
 
         # Desbloqueo de pistas de lore vinculadas a la misión
@@ -187,7 +187,7 @@ class MissionService:
             )
 
         logger.info(
-            f"User {user_id} successfully completed mission {mission_id} (Type: {mission.type}, Message: {target_message_id})."
+            f"User {user_id} successfully completed mission {mission_id} (Type: {mission.mission_type}, Message: {target_message_id})."
         )
         return True, mission
 
@@ -203,13 +203,11 @@ class MissionService:
         requires_action: bool = False,
         action_data: dict | None = None,
     ) -> Mission:
-        mission_id = f"{mission_type}_{sanitize_text(name).lower().replace(' ', '_').replace('.', '').replace(',', '')}"
         new_mission = Mission(
-            id=mission_id,
             name=sanitize_text(name),
             description=sanitize_text(description),
             reward_points=reward_points,
-            type=mission_type,
+            mission_type=mission_type,
             target_value=target_value,
             duration_days=duration_days,
             requires_action=requires_action,
@@ -221,17 +219,17 @@ class MissionService:
         await self.session.refresh(new_mission)
         return new_mission
 
-    async def toggle_mission_status(self, mission_id: str, status: bool) -> bool:
-        mission = await self.session.get(Mission, mission_id)
+    async def toggle_mission_status(self, mission_id: int | str, status: bool) -> bool:
+        mission = await self.session.get(Mission, int(mission_id))
         if mission:
             mission.is_active = status
             await self.session.commit()
             return True
         return False
 
-    async def update_mission(self, mission_id: str, **fields) -> Mission | None:
+    async def update_mission(self, mission_id: int | str, **fields) -> Mission | None:
         """Update mission fields and return the updated mission."""
-        mission = await self.session.get(Mission, mission_id)
+        mission = await self.session.get(Mission, int(mission_id))
         if not mission:
             return None
         for key, value in fields.items():
@@ -287,8 +285,8 @@ class MissionService:
                     )
         await self.session.commit()
 
-    async def delete_mission(self, mission_id: str) -> bool:
-        mission = await self.session.get(Mission, mission_id)
+    async def delete_mission(self, mission_id: int | str) -> bool:
+        mission = await self.session.get(Mission, int(mission_id))
         if mission:
             await self.session.delete(mission)
             await self.session.commit()
