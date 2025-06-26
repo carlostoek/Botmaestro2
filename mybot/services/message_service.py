@@ -14,7 +14,7 @@ import logging
 
 from .config_service import ConfigService
 from .channel_service import ChannelService
-from database.models import ButtonReaction, Mission # Import Mission to query for it
+from mybot.database.models import ButtonReaction, Mission # Import Mission to query for it
 from keyboards.inline_post_kb import get_reaction_kb
 from services.message_registry import store_message
 from utils.config import VIP_CHANNEL_ID, FREE_CHANNEL_ID

@@ -10,7 +10,7 @@ from keyboards.admin_channels_kb import get_admin_channels_kb, get_wait_time_kb
 from keyboards.common import get_back_kb
 from services.channel_service import ChannelService
 from services.config_service import ConfigService
-from database.models import BotConfig
+from mybot.database.models import BotConfig
 
 router = Router()
 

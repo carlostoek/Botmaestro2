@@ -17,7 +17,7 @@ from keyboards.setup_kb import (
     get_setup_tariffs_kb,
     get_setup_confirmation_kb,
 )
-from database.models import User
+from mybot.database.models import User
 import logging
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder # Importar InlineKeyboardBuilder

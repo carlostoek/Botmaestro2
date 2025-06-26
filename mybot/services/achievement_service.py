@@ -5,7 +5,7 @@ from aiogram import Bot
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import (
+from mybot.database.models import (
     Achievement,
     UserAchievement,
     InviteToken,

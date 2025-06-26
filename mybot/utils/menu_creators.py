@@ -5,7 +5,7 @@ Separated to avoid circular imports and improve maintainability.
 from typing import Tuple
 from aiogram.types import InlineKeyboardMarkup
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User
+from mybot.database.models import User
 from utils.keyboard_utils import (
     get_profile_keyboard,
     get_missions_keyboard,

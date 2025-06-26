@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import User, UserStats
+from mybot.database.models import User, UserStats
 from utils.user_roles import get_points_multiplier
 from aiogram import Bot
 from services.level_service import LevelService

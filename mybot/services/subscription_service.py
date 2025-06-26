@@ -7,7 +7,7 @@ from aiogram import Bot
 
 from services.config_service import ConfigService
 
-from database.models import VipSubscription, User, Token, Tariff
+from mybot.database.models import VipSubscription, User, Token, Tariff
 import logging
 
 logger = logging.getLogger(__name__)

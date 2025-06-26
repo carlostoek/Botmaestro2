@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from aiogram import Bot
 
-from database.models import Badge, UserBadge, User, UserStats
+from mybot.database.models import Badge, UserBadge, User, UserStats
 import re
 
 class BadgeService:

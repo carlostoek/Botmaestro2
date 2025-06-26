@@ -16,7 +16,7 @@ from keyboards.auction_kb import (
     get_bid_history_kb
 )
 from services.auction_service import AuctionService
-from database.models import User, AuctionParticipant
+from mybot.database.models import User, AuctionParticipant
 from utils.text_utils import format_points, format_time_remaining, anonymize_username
 import logging
 

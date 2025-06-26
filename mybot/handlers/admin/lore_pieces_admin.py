@@ -11,7 +11,7 @@ from utils.keyboard_utils import get_admin_lore_piece_list_keyboard, get_back_ke
 from utils.message_utils import safe_edit_message
 from states.gamification_states import LorePieceAdminStates
 from services.lore_piece_service import LorePieceService
-from database.models import LorePiece
+from mybot.database.models import LorePiece
 
 router = Router()
 

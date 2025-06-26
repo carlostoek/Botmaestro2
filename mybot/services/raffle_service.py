@@ -4,7 +4,7 @@ import datetime
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import Raffle, RaffleEntry
+from mybot.database.models import Raffle, RaffleEntry
 
 
 class RaffleService:

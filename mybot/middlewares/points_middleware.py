@@ -5,7 +5,7 @@ try:
 except ImportError:  # Fallback for older aiogram
     MessageReactionUpdated = object
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User
+from mybot.database.models import User
 from services.point_service import PointService
 from utils.messages import BOT_MESSAGES
 import logging

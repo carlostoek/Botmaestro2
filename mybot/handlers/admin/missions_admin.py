@@ -10,7 +10,7 @@ from utils.keyboard_utils import get_admin_mission_list_keyboard, get_back_keybo
 from utils.admin_state import AdminMissionStates, MissionAdminStates
 from utils.message_utils import safe_edit_message
 from services.mission_service import MissionService
-from database.models import Mission, LorePiece
+from mybot.database.models import Mission, LorePiece
 
 router = Router()
 

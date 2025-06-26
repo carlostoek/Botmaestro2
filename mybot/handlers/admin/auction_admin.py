@@ -432,7 +432,7 @@ async def auction_statistics(callback: CallbackQuery, session: AsyncSession):
     
     # Get statistics
     from sqlalchemy import func
-    from database.models import Auction, Bid
+    from mybot.database.models import Auction, Bid
     
     # Total auctions
     total_stmt = select(func.count()).select_from(Auction)

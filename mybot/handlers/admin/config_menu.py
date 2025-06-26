@@ -17,7 +17,7 @@ from utils.keyboard_utils import get_back_keyboard
 from services.config_service import ConfigService
 from services.channel_service import ChannelService
 from services.scheduler import run_channel_request_check, run_vip_subscription_check
-from database.setup import get_session
+from mybot.database.setup import get_session
 from utils.admin_state import AdminConfigStates
 from aiogram.fsm.context import FSMContext
 

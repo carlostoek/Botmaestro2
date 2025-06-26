@@ -5,7 +5,7 @@ from aiogram import Bot
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from sqlalchemy import select
 
-from database.models import PendingChannelRequest, BotConfig, User
+from mybot.database.models import PendingChannelRequest, BotConfig, User
 from utils.config import CHANNEL_SCHEDULER_INTERVAL, VIP_SCHEDULER_INTERVAL
 from services.config_service import ConfigService
 from services.auction_service import AuctionService

@@ -2,7 +2,7 @@ import datetime
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from database.models import (
+from mybot.database.models import (
     Mission,
     User,
     UserMissionEntry,

@@ -21,7 +21,7 @@ from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
-from database.models import PendingChannelRequest, User, BotConfig
+from mybot.database.models import PendingChannelRequest, User, BotConfig
 from services.config_service import ConfigService
 from services.message_registry import store_message
 from utils.text_utils import sanitize_text

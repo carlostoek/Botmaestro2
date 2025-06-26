@@ -1,7 +1,7 @@
 import datetime
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import UserStats
+from mybot.database.models import UserStats
 from .point_service import PointService
 from .config_service import ConfigService
 

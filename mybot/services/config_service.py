@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import ConfigEntry
+from mybot.database.models import ConfigEntry
 from utils.text_utils import sanitize_text
 
 

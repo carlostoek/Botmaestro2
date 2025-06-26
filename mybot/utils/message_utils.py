@@ -2,7 +2,7 @@
 from aiogram.types import Message, InlineKeyboardMarkup
 from aiogram.exceptions import TelegramBadRequest
 import logging
-from database.models import User, Mission, Reward, UserAchievement
+from mybot.database.models import User, Mission, Reward, UserAchievement
 from services.level_service import LevelService
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select

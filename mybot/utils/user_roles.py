@@ -2,7 +2,7 @@ from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from .config import ADMIN_IDS, VIP_CHANNEL_ID
-from database.models import User, VipSubscription
+from mybot.database.models import User, VipSubscription
 import os
 import time
 from typing import Dict, Tuple

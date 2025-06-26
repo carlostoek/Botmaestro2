@@ -14,7 +14,7 @@ from keyboards.tarifas_kb import (
 )
 from keyboards.common import get_back_kb
 from utils.menu_utils import send_temporary_reply, update_menu
-from database.models import Tariff
+from mybot.database.models import Tariff
 from utils.text_utils import sanitize_text, escape_markdown_v2
 import logging
 
@@ -290,7 +290,7 @@ async def delete_tariff(callback: CallbackQuery, session: AsyncSession):
         return
     
     # Check if there are active tokens for this tariff
-    from database.models import Token
+    from mybot.database.models import Token
     stmt = select(Token).where(Token.tariff_id == tariff_id, Token.is_used == False)
     result = await session.execute(stmt)
     active_tokens = result.scalars().all()

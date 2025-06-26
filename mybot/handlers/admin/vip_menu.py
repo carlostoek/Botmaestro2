@@ -27,7 +27,7 @@ from services import (
     AchievementService,
     MissionService,
 )
-from database.models import User, Tariff
+from mybot.database.models import User, Tariff
 from utils.message_utils import get_profile_message
 from utils.text_utils import sanitize_text, escape_markdown_v2
 from utils.admin_state import (
@@ -43,7 +43,7 @@ from utils.menu_utils import (
     send_clean_message,
 )
 from services.message_service import MessageService
-from database.models import set_user_menu_state
+from mybot.database.models import set_user_menu_state
 import logging
 
 logger = logging.getLogger(__name__)

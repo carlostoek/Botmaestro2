@@ -7,7 +7,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User
+from mybot.database.models import User
 from utils.text_utils import sanitize_text
 from utils.menu_manager import menu_manager
 from utils.menu_factory import menu_factory

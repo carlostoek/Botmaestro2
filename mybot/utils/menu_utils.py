@@ -2,7 +2,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.exceptions import TelegramBadRequest
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import set_user_menu_state
+from mybot.database.models import set_user_menu_state
 from utils.user_roles import get_user_role
 from keyboards.admin_main_kb import get_admin_main_kb
 from keyboards.vip_main_kb import get_vip_main_kb

@@ -5,7 +5,7 @@ from aiogram.types import Message
 from aiogram.filters.command import CommandObject
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import User
+from mybot.database.models import User
 from utils.text_utils import sanitize_text
 from services.token_service import TokenService
 from services.subscription_service import SubscriptionService

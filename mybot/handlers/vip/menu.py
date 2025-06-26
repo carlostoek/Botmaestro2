@@ -19,7 +19,7 @@ from utils.message_utils import get_profile_message
 from services.subscription_service import SubscriptionService
 from services.mission_service import MissionService
 from services.achievement_service import AchievementService
-from database.models import User, UserBadge, set_user_menu_state
+from mybot.database.models import User, UserBadge, set_user_menu_state
 from utils.text_utils import sanitize_text
 
 router = Router()

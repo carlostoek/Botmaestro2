@@ -5,7 +5,7 @@ from secrets import token_urlsafe
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from database.models import InviteToken, SubscriptionToken, Token, Tariff, User, VipSubscription
+from mybot.database.models import InviteToken, SubscriptionToken, Token, Tariff, User, VipSubscription
 from services.achievement_service import AchievementService
 from services.subscription_service import SubscriptionService
 from aiogram import Bot

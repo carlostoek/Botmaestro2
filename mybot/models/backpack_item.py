@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs
 import datetime
 
-from database.models import Base, User
+from mybot.database.models import Base, User
 from .pista import Pista
 
 

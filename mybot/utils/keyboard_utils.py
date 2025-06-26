@@ -5,7 +5,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
     KeyboardButton,
 )
-from database.models import User
+from mybot.database.models import User
 from utils.messages import BOT_MESSAGES
 
 

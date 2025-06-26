@@ -12,7 +12,7 @@ from utils.menu_manager import menu_manager
 from utils.menu_factory import menu_factory
 from services.tenant_service import TenantService
 from services import get_admin_statistics
-from database.models import Tariff, Token
+from mybot.database.models import Tariff, Token
 from uuid import uuid4
 from sqlalchemy import select
 from utils.messages import BOT_MESSAGES

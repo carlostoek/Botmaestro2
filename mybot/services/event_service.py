@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import Event
+from mybot.database.models import Event
 
 
 class EventService:

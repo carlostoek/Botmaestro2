@@ -6,7 +6,7 @@ import logging
 from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import ConfigEntry, User, Tariff
+from mybot.database.models import ConfigEntry, User, Tariff
 from services.config_service import ConfigService
 from services.channel_service import ChannelService
 from utils.text_utils import sanitize_text

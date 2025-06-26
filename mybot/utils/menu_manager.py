@@ -8,7 +8,7 @@ from typing import Dict, Optional, Tuple, Any
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 from aiogram.exceptions import TelegramBadRequest, TelegramAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.models import User, set_user_menu_state
+from mybot.database.models import User, set_user_menu_state
 
 logger = logging.getLogger(__name__)
 

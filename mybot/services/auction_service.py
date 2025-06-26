@@ -9,7 +9,7 @@ from aiogram import Bot
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import (
+from mybot.database.models import (
     Auction, 
     Bid, 
     AuctionParticipant, 
