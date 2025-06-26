@@ -324,6 +324,7 @@ async def admin_process_duration(message: Message, state: FSMContext, session: A
         data["target"],
         data["reward"],
         days,
+        channel_type="vip",
     )
     await message.answer(
         "✅ Misión creada correctamente", reply_markup=get_admin_content_missions_keyboard()

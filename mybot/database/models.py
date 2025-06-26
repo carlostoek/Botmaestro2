@@ -105,6 +105,7 @@ class Mission(AsyncAttrs, Base):
     id = Column(String, primary_key=True, unique=True)
     name = Column(String, nullable=False)
     description = Column(Text)
+    channel_type = Column(String, nullable=False, default="vip")
     reward_points = Column(Integer, default=0)
     type = Column(String, default="one_time")
     target_value = Column(Integer, default=1)

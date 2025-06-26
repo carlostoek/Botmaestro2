@@ -114,6 +114,7 @@ class MessageService:
                 target_value=1,
                 reward_points=1,
                 duration_days=7,
+                channel_type=channel_type,
                 requires_action=True,
                 action_data={"target_message_id": real_message_id},
             )
