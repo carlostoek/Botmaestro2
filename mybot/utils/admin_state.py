@@ -88,7 +88,9 @@ class AdminMissionStates(StatesGroup):
     creating_mission_description = State()
     creating_mission_type = State()
     creating_mission_target = State()
-    creating_mission_reward = State()
+    creating_mission_reward_points = State()
+    creating_mission_reward_type = State()
+    creating_mission_reward_content = State()
     creating_mission_duration = State()
 
 

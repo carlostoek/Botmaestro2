@@ -517,6 +517,20 @@ def get_reward_type_keyboard() -> InlineKeyboardMarkup:
     return keyboard
 
 
+def get_mission_reward_type_keyboard() -> InlineKeyboardMarkup:
+    """Keyboard to select mission reward type."""
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🎁 Puntos", callback_data="mission_reward_type_points")],
+            [InlineKeyboardButton(text="📝 Texto", callback_data="mission_reward_type_text")],
+            [InlineKeyboardButton(text="🖼️ Imagen", callback_data="mission_reward_type_photo")],
+            [InlineKeyboardButton(text="🎥 Video", callback_data="mission_reward_type_video")],
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_content_missions")],
+        ]
+    )
+    return keyboard
+
+
 def get_mission_completed_keyboard() -> InlineKeyboardMarkup:
     """Keyboard shown after completing a mission."""
     keyboard = [
