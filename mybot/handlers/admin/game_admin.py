@@ -497,14 +497,10 @@ async def badge_name_step(message: Message, state: FSMContext):
     await state.set_state(AdminBadgeStates.creating_badge_description)
 
 
-@router.message(AdminBadgeStates.creating_badge_description)
-async def badge_description_step(message: Message, state: FSMContext):
+@router.message(AdminBadgeStates.creating_badge_requirement)
+async def badge_requirement_step(message: Message, state: FSMContext):
     if not is_admin(message.from_user.id):
         return
-    await state.update_data(description=message.text.strip())
-    await message.answer("🎯 Requisito (ej. 'Alcanzar nivel 5'):")
-    await state.set_state(AdminBadgeStates.creating_badge_requirement)
-
-
-@router.message(AdminBadgeStates.creating_badge_requirement)
-async def badge_requirement_step(message: Message, state: F
+    await state.update_data(requirement=message.text.strip())
+    await message.answer("🖼️ Emoji o símbolo (opcional, escribe 'no' para omitir):")
+    await state.set_state(AdminBadgeStates.creating_badge_emoji)
