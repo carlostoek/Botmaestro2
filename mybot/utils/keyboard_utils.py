@@ -230,6 +230,12 @@ def get_admin_manage_content_keyboard():
             ],
             [
                 InlineKeyboardButton(
+                    text="🎒 Administrar Pistas",
+                    callback_data="admin_content_lore_pieces",
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text="🎉 Eventos y Sorteos",
                     callback_data="admin_manage_events_sorteos",
                 )

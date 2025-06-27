@@ -679,7 +679,6 @@ async def admin_content_minigames(callback: CallbackQuery, session: AsyncSession
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=toggle_text, callback_data="toggle_minigames")],
-            [InlineKeyboardButton(text="🎒 Administrar Pistas", callback_data="admin_manage_hints")],
             [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_manage_content")],
         ]
     )
