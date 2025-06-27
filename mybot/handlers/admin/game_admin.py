@@ -34,11 +34,12 @@ from utils.admin_state import (
 from services.mission_service import MissionService
 from services.reward_service import RewardService
 from services.level_service import LevelService
-from database.models import User, Mission
+from database.models import User, Mission, LorePiece
 from services.point_service import PointService
 from services.config_service import ConfigService
 from services.badge_service import BadgeService
 from utils.messages import BOT_MESSAGES
+from utils.pagination import get_pagination_buttons
 
 router = Router()
 
@@ -1243,5 +1244,81 @@ async def delete_level(callback: CallbackQuery, session: AsyncSession):
     await callback.message.edit_text(
         BOT_MESSAGES["level_deleted"], reply_markup=get_admin_content_levels_keyboard()
     )
+    await callback.answer()
+
+
+async def show_lore_pieces_page(message: Message, session: AsyncSession, page: int = 0) -> None:
+    """Display paginated lore pieces with action buttons."""
+    limit = 5
+    if page < 0:
+        page = 0
+
+    total_stmt = select(func.count()).select_from(LorePiece)
+    total_result = await session.execute(total_stmt)
+    total = total_result.scalar_one()
+
+    stmt = (
+        select(LorePiece)
+        .order_by(LorePiece.id)
+        .offset(page * limit)
+        .limit(limit)
+    )
+    result = await session.execute(stmt)
+    pieces = result.scalars().all()
+
+    lines = []
+    for p in pieces:
+        lines.append(
+            "\n".join(
+                [
+                    f"🎯 Pista: {p.code_name}",
+                    f"Título: {p.title}",
+                    f"Tipo: {p.content_type}",
+                    f"Categoría: {p.category or '-'}",
+                    f"Principal: {'Sí' if p.is_main_story else 'No'}",
+                ]
+            )
+        )
+
+    text = "\n\n".join(lines) if lines else "No hay pistas registradas."
+
+    keyboard: list[list[InlineKeyboardButton]] = []
+    for p in pieces:
+        keyboard.append(
+            [
+                InlineKeyboardButton(text="✏️ Editar", callback_data=f"lore_piece_edit:{p.code_name}"),
+                InlineKeyboardButton(text="🗑 Eliminar", callback_data=f"lore_piece_delete:{p.code_name}"),
+                InlineKeyboardButton(text="ℹ️ Detalles", callback_data=f"lore_piece_view_details:{p.code_name}"),
+            ]
+        )
+
+    total_pages = (total + limit - 1) // limit
+    nav = get_pagination_buttons(page, total_pages, "lore_piece_page")
+    if nav:
+        keyboard.append(nav)
+
+    keyboard.append([InlineKeyboardButton(text="➕ Nueva Pista", callback_data="lore_piece_create")])
+    keyboard.append([InlineKeyboardButton(text="🔙 Volver", callback_data="admin_kinky_game")])
+
+    await message.edit_text(text, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard))
+
+
+@router.callback_query(F.data == "admin_content_lore_pieces")
+async def admin_content_lore_pieces(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    await show_lore_pieces_page(callback.message, session, 0)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("lore_piece_page:"))
+async def lore_piece_page(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    try:
+        page = int(callback.data.split(":", 1)[1])
+    except (IndexError, ValueError):
+        page = 0
+    await show_lore_pieces_page(callback.message, session, page)
     await callback.answer()
 
