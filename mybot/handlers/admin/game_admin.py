@@ -1325,6 +1325,59 @@ async def lore_piece_page(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
 
 
+@router.callback_query(F.data.startswith("lore_piece_view_details:"))
+async def lore_piece_view_details(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    code = callback.data.split(":", 1)[1]
+    service = LorePieceService(session)
+    piece = await service.get_lore_piece_by_code(code)
+    if not piece:
+        await callback.answer("Pista no encontrada", show_alert=True)
+        return
+
+    lines = [
+        f"🎯 Pista: {piece.code_name}",
+        f"Título: {piece.title}",
+        f"Descripción: {piece.description or '-'}",
+        f"Tipo de Contenido: {piece.content_type}",
+        f"Categoría: {piece.category or '-'}",
+        f"Principal: {'Sí' if piece.is_main_story else 'No'}",
+    ]
+
+    text = "\n".join(lines)
+    if piece.content_type == "text" and piece.content:
+        text += f"\n\n{piece.content}"
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Editar Pista", callback_data=f"lore_piece_edit:{piece.code_name}"),
+                InlineKeyboardButton(text="Eliminar Pista", callback_data=f"lore_piece_delete:{piece.code_name}"),
+            ],
+            [InlineKeyboardButton(text="Volver a la Lista", callback_data="admin_content_lore_pieces")],
+        ]
+    )
+
+    await callback.message.edit_text(text, reply_markup=keyboard)
+
+    if piece.content_type in {"image", "audio", "video"}:
+        if piece.content:
+            try:
+                if piece.content_type == "image":
+                    await callback.message.answer_photo(piece.content)
+                elif piece.content_type == "audio":
+                    await callback.message.answer_audio(piece.content)
+                elif piece.content_type == "video":
+                    await callback.message.answer_video(piece.content)
+            except Exception:
+                await callback.message.answer("Archivo no disponible para previsualización.")
+        else:
+            await callback.message.answer("Archivo no disponible para previsualización.")
+
+    await callback.answer()
+
+
 @router.callback_query(F.data == "lore_piece_create")
 async def lore_piece_create_start(callback: CallbackQuery, state: FSMContext):
     if not is_admin(callback.from_user.id):
