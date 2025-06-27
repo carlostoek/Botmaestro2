@@ -73,8 +73,10 @@ async def handle_reaction_callback(
     points = float(points_dict.get(reaction_type, 0.0))
 
     await PointService(session).add_points(callback.from_user.id, points, bot=bot)
+
     from services.mission_service import MissionService
     mission_service = MissionService(session)
+
     await mission_service.update_progress(callback.from_user.id, "reaction", bot=bot)
 
     channel_type = "free" if channel_id == FREE_CHANNEL_ID else "vip"
@@ -83,7 +85,7 @@ async def handle_reaction_callback(
     )
     if mission:
         completed, _ = await mission_service.complete_mission(
-            callback.from_user.id, mission.id, bot=bot
+            callback.from_user.id, mission.id, bot=bot  # <--- Aquí está ahora bien corregido
         )
         if completed:
             from services.backpack_service import BackpackService
