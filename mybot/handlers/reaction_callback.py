@@ -20,21 +20,27 @@ logger = logging.getLogger(__name__)
 async def handle_reaction_callback(
     callback: CallbackQuery, session: AsyncSession, bot: Bot
 ) -> None:
-    parts = callback.data.split("_")
-    if len(parts) < 4:
+    """Handle reaction callbacks of the form ``ip_<channel_id>_<message_id>_<type>``.
+
+    ``reaction_type`` may contain underscores, so ``callback.data`` is split with
+    ``maxsplit=3`` to capture the rest of the string safely. If any component is
+    invalid, the callback is answered without raising an exception.
+    """
+
+    if not callback.data:
         return await callback.answer()
 
-    try:
-        channel_id = int(parts[1])
-    except ValueError:
-        channel_id = parts[1]
-
-    try:
-        message_id = int(parts[2])
-    except ValueError:
+    parts = callback.data.split("_", maxsplit=3)
+    if len(parts) != 4:
         return await callback.answer()
 
-    reaction_type = parts[3]
+    _, channel_id_str, message_id_str, reaction_type = parts
+
+    if not channel_id_str.isdigit() or not message_id_str.isdigit():
+        return await callback.answer()
+
+    channel_id = int(channel_id_str)
+    message_id = int(message_id_str)
 
     if not callback.message:
         return await callback.answer()
