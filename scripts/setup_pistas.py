@@ -1,6 +1,6 @@
 import asyncio
 from sqlalchemy import select
-from mybot.database.setup import init_db, get_session
+from database.setup import init_db, get_session
 from models import Pista
 
 INITIAL_PISTA = {

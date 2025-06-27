@@ -11,7 +11,7 @@ from database.models import (
     LorePiece,
     UserLorePiece,
 )
-from mybot.models import Mission
+from models import Mission
 from utils.text_utils import sanitize_text
 import logging
 

@@ -2,7 +2,7 @@ import datetime
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import UserStats, MiniGamePlay, UserMissionEntry
-from mybot.models import Mission
+from models import Mission
 from .point_service import PointService
 from .mission_service import MissionService
 
