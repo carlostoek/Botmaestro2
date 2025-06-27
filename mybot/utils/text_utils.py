@@ -152,3 +152,31 @@ def escape_markdown_v2(text: str) -> str:
     for old, new in replacements:
         text = text.replace(old, new)
     return text
+
+
+def escape_markdown(text: str) -> str:
+    """Escape special characters for Telegram Markdown."""
+    if not isinstance(text, str):
+        text = str(text)
+
+    replacements = [
+        ("\\", "\\\\"),
+        ("`", "\\`"),
+        ("*", "\\*"),
+        ("_", "\\_"),
+        ("[", "\\["),
+        ("]", "\\]"),
+    ]
+
+    for old, new in replacements:
+        text = text.replace(old, new)
+    return text
+
+
+def escape_html(text: str | None) -> str:
+    """Escape text for HTML parse mode."""
+    from html import escape
+
+    if text is None:
+        return ""
+    return escape(str(text))

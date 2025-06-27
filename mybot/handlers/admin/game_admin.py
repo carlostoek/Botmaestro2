@@ -70,8 +70,11 @@ async def show_users_page(message: Message, session: AsyncSession, offset: int) 
         "",
     ]
 
+    from utils.text_utils import escape_html
+
     for user in users:
-        display = user.username or (user.first_name or "Sin nombre")
+        raw_display = user.username or (user.first_name or "Sin nombre")
+        display = escape_html(raw_display)
         text_lines.append(f"- {display} (ID: {user.id}) - {user.points} pts")
 
     keyboard = get_admin_users_list_keyboard(users, offset, total_users, limit)
@@ -158,7 +161,10 @@ async def admin_view_user(callback: CallbackQuery, session: AsyncSession):
     if not user:
         await callback.answer("Usuario no encontrado", show_alert=True)
         return
-    display = user.username or (user.first_name or "Sin nombre")
+    from utils.text_utils import escape_html
+
+    raw_display = user.username or (user.first_name or "Sin nombre")
+    display = escape_html(raw_display)
     await callback.message.answer(f"Perfil de {display}\nPuntos: {user.points}")
     await callback.answer()
 
@@ -197,8 +203,11 @@ async def process_search_user(message: Message, state: FSMContext, session: Asyn
     if not users:
         await send_temporary_reply(message, "No se encontraron usuarios.")
     else:
+        from utils.text_utils import escape_html
+
         response = "Resultados:\n" + "\n".join(
-            f"- {(u.username or u.first_name or 'Sin nombre')} (ID: {u.id})" for u in users
+            f"- {escape_html(u.username or u.first_name or 'Sin nombre')} (ID: {u.id})"
+            for u in users
         )
         await message.answer(response)
     await state.clear()
