@@ -77,3 +77,11 @@ class LorePieceService:
         await self.session.delete(piece)
         await self.session.commit()
         return True
+
+    async def toggle_piece_status(self, code_name: str, status: bool) -> bool:
+        piece = await self.get_lore_piece_by_code(code_name)
+        if piece:
+            piece.is_active = status
+            await self.session.commit()
+            return True
+        return False
