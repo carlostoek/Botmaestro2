@@ -46,7 +46,9 @@ async def handle_reaction_callback(
         return await callback.answer()
 
     chat_id = callback.message.chat.id
-    valid = validate_message(chat_id, message_id)
+    # Use the channel_id from callback data for validation in case
+    # the callback originates from a forwarded or linked message.
+    valid = validate_message(channel_id, message_id)
     logger.info(
         "Edit attempt chat_id=%s message_id=%s valid=%s", chat_id, message_id, valid
     )
@@ -102,7 +104,9 @@ async def handle_reaction_callback(
             else:
                 await backpack.give_daily_pista(callback.from_user.id)
 
-    await service.update_reaction_markup(chat_id, message_id)
+    # Update the original channel post rather than the chat where the
+    # callback was received (which could be a linked discussion group).
+    await service.update_reaction_markup(channel_id, message_id)
     await callback.answer(BOT_MESSAGES["reaction_registered_points"].format(points=points))
     await bot.send_message(
         callback.from_user.id,
