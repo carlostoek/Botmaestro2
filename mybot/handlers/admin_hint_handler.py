@@ -40,16 +40,17 @@ async def process_hint_type(message: Message, state: FSMContext):
 
 @router.message(StateFilter(HintCreation.waiting_for_content))
 async def process_hint_content(message: Message, state: FSMContext):
-    session = await get_session()
-    data = await state.get_data()
+    session_factory = await get_session()
+    async with session_factory() as session:
+        data = await state.get_data()
 
-    new_hint = Hint(
-        code_name=data['code_name'],
-        hint_type=data['hint_type'],
-        content=message.text.strip()
-    )
-    session.add(new_hint)
-    await session.commit()
+        new_hint = Hint(
+            code_name=data['code_name'],
+            hint_type=data['hint_type'],
+            content=message.text.strip()
+        )
+        session.add(new_hint)
+        await session.commit()
 
     await message.answer(f"Pista '{data['code_name']}' creada exitosamente.")
     await state.clear()
