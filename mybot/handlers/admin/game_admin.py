@@ -710,7 +710,7 @@ async def admin_manage_hints(callback: CallbackQuery):
         return await callback.answer()
 
     await callback.message.answer(
-        "Para crear una nueva pista, usa el comando /crear_pista."
+        "La funcionalidad de crear pistas ha sido deshabilitada."
     )
     await callback.answer()
 
