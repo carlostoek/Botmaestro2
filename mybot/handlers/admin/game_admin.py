@@ -1514,7 +1514,15 @@ async def process_lore_category(message: Message, state: FSMContext):
     await state.set_state(LorePieceAdminStates.confirming_main_story)
 
 
-@router.callback_query(LorePieceAdminStates.confirming_main_story, F.data.in_("lore_main_yes", "lore_main_no"))
+@router.callback_query(
+    LorePieceAdminStates.confirming_main_story,
+    F.data.in_(
+        [
+            "lore_main_yes",
+            "lore_main_no",
+        ]
+    ),
+)
 async def process_main_story(callback: CallbackQuery, state: FSMContext):
     if not is_admin(callback.from_user.id):
         return await callback.answer()
@@ -1726,7 +1734,15 @@ async def edit_lore_main_start(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-@router.callback_query(LorePieceAdminStates.editing_is_main_story, F.data.in_("lore_main_edit_yes", "lore_main_edit_no"))
+@router.callback_query(
+    LorePieceAdminStates.editing_is_main_story,
+    F.data.in_(
+        [
+            "lore_main_edit_yes",
+            "lore_main_edit_no",
+        ]
+    ),
+)
 async def edit_lore_main(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not is_admin(callback.from_user.id):
         return await callback.answer()
