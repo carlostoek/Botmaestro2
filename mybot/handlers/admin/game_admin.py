@@ -35,11 +35,13 @@ from services.mission_service import MissionService
 from services.reward_service import RewardService
 from services.level_service import LevelService
 from database.models import User, Mission, LorePiece
+from services.lore_piece_service import LorePieceService
 from services.point_service import PointService
 from services.config_service import ConfigService
 from services.badge_service import BadgeService
 from utils.messages import BOT_MESSAGES
 from utils.pagination import get_pagination_buttons
+from states.gamification_states import LorePieceAdminStates
 
 router = Router()
 
@@ -1321,4 +1323,155 @@ async def lore_piece_page(callback: CallbackQuery, session: AsyncSession):
         page = 0
     await show_lore_pieces_page(callback.message, session, page)
     await callback.answer()
+
+
+@router.callback_query(F.data == "lore_piece_create")
+async def lore_piece_create_start(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    await callback.message.edit_text(
+        "Ingresa el code_name de la pista:",
+        reply_markup=get_back_keyboard("admin_content_lore_pieces"),
+    )
+    await state.set_state(LorePieceAdminStates.creating_code_name)
+    await callback.answer()
+
+
+@router.message(LorePieceAdminStates.creating_code_name)
+async def process_lore_code_name(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    code = message.text.strip()
+    service = LorePieceService(session)
+    if await service.code_exists(code):
+        await send_temporary_reply(message, "Ese code_name ya existe. Ingresa otro:")
+        return
+    await state.update_data(code_name=code)
+    await message.answer("Título de la pista:")
+    await state.set_state(LorePieceAdminStates.creating_title)
+
+
+@router.message(LorePieceAdminStates.creating_title)
+async def process_lore_title(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    await state.update_data(title=message.text)
+    await message.answer("Descripción (opcional, '-' para omitir):")
+    await state.set_state(LorePieceAdminStates.creating_description)
+
+
+@router.message(LorePieceAdminStates.creating_description)
+async def process_lore_description(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    desc = message.text
+    if desc.strip() in {"-", "", "none", "skip"}:
+        desc = None
+    await state.update_data(description=desc)
+    await message.answer("Categoría de la pista:")
+    await state.set_state(LorePieceAdminStates.creating_category)
+
+
+@router.message(LorePieceAdminStates.creating_category)
+async def process_lore_category(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    await state.update_data(category=message.text)
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Sí", callback_data="lore_main_yes")],
+            [InlineKeyboardButton(text="❌ No", callback_data="lore_main_no")],
+        ]
+    )
+    await message.answer("¿Es parte de la historia principal?", reply_markup=kb)
+    await state.set_state(LorePieceAdminStates.confirming_main_story)
+
+
+@router.callback_query(LorePieceAdminStates.confirming_main_story, F.data.in_("lore_main_yes", "lore_main_no"))
+async def process_main_story(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    is_main = callback.data == "lore_main_yes"
+    await state.update_data(is_main_story=is_main)
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 Texto", callback_data="lore_type_text")],
+            [InlineKeyboardButton(text="🖼 Imagen", callback_data="lore_type_image")],
+            [InlineKeyboardButton(text="🎵 Audio", callback_data="lore_type_audio")],
+            [InlineKeyboardButton(text="🎞 Video", callback_data="lore_type_video")],
+        ]
+    )
+    await callback.message.edit_text("Selecciona el tipo de contenido:", reply_markup=kb)
+    await state.set_state(LorePieceAdminStates.choosing_content_type)
+    await callback.answer()
+
+
+@router.callback_query(LorePieceAdminStates.choosing_content_type, F.data.startswith("lore_type_"))
+async def choose_content_type(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    ctype = callback.data.split("lore_type_")[-1]
+    await state.update_data(content_type=ctype)
+    if ctype == "text":
+        await callback.message.edit_text("Ingresa el texto de la pista:")
+        await state.set_state(LorePieceAdminStates.entering_text_content)
+    else:
+        await callback.message.edit_text("Envía el archivo correspondiente:")
+        await state.set_state(LorePieceAdminStates.uploading_file_content)
+    await callback.answer()
+
+
+@router.message(LorePieceAdminStates.entering_text_content)
+async def save_text_content(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    data = await state.get_data()
+    service = LorePieceService(session)
+    await service.create_lore_piece(
+        data["code_name"],
+        data["title"],
+        "text",
+        message.text,
+        description=data.get("description"),
+        category=data.get("category"),
+        is_main_story=data.get("is_main_story", False),
+    )
+    await message.answer(
+        "✅ Pista creada correctamente",
+        reply_markup=get_back_keyboard("admin_content_lore_pieces"),
+    )
+    await state.clear()
+
+
+@router.message(LorePieceAdminStates.uploading_file_content)
+async def save_file_content(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    data = await state.get_data()
+    ctype = data.get("content_type")
+    file_id = None
+    if ctype == "image" and message.photo:
+        file_id = message.photo[-1].file_id
+    elif ctype == "audio" and message.audio:
+        file_id = message.audio.file_id
+    elif ctype == "video" and message.video:
+        file_id = message.video.file_id
+    if not file_id:
+        await send_temporary_reply(message, "Envía un archivo válido.")
+        return
+    service = LorePieceService(session)
+    await service.create_lore_piece(
+        data["code_name"],
+        data["title"],
+        ctype,
+        file_id,
+        description=data.get("description"),
+        category=data.get("category"),
+        is_main_story=data.get("is_main_story", False),
+    )
+    await message.answer(
+        "✅ Pista creada correctamente",
+        reply_markup=get_back_keyboard("admin_content_lore_pieces"),
+    )
+    await state.clear()
 
