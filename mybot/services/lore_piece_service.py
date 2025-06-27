@@ -69,3 +69,11 @@ class LorePieceService:
             piece.content = content
         await self.session.commit()
         return True
+
+    async def delete_lore_piece(self, code_name: str) -> bool:
+        piece = await self.get_lore_piece_by_code(code_name)
+        if not piece:
+            return False
+        await self.session.delete(piece)
+        await self.session.commit()
+        return True
