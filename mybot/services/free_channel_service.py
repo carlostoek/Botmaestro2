@@ -270,10 +270,14 @@ class FreeChannelService:
             reply_markup: Teclado inline opcional
             media_files: Lista de archivos multimedia [{'type': 'photo/video/document/audio', 'file_id': 'xxx', 'caption': 'xxx'}]
         """
+        from utils.text_utils import escape_markdown
+
         free_channel_id = await self.get_free_channel_id()
         if not free_channel_id:
             logger.error("Free channel not configured")
             return None
+
+        safe_text = escape_markdown(text or "")
         
         try:
             # Si hay archivos multimedia, enviar como álbum
@@ -283,6 +287,7 @@ class FreeChannelService:
                     media_type = media.get('type', 'photo')
                     file_id = media.get('file_id')
                     caption = media.get('caption', text if i == 0 else None)
+                    caption = escape_markdown(caption) if caption else None
                     
                     if media_type == 'photo':
                         media_group.append(InputMediaPhoto(media=file_id, caption=caption))
@@ -312,7 +317,7 @@ class FreeChannelService:
                     sent_message = await self.bot.send_photo(
                         chat_id=free_channel_id,
                         photo=file_id,
-                        caption=text,
+                        caption=safe_text,
                         reply_markup=reply_markup,
                         protect_content=protect_content,
                         parse_mode="Markdown"
@@ -321,7 +326,7 @@ class FreeChannelService:
                     sent_message = await self.bot.send_video(
                         chat_id=free_channel_id,
                         video=file_id,
-                        caption=text,
+                        caption=safe_text,
                         reply_markup=reply_markup,
                         protect_content=protect_content,
                         parse_mode="Markdown"
@@ -330,7 +335,7 @@ class FreeChannelService:
                     sent_message = await self.bot.send_document(
                         chat_id=free_channel_id,
                         document=file_id,
-                        caption=text,
+                        caption=safe_text,
                         reply_markup=reply_markup,
                         protect_content=protect_content,
                         parse_mode="Markdown"
@@ -339,7 +344,7 @@ class FreeChannelService:
                     sent_message = await self.bot.send_audio(
                         chat_id=free_channel_id,
                         audio=file_id,
-                        caption=text,
+                        caption=safe_text,
                         reply_markup=reply_markup,
                         protect_content=protect_content,
                         parse_mode="Markdown"
@@ -348,7 +353,7 @@ class FreeChannelService:
                     # Fallback a mensaje de texto
                     sent_message = await self.bot.send_message(
                         chat_id=free_channel_id,
-                        text=text,
+                        text=safe_text,
                         reply_markup=reply_markup,
                         protect_content=protect_content,
                         parse_mode="Markdown"
@@ -357,7 +362,7 @@ class FreeChannelService:
                 # Mensaje de texto simple
                 sent_message = await self.bot.send_message(
                     chat_id=free_channel_id,
-                    text=text,
+                    text=safe_text,
                     reply_markup=reply_markup,
                     protect_content=protect_content,
                     parse_mode="Markdown"

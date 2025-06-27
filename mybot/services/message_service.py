@@ -64,9 +64,13 @@ class MessageService:
         try:
             raw_reactions, _ = await self.channel_service.get_reactions_and_points(target_channel_id)
 
+            from utils.text_utils import escape_html
+
+            safe_text = escape_html(text)
+
             sent = await self.bot.send_message(
                 chat_id=target_channel_id_str,
-                text=text,
+                text=safe_text,
                 reply_markup=None,
             )
 
