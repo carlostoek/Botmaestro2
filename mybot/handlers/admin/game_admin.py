@@ -1,5 +1,6 @@
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery, Message, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -678,6 +679,7 @@ async def admin_content_minigames(callback: CallbackQuery, session: AsyncSession
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=toggle_text, callback_data="toggle_minigames")],
+            [InlineKeyboardButton(text="🎒 Administrar Pistas", callback_data="admin_manage_hints")],
             [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_manage_content")],
         ]
     )
@@ -700,6 +702,17 @@ async def toggle_minigames(callback: CallbackQuery, session: AsyncSession):
     await service.set_value("minigames_enabled", new_value)
     await callback.answer("Configuración actualizada", show_alert=True)
     await admin_content_minigames(callback, session)
+
+
+@router.callback_query(F.data == "admin_manage_hints")
+async def admin_manage_hints(callback: CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+
+    await callback.message.answer(
+        "Para crear una nueva pista, usa el comando /crear_pista."
+    )
+    await callback.answer()
 
 
 @router.callback_query(F.data == "admin_configure_daily_gift")
