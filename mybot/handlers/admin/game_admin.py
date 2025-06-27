@@ -1378,6 +1378,50 @@ async def lore_piece_view_details(callback: CallbackQuery, session: AsyncSession
     await callback.answer()
 
 
+@router.callback_query(F.data.startswith("lore_piece_delete:"))
+async def lore_piece_delete_warning(callback: CallbackQuery, session: AsyncSession):
+    """Prompt admin to confirm deletion of a lore piece."""
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    code = callback.data.split(":", 1)[1]
+    service = LorePieceService(session)
+    piece = await service.get_lore_piece_by_code(code)
+    if not piece:
+        await callback.answer("Pista no encontrada", show_alert=True)
+        return
+
+    text = (
+        f"⚠️ ¿Estás seguro de que quieres eliminar la pista {code}?\n\n"
+        "Esta acción no se puede deshacer."
+    )
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Sí, Eliminar",
+                    callback_data=f"lore_piece_confirm_delete:{code}",
+                )
+            ],
+            [InlineKeyboardButton(text="Cancelar", callback_data="admin_content_lore_pieces")],
+        ]
+    )
+
+    await callback.message.edit_text(text, reply_markup=keyboard)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("lore_piece_confirm_delete:"))
+async def lore_piece_confirm_delete(callback: CallbackQuery, session: AsyncSession):
+    """Delete a lore piece after admin confirmation."""
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    code = callback.data.split(":", 1)[1]
+    service = LorePieceService(session)
+    await service.delete_lore_piece(code)
+    await show_lore_pieces_page(callback.message, session, 0)
+    await callback.answer("Pista eliminada")
+
+
 @router.callback_query(F.data == "lore_piece_create")
 async def lore_piece_create_start(callback: CallbackQuery, state: FSMContext):
     if not is_admin(callback.from_user.id):
