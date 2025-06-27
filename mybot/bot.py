@@ -18,6 +18,7 @@ from handlers.reaction_callback import router as reaction_callback_router
 from handlers.admin import admin_router
 from handlers.admin.auction_admin import router as auction_admin_router
 from handlers.lore_handlers import router as lore_router
+from handlers import admin_hint_handler
 
 from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
 
@@ -85,6 +86,7 @@ async def main() -> None:
     dp.include_router(auction_admin_router)
     dp.include_router(free_channel_admin_router)  # Nuevo router para canal gratuito
     dp.include_router(publication_test_router)
+    dp.include_router(admin_hint_handler.router)
     dp.include_router(vip.router)
     dp.include_router(gamification.router)
     dp.include_router(auction_user_router)
