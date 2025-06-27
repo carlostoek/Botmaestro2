@@ -21,21 +21,22 @@ async def iniciar_combinacion(message: Message, state: FSMContext):
 
 @router.message(CombinationFSM.waiting_for_hint_codes)
 async def procesar_combinacion(message: Message, state: FSMContext):
-    session = await get_session()
-    user_id = message.from_user.id
-    user_input = message.text.replace(" ", "")
-    user_hints = sorted(user_input.split(","))
-
-    result = await session.execute(select(HintCombination))
-    combinaciones = result.scalars().all()
-
-    for combinacion in combinaciones:
-        pistas_requeridas = sorted(combinacion.required_hints.split(","))
-        if user_hints == pistas_requeridas:
-            await desbloquear_pista(bot=message.bot, user_id=user_id, pista_code=combinacion.reward_code)
-            await message.answer("\u00a1Combinaci\u00f3n correcta! Has desbloqueado una nueva pista.")
-            await state.clear()
-            return
-
-    await message.answer("Combinaci\u00f3n incorrecta. Verifica tus pistas e intenta nuevamente.")
-    await state.clear()
+    session_factory = await get_session()
+    async with session_factory() as session:
+        user_id = message.from_user.id
+        user_input = message.text.replace(" ", "")
+        user_hints = sorted(user_input.split(","))
+    
+        result = await session.execute(select(HintCombination))
+        combinaciones = result.scalars().all()
+    
+        for combinacion in combinaciones:
+            pistas_requeridas = sorted(combinacion.required_hints.split(","))
+            if user_hints == pistas_requeridas:
+                await desbloquear_pista(bot=message.bot, user_id=user_id, pista_code=combinacion.reward_code)
+                await message.answer("\u00a1Combinaci\u00f3n correcta! Has desbloqueado una nueva pista.")
+                await state.clear()
+                return
+    
+        await message.answer("Combinaci\u00f3n incorrecta. Verifica tus pistas e intenta nuevamente.")
+        await state.clear()
