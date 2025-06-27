@@ -102,7 +102,7 @@ class UserAchievement(AsyncAttrs, Base):
 
 class Mission(AsyncAttrs, Base):
     __tablename__ = "missions"
-    id = Column(String, primary_key=True, unique=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     description = Column(Text)
     reward_points = Column(Integer, default=0)
@@ -112,9 +112,14 @@ class Mission(AsyncAttrs, Base):
     is_active = Column(Boolean, default=True)
     requires_action = Column(Boolean, default=False)
     action_data = Column(JSON, nullable=True)
-    # Código de pista que se desbloquea al completar esta misión
     unlocks_lore_piece_code = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now())
+    channel_type = Column(String, nullable=False, default="general")
+    mission_type = Column(String, nullable=False, default="reaction")
+    reward_type = Column(String, nullable=False, default="points")
+    reward_content = Column(String, nullable=True)
+    reward_amount = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
 
 class UserMissionEntry(AsyncAttrs, Base):
