@@ -428,6 +428,7 @@ class LorePiece(AsyncAttrs, Base):
     unlock_condition_value = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    is_active = Column(Boolean, default=True)
 
 
 class UserLorePiece(AsyncAttrs, Base):

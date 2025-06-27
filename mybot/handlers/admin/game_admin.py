@@ -1278,6 +1278,7 @@ async def show_lore_pieces_page(message: Message, session: AsyncSession, page: i
                     f"Tipo: {p.content_type}",
                     f"Categoría: {p.category or '-'}",
                     f"Principal: {'Sí' if p.is_main_story else 'No'}",
+                    f"Estado: {'Activa' if p.is_active else 'Inactiva'}",
                 ]
             )
         )
@@ -1291,6 +1292,10 @@ async def show_lore_pieces_page(message: Message, session: AsyncSession, page: i
                 InlineKeyboardButton(text="✏️ Editar", callback_data=f"lore_piece_edit:{p.code_name}"),
                 InlineKeyboardButton(text="🗑 Eliminar", callback_data=f"lore_piece_delete:{p.code_name}"),
                 InlineKeyboardButton(text="ℹ️ Detalles", callback_data=f"lore_piece_view_details:{p.code_name}"),
+                InlineKeyboardButton(
+                    text="❌ Desactivar" if p.is_active else "✅ Activar",
+                    callback_data=f"lore_piece_toggle_active:{p.code_name}",
+                ),
             ]
         )
 
@@ -1343,6 +1348,7 @@ async def lore_piece_view_details(callback: CallbackQuery, session: AsyncSession
         f"Tipo de Contenido: {piece.content_type}",
         f"Categoría: {piece.category or '-'}",
         f"Principal: {'Sí' if piece.is_main_story else 'No'}",
+        f"Estado: {'Activa' if piece.is_active else 'Inactiva'}",
     ]
 
     text = "\n".join(lines)
@@ -1354,6 +1360,12 @@ async def lore_piece_view_details(callback: CallbackQuery, session: AsyncSession
             [
                 InlineKeyboardButton(text="Editar Pista", callback_data=f"lore_piece_edit:{piece.code_name}"),
                 InlineKeyboardButton(text="Eliminar Pista", callback_data=f"lore_piece_delete:{piece.code_name}"),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="❌ Desactivar" if piece.is_active else "✅ Activar",
+                    callback_data=f"lore_piece_toggle_active:{piece.code_name}",
+                )
             ],
             [InlineKeyboardButton(text="Volver a la Lista", callback_data="admin_content_lore_pieces")],
         ]
@@ -1420,6 +1432,24 @@ async def lore_piece_confirm_delete(callback: CallbackQuery, session: AsyncSessi
     await service.delete_lore_piece(code)
     await show_lore_pieces_page(callback.message, session, 0)
     await callback.answer("Pista eliminada")
+
+
+@router.callback_query(F.data.startswith("lore_piece_toggle_active:"))
+async def lore_piece_toggle_active(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    code = callback.data.split(":", 1)[1]
+    service = LorePieceService(session)
+    piece = await service.get_lore_piece_by_code(code)
+    if not piece:
+        await callback.answer("Pista no encontrada", show_alert=True)
+        return
+    await service.toggle_piece_status(code, not piece.is_active)
+    status_text = (
+        f"✅ La pista {code} ahora está activa." if not piece.is_active else f"❌ La pista {code} ahora está inactiva."
+    )
+    await callback.answer(status_text, show_alert=True)
+    await show_lore_pieces_page(callback.message, session, 0)
 
 
 @router.callback_query(F.data == "lore_piece_create")
@@ -1548,6 +1578,7 @@ async def _lore_piece_summary(piece: LorePiece) -> tuple[str, InlineKeyboardMark
         f"Categoría: {piece.category or '-'}",
         f"Principal: {'Sí' if piece.is_main_story else 'No'}",
         f"Tipo: {piece.content_type}",
+        f"Estado: {'Activa' if piece.is_active else 'Inactiva'}",
     ]
     keyboard = [
         [InlineKeyboardButton(text="Editar Título", callback_data="lore_edit_title")],
@@ -1556,6 +1587,12 @@ async def _lore_piece_summary(piece: LorePiece) -> tuple[str, InlineKeyboardMark
         [InlineKeyboardButton(text="Editar Historia Principal", callback_data="lore_edit_main")],
         [InlineKeyboardButton(text="Editar Tipo de Contenido", callback_data="lore_edit_type")],
         [InlineKeyboardButton(text="Editar Contenido", callback_data="lore_edit_content")],
+        [
+            InlineKeyboardButton(
+                text="❌ Desactivar" if piece.is_active else "✅ Activar",
+                callback_data=f"lore_piece_toggle_active:{piece.code_name}",
+            )
+        ],
         [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_content_lore_pieces")],
     ]
     return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=keyboard)
