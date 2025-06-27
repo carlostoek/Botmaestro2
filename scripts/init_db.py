@@ -1,9 +1,9 @@
 import asyncio
 
-from mybot.database.setup import init_db, get_session
-from mybot.services.achievement_service import AchievementService
-from mybot.services.level_service import LevelService
-from mybot.services.mission_service import MissionService
+from database.setup import init_db, get_session
+from services.achievement_service import AchievementService
+from services.level_service import LevelService
+from services.mission_service import MissionService
 
 DEFAULT_MISSIONS = [
     {
