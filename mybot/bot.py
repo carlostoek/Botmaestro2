@@ -24,7 +24,7 @@ from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
 
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
-from mybot import mochila
+import mochila
 
 from utils.config import BOT_TOKEN, VIP_CHANNEL_ID
 from services import (
