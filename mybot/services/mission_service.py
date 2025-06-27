@@ -198,18 +198,22 @@ class MissionService:
         mission_type: str,
         target_value: int,
         reward_points: int,
+        reward_type: str | None = None,
         duration_days: int = 0,
         *,
         channel_type: str | None = None,
         requires_action: bool = False,
         action_data: dict | None = None,
     ) -> Mission:
+        if reward_type is None:
+            reward_type = "points"
         if channel_type is None:
             channel_type = "general"
         new_mission = Mission(
             name=sanitize_text(name),
             description=sanitize_text(description),
             reward_points=reward_points,
+            reward_type=reward_type,
             channel_type=channel_type,
             mission_type=mission_type,
             target_value=target_value,
