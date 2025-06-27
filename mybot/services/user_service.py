@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from database.models import User
 from utils.text_utils import sanitize_text
 
@@ -23,16 +24,21 @@ class UserService:
         last_name: str | None = None,
         username: str | None = None,
     ) -> User:
-        user = User(
-            id=telegram_id,
-            first_name=sanitize_text(first_name),
-            last_name=sanitize_text(last_name),
-            username=sanitize_text(username),
+        stmt = (
+            pg_insert(User)
+            .values(
+                id=telegram_id,
+                first_name=sanitize_text(first_name),
+                last_name=sanitize_text(last_name),
+                username=sanitize_text(username),
+            )
+            .on_conflict_do_nothing(index_elements=[User.id])
         )
-        self.session.add(user)
+        result = await self.session.execute(stmt)
         await self.session.commit()
-        await self.session.refresh(user)
-        logger.info("Created new user: %s", telegram_id)
+        if result.rowcount:
+            logger.info("Created new user: %s", telegram_id)
+        user = await self.session.get(User, telegram_id)
         return user
 
     async def update_user_info(
