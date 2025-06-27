@@ -1443,6 +1443,253 @@ async def save_text_content(message: Message, state: FSMContext, session: AsyncS
     await state.clear()
 
 
+async def _lore_piece_summary(piece: LorePiece) -> tuple[str, InlineKeyboardMarkup]:
+    lines = [
+        f"🎯 Pista: {piece.code_name}",
+        f"Título: {piece.title}",
+        f"Descripción: {piece.description or '-'}",
+        f"Categoría: {piece.category or '-'}",
+        f"Principal: {'Sí' if piece.is_main_story else 'No'}",
+        f"Tipo: {piece.content_type}",
+    ]
+    keyboard = [
+        [InlineKeyboardButton(text="Editar Título", callback_data="lore_edit_title")],
+        [InlineKeyboardButton(text="Editar Descripción", callback_data="lore_edit_description")],
+        [InlineKeyboardButton(text="Editar Categoría", callback_data="lore_edit_category")],
+        [InlineKeyboardButton(text="Editar Historia Principal", callback_data="lore_edit_main")],
+        [InlineKeyboardButton(text="Editar Tipo de Contenido", callback_data="lore_edit_type")],
+        [InlineKeyboardButton(text="Editar Contenido", callback_data="lore_edit_content")],
+        [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_content_lore_pieces")],
+    ]
+    return "\n".join(lines), InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+@router.callback_query(F.data.startswith("lore_piece_edit:"))
+async def lore_piece_edit(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    code = callback.data.split(":", 1)[1]
+    service = LorePieceService(session)
+    piece = await service.get_lore_piece_by_code(code)
+    if not piece:
+        await callback.answer("Pista no encontrada", show_alert=True)
+        return
+    await state.update_data(edit_lore_code=code)
+    text, kb = await _lore_piece_summary(piece)
+    await callback.message.edit_text(text, reply_markup=kb)
+    await callback.answer()
+
+
+@router.callback_query(F.data == "lore_edit_title")
+async def edit_lore_title_start(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    await callback.message.edit_text(
+        "Nuevo título:", reply_markup=get_back_keyboard(f"lore_piece_edit:{code}")
+    )
+    await state.set_state(LorePieceAdminStates.editing_title)
+    await callback.answer()
+
+
+@router.message(LorePieceAdminStates.editing_title)
+async def edit_lore_title(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    service = LorePieceService(session)
+    await service.update_lore_piece(code, title=message.text)
+    piece = await service.get_lore_piece_by_code(code)
+    await message.answer("Título actualizado.")
+    text, kb = await _lore_piece_summary(piece)
+    await message.answer(text, reply_markup=kb)
+    await state.clear()
+
+
+@router.callback_query(F.data == "lore_edit_description")
+async def edit_lore_description_start(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    await callback.message.edit_text(
+        "Nueva descripción ('-' para vaciar):",
+        reply_markup=get_back_keyboard(f"lore_piece_edit:{code}")
+    )
+    await state.set_state(LorePieceAdminStates.editing_description)
+    await callback.answer()
+
+
+@router.message(LorePieceAdminStates.editing_description)
+async def edit_lore_description(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    desc = message.text
+    if desc.strip() in {"-", "none", ""}:
+        desc = None
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    service = LorePieceService(session)
+    await service.update_lore_piece(code, description=desc)
+    piece = await service.get_lore_piece_by_code(code)
+    await message.answer("Descripción actualizada.")
+    text, kb = await _lore_piece_summary(piece)
+    await message.answer(text, reply_markup=kb)
+    await state.clear()
+
+
+@router.callback_query(F.data == "lore_edit_category")
+async def edit_lore_category_start(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    await callback.message.edit_text(
+        "Nueva categoría ('-' para ninguna):",
+        reply_markup=get_back_keyboard(f"lore_piece_edit:{code}")
+    )
+    await state.set_state(LorePieceAdminStates.editing_category)
+    await callback.answer()
+
+
+@router.message(LorePieceAdminStates.editing_category)
+async def edit_lore_category(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    cat = message.text
+    if cat.strip() in {"-", "none", ""}:
+        cat = None
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    service = LorePieceService(session)
+    await service.update_lore_piece(code, category=cat)
+    piece = await service.get_lore_piece_by_code(code)
+    await message.answer("Categoría actualizada.")
+    text, kb = await _lore_piece_summary(piece)
+    await message.answer(text, reply_markup=kb)
+    await state.clear()
+
+
+@router.callback_query(F.data == "lore_edit_main")
+async def edit_lore_main_start(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="✅ Sí", callback_data="lore_main_edit_yes")],
+            [InlineKeyboardButton(text="❌ No", callback_data="lore_main_edit_no")],
+        ]
+    )
+    await callback.message.edit_text(
+        "¿Es parte de la historia principal?",
+        reply_markup=kb,
+    )
+    await state.set_state(LorePieceAdminStates.editing_is_main_story)
+    await callback.answer()
+
+
+@router.callback_query(LorePieceAdminStates.editing_is_main_story, F.data.in_("lore_main_edit_yes", "lore_main_edit_no"))
+async def edit_lore_main(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    is_main = callback.data == "lore_main_edit_yes"
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    service = LorePieceService(session)
+    await service.update_lore_piece(code, is_main_story=is_main)
+    piece = await service.get_lore_piece_by_code(code)
+    await callback.message.edit_text("Actualizado.")
+    text, kb = await _lore_piece_summary(piece)
+    await callback.message.answer(text, reply_markup=kb)
+    await state.clear()
+    await callback.answer()
+
+
+@router.callback_query(F.data == "lore_edit_type")
+async def edit_lore_type_start(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="📝 Texto", callback_data="lore_type_edit_text")],
+            [InlineKeyboardButton(text="🖼 Imagen", callback_data="lore_type_edit_image")],
+            [InlineKeyboardButton(text="🎵 Audio", callback_data="lore_type_edit_audio")],
+            [InlineKeyboardButton(text="🎞 Video", callback_data="lore_type_edit_video")],
+        ]
+    )
+    await callback.message.edit_text(
+        "Selecciona el nuevo tipo de contenido:", reply_markup=kb
+    )
+    await state.set_state(LorePieceAdminStates.editing_content_type)
+    await callback.answer()
+
+
+@router.callback_query(LorePieceAdminStates.editing_content_type, F.data.startswith("lore_type_edit_"))
+async def edit_lore_type(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    ctype = callback.data.split("lore_type_edit_")[-1]
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    service = LorePieceService(session)
+    await service.update_lore_piece(code, content_type=ctype)
+    await state.update_data(new_content_type=ctype)
+    if ctype == "text":
+        await callback.message.edit_text("Ingresa el nuevo texto:")
+        await state.set_state(LorePieceAdminStates.editing_text_content)
+    else:
+        await callback.message.edit_text("Envía el nuevo archivo:")
+        await state.set_state(LorePieceAdminStates.editing_file_content)
+    await callback.answer()
+
+
+@router.message(LorePieceAdminStates.editing_text_content)
+async def edit_lore_text_content(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    service = LorePieceService(session)
+    await service.update_lore_piece(code, content=message.text)
+    piece = await service.get_lore_piece_by_code(code)
+    await message.answer("Contenido actualizado.")
+    text, kb = await _lore_piece_summary(piece)
+    await message.answer(text, reply_markup=kb)
+    await state.clear()
+
+
+@router.message(LorePieceAdminStates.editing_file_content)
+async def edit_lore_file_content(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    data = await state.get_data()
+    code = data.get("edit_lore_code")
+    ctype = data.get("new_content_type")
+    file_id = None
+    if ctype == "image" and message.photo:
+        file_id = message.photo[-1].file_id
+    elif ctype == "audio" and message.audio:
+        file_id = message.audio.file_id
+    elif ctype == "video" and message.video:
+        file_id = message.video.file_id
+    if not file_id:
+        await send_temporary_reply(message, "Envía un archivo válido.")
+        return
+    service = LorePieceService(session)
+    await service.update_lore_piece(code, content_type=ctype, content=file_id)
+    piece = await service.get_lore_piece_by_code(code)
+    await message.answer("Contenido actualizado.")
+    text, kb = await _lore_piece_summary(piece)
+    await message.answer(text, reply_markup=kb)
+    await state.clear()
+
+
 @router.message(LorePieceAdminStates.uploading_file_content)
 async def save_file_content(message: Message, state: FSMContext, session: AsyncSession):
     if not is_admin(message.from_user.id):
