@@ -83,7 +83,7 @@ async def main() -> None:
     dp.chat_member.outer_middleware(session_middleware_factory(Session, bot))
     dp.poll_answer.outer_middleware(session_middleware_factory(Session, bot))
     dp.message_reaction.outer_middleware(session_middleware_factory(Session, bot))
-    dp.include_router(admin_router)
+    
 
     from middlewares import PointsMiddleware, UserRegistrationMiddleware
     user_reg_mw = UserRegistrationMiddleware()
