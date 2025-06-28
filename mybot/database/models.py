@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     JSON,
     Text,
+    TIMESTAMP,
     ForeignKey,
     Float,
     UniqueConstraint,
@@ -444,6 +445,45 @@ class UserLorePiece(AsyncAttrs, Base):
     __table_args__ = (
         UniqueConstraint("user_id", "lore_piece_id", name="uix_user_lore_pieces"),
     )
+
+
+class TriviaQuestion(AsyncAttrs, Base):
+    __tablename__ = "trivia_questions"
+
+    id = Column(Integer, primary_key=True)
+    question = Column(Text, nullable=False)
+    options = Column(Text, nullable=False)
+    correct_answer = Column(Integer, nullable=False)
+    category = Column(String, nullable=False)
+    difficulty = Column(String, nullable=False)
+    channel_access = Column(String, nullable=False)
+    lore_piece = Column(String, nullable=True)
+    created_at = Column(TIMESTAMP, server_default="NOW()")
+
+
+class TriviaAnswer(AsyncAttrs, Base):
+    __tablename__ = "trivia_answers"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    question_id = Column(Integer, ForeignKey("trivia_questions.id"), nullable=False)
+    answer = Column(Integer, nullable=False)
+    is_correct = Column(Boolean, nullable=False)
+    response_time = Column(Integer, nullable=True)
+    points_earned = Column(Integer, default=0)
+    answered_at = Column(TIMESTAMP, server_default="NOW()")
+
+
+class TriviaStat(AsyncAttrs, Base):
+    __tablename__ = "trivia_stats"
+
+    user_id = Column(Integer, primary_key=True)
+    total_answered = Column(Integer, default=0)
+    correct_answers = Column(Integer, default=0)
+    streak = Column(Integer, default=0)
+    best_streak = Column(Integer, default=0)
+    total_points = Column(Integer, default=0)
+    last_trivia = Column(TIMESTAMP, nullable=True)
 
 
 
