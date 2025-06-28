@@ -5,7 +5,7 @@ from aiogram.types import Message
 from aiogram.filters import Command
 from sqlalchemy import select
 from database.models import LorePiece, UserLorePiece, User
-from database.database import get_session
+from database import get_session
 from backpack import desbloquear_pista_narrativa
 import random
 from datetime import datetime
