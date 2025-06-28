@@ -42,7 +42,6 @@ from handlers.missions_handler import router as missions_router
 from handlers.info_handler import router as info_router
 
 from handlers.admin_commands import router as admin_router
-dp.include_router(admin_router)
 
 from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
 
