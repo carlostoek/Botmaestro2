@@ -171,6 +171,15 @@ class MenuManager:
         user_id = message.from_user.id
         bot = message.bot
         
+        # Validar texto vacío
+        if not text or text.strip() == "":
+            # Si no hay texto pero hay keyboard, usar mensaje invisible
+            if keyboard:
+                text = "⚡"  # Mensaje mínimo para mostrar solo keyboard
+            else:
+                logger.warning(f"Attempted to send empty message to user {user_id}")
+                return None
+        
         # Clean up previous temporary message
         await self._cleanup_temp_messages(bot, user_id)
         
@@ -181,13 +190,14 @@ class MenuManager:
                 parse_mode=parse_mode
             )
             
-            # Schedule for deletion
-            import time
-            expire_time = time.time() + auto_delete_seconds
-            self._temp_messages[user_id] = (sent_message.chat.id, sent_message.message_id, expire_time)
-            
-            # Schedule actual deletion
-            asyncio.create_task(self._auto_delete_message(bot, user_id, auto_delete_seconds))
+            # Schedule for deletion solo si auto_delete_seconds > 0
+            if auto_delete_seconds > 0:
+                import time
+                expire_time = time.time() + auto_delete_seconds
+                self._temp_messages[user_id] = (sent_message.chat.id, sent_message.message_id, expire_time)
+                
+                # Schedule actual deletion
+                asyncio.create_task(self._auto_delete_message(bot, user_id, auto_delete_seconds))
             
             return sent_message
         except Exception as e:
