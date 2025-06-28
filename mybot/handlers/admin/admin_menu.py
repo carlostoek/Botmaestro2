@@ -17,6 +17,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from utils.messages import BOT_MESSAGES
 from utils.keyboard_utils import get_admin_manage_content_keyboard # Importar la función del teclado
+from backpack import desbloquear_pista_narrativa
 
 import logging
 
@@ -363,4 +364,37 @@ async def admin_free_channel_redirect(callback: CallbackQuery, session: AsyncSes
     # Importar y llamar al handler del canal gratuito
     from handlers.free_channel_admin import free_channel_admin_menu
     await free_channel_admin_menu(callback, session)
+
+
+@router.message(F.text.startswith("/give_hint "))
+async def cmd_give_hint(message: Message):
+    """Comando de admin para dar una pista a un usuario."""
+    if not is_admin(message.from_user.id):
+        return
+
+    parts = message.text.split()
+    if len(parts) == 3:
+        try:
+            target_user_id = int(parts[1])
+            hint_code_to_give = parts[2]
+
+            success = await desbloquear_pista_narrativa(
+                message.bot,
+                target_user_id,
+                hint_code_to_give,
+                {"source": "admin_command", "admin_id": message.from_user.id},
+            )
+
+            if success:
+                await message.answer(
+                    f"✅ Pista '{hint_code_to_give}' desbloqueada para el usuario {target_user_id}."
+                )
+            else:
+                await message.answer(
+                    f"⚠️ La pista '{hint_code_to_give}' ya la tiene el usuario {target_user_id} o no existe."
+                )
+        except ValueError:
+            await message.answer("❌ Uso incorrecto. Formato: /give_hint <user_id> <hint_code>")
+    else:
+        await message.answer("❌ Uso incorrecto. Formato: /give_hint <user_id> <hint_code>")
 
