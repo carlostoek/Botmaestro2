@@ -1,14 +1,14 @@
-# mybot/mochila_narrativa.py
+# mochila_narrativa.py
 
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy import select, and_, func
-from mybot.database.models import LorePiece, UserLorePiece, User
-from mybot.database.hint_combination import HintCombination
-from mybot.database.database import get_session
-from mybot.notifications import send_narrative_notification
+from database.models import LorePiece, UserLorePiece, User
+from database.hint_combination import HintCombination
+from database.setup import get_session
+from notificaciones import send_narrative_notification
 import random
 from datetime import datetime
 
