@@ -97,12 +97,12 @@ async def cmd_start(message: Message, session: AsyncSession):
         )
         # Display the reply keyboard without cluttering the chat
         await menu_manager.send_temporary_message(
-            message,
-            "​",
-            keyboard=main_menu_keyboard,
-            auto_delete_seconds=0,
-            parse_mode="Markdown",
-        )
+    message,
+    "🎭 **Bienvenido al Diván**",  # Texto descriptivo
+    keyboard=main_menu_keyboard,
+    auto_delete_seconds=0,
+    parse_mode="Markdown",
+)
         return # Terminar aquí para el flujo de administración
     
     # Lógica para usuarios no-administradores (VIP, Free)
