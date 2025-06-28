@@ -23,7 +23,6 @@ from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
 
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
-import mochila
 import combinar_pistas
 import backpack
 
@@ -96,7 +95,6 @@ async def main() -> None:
     dp.include_router(minigames.router)
     dp.include_router(free_user.router)
     dp.include_router(lore_router)
-    dp.include_router(mochila.router)
     dp.include_router(backpack.router)
     dp.include_router(combinar_pistas.router)
     dp.include_router(channel_access_router)
