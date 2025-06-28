@@ -12,6 +12,8 @@ from database.setup import init_db, get_session
 from services.achievement_service import AchievementService
 from services.level_service import LevelService
 from services.mission_service import MissionService
+from sqlalchemy.future import select
+from database.models import LorePiece
 
 DEFAULT_MISSIONS = [
     {
@@ -52,6 +54,25 @@ async def main() -> None:
                     m["reward_points"],
                     m.get("duration_days", 0),
                 )
+
+        # Ensure a test LorePiece exists for development/testing
+        existing_pista = await session.execute(
+            select(LorePiece).where(LorePiece.code_name == "TEST_P_1")
+        )
+        if not existing_pista.scalar_one_or_none():
+            test_lore_piece = LorePiece(
+                code_name="TEST_P_1",
+                title="El Diario Olvidado",
+                description="Una página arrancada del diario de Diana. Parece hablar de un encuentro en un viejo café.",
+                content="¡No te olvides de la cafetería en la Calle del Tiempo Perdido! Algo mágico me sucedió allí...",
+                content_type="text",
+                category="memorias",
+            )
+            session.add(test_lore_piece)
+            await session.commit()
+            print("Pista de prueba 'TEST_P_1' añadida.")
+        else:
+            print("Pista de prueba 'TEST_P_1' ya existe.")
     print("Database initialised")
 
 if __name__ == "__main__":
