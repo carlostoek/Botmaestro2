@@ -1,12 +1,11 @@
 # mybot/handlers/admin_commands.py
 
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.types import Message
 from aiogram.filters import Command
 from sqlalchemy import select
 from database.models import LorePiece, UserLorePiece, User
-from database.database import get_session
-from mochila_narrativa import desbloquear_pista_narrativa
+from database.setup import get_session
 import random
 from datetime import datetime
 
@@ -103,8 +102,7 @@ async def cmd_test_hint(message: Message):
                 description=test_hint["description"],
                 content=test_hint["content"],
                 content_type=test_hint["content_type"],
-                category=test_hint["category"],
-                rarity=test_hint["rarity"]
+                category=test_hint["category"]
             )
             session.add(lore_piece)
             await session.flush()  # Para obtener el ID
@@ -219,7 +217,14 @@ async def cmd_test_all_hints(message: Message):
             lore_piece = existing_hint.scalar_one_or_none()
             
             if not lore_piece:
-                lore_piece = LorePiece(**test_hint)
+                lore_piece = LorePiece(
+                    code_name=test_hint["code_name"],
+                    title=test_hint["title"],
+                    description=test_hint["description"],
+                    content=test_hint["content"],
+                    content_type=test_hint["content_type"],
+                    category=test_hint["category"]
+                )
                 session.add(lore_piece)
                 await session.flush()
             
