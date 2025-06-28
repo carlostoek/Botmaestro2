@@ -4,6 +4,7 @@ Enhanced start handler with improved user experience and multi-tenant support.
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
+from bot import main_menu_keyboard
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User
@@ -94,6 +95,10 @@ async def cmd_start(message: Message, session: AsyncSession):
             "admin_main", # Asegúrate de registrar el estado correcto
             delete_origin_message=True
         )
+        await message.answer(
+            "¡Bienvenido! Aquí tienes las opciones principales:",
+            reply_markup=main_menu_keyboard,
+        )
         return # Terminar aquí para el flujo de administración
     
     # Lógica para usuarios no-administradores (VIP, Free)
@@ -113,14 +118,18 @@ async def cmd_start(message: Message, session: AsyncSession):
                 text = "🌟 **¡Hola de nuevo!**\n\n" + text.split('\n\n', 1)[-1]
         
         await menu_manager.show_menu(
-            message, 
-            text, 
-            keyboard, 
-            session, 
+            message,
+            text,
+            keyboard,
+            session,
             "main",
             delete_origin_message=True
         )
-        
+        await message.answer(
+            "¡Bienvenido! Aquí tienes las opciones principales:",
+            reply_markup=main_menu_keyboard,
+        )
+
     except Exception as e:
         logger.error(f"Error in start command for user {user_id}: {e}")
         await menu_manager.send_temporary_message(
