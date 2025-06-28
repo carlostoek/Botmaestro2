@@ -370,6 +370,10 @@ async def admin_free_channel_redirect(callback: CallbackQuery, session: AsyncSes
 async def cmd_give_hint(message: Message):
     """Comando de admin para dar una pista a un usuario."""
     if not is_admin(message.from_user.id):
+        await message.answer(
+            "❌ **Acceso Denegado**\n\nNo tienes permisos para usar este comando.",
+            parse_mode="HTML",
+        )
         return
 
     parts = message.text.split()
@@ -387,14 +391,22 @@ async def cmd_give_hint(message: Message):
 
             if success:
                 await message.answer(
-                    f"✅ Pista '{hint_code_to_give}' desbloqueada para el usuario {target_user_id}."
+                    f"✅ Pista '<b>{hint_code_to_give}</b>' desbloqueada para el usuario <b>{target_user_id}</b>.",
+                    parse_mode="HTML",
                 )
             else:
                 await message.answer(
-                    f"⚠️ La pista '{hint_code_to_give}' ya la tiene el usuario {target_user_id} o no existe."
+                    f"⚠️ La pista '<b>{hint_code_to_give}</b>' ya la tiene el usuario <b>{target_user_id}</b> o no existe.",
+                    parse_mode="HTML",
                 )
         except ValueError:
-            await message.answer("❌ Uso incorrecto. Formato: /give_hint <user_id> <hint_code>")
+            await message.answer(
+                "❌ Uso incorrecto. Formato: <code>/give_hint &lt;user_id&gt; &lt;hint_code&gt;</code>",
+                parse_mode="HTML",
+            )
     else:
-        await message.answer("❌ Uso incorrecto. Formato: /give_hint <user_id> <hint_code>")
+        await message.answer(
+            "❌ Uso incorrecto. Formato: <code>/give_hint &lt;user_id&gt; &lt;hint_code&gt;</code>",
+            parse_mode="HTML",
+        )
 
