@@ -24,3 +24,16 @@ async def enviar_notificacion_gamificada(bot: Bot, user_id: int):
 
     user_last_message[user_id] = mensaje
     await bot.send_message(user_id, f"💬 {mensaje}")
+
+
+async def send_narrative_notification(bot: Bot, user_id: int, pista_code: str, origen: str = "Sistema"):
+    mensajes = [
+        f"🎩 Lucien: Una nueva pieza ha caído en tus manos... {pista_code}. No la pierdas.",
+        f"🎩 Lucien: {pista_code} se ha revelado para ti. ¿Podrás entender su verdadero valor?",
+        f"🎩 Lucien: Has desbloqueado algo nuevo. {pista_code}... interesante.",
+        f"🎩 Lucien: El Diván susurra: {pista_code} es ahora tuyo.",
+        f"🎩 Lucien: {pista_code} proviene de {origen}. ¿Accidente o destino?"
+    ]
+
+    mensaje = random.choice(mensajes)
+    await bot.send_message(user_id, mensaje)
