@@ -13,6 +13,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Enum,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from uuid import uuid4
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
@@ -444,6 +445,22 @@ class UserLorePiece(AsyncAttrs, Base):
     __table_args__ = (
         UniqueConstraint("user_id", "lore_piece_id", name="uix_user_lore_pieces"),
     )
+
+
+class HintCombination(AsyncAttrs, Base):
+    __tablename__ = 'hint_combinations'
+    id = Column(Integer, primary_key=True, index=True)
+    combination_code = Column(String, unique=True, nullable=False)
+    required_hints = Column(ARRAY(String), nullable=False)
+    reward_code = Column(String, nullable=False)
+    reward_type = Column(String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    def __repr__(self):
+        return (
+            f"<HintCombination(code='{self.combination_code}', "
+            f"required_hints={self.required_hints})>"
+        )
 
 
 

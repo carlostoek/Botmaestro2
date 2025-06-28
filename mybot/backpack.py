@@ -5,8 +5,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy import select, and_, func
-from database.models import LorePiece, UserLorePiece, User
-from database.hint_combination import HintCombination
+from database.models import LorePiece, UserLorePiece, User, HintCombination
 from database.setup import get_session
 from notificaciones import send_narrative_notification
 import random
