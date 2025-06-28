@@ -43,7 +43,7 @@ from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
 import combinar_pistas
-import backpack
+from backpack import router as backpack_router
 
 from utils.config import BOT_TOKEN, VIP_CHANNEL_ID
 from services import (
@@ -102,6 +102,7 @@ async def main() -> None:
 
     dp.include_router(start_token)
     dp.include_router(start.router)
+    dp.include_router(backpack_router)
     dp.include_router(admin_router)
     dp.include_router(auction_admin_router)
     dp.include_router(free_channel_admin_router)  # Nuevo router para canal gratuito
@@ -114,7 +115,6 @@ async def main() -> None:
     dp.include_router(minigames.router)
     dp.include_router(free_user.router)
     dp.include_router(lore_router)
-    dp.include_router(backpack.router)
     dp.include_router(combinar_pistas.router)
     dp.include_router(channel_access_router)
 
