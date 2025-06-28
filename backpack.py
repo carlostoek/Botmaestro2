@@ -106,7 +106,7 @@ async def mostrar_mochila_narrativa(message: Message):
             })
             count = len(data)
             keyboard.append([
-                InlineKeyboardButton(
+                InlineKeyboardButton(text=
                     f"{cat_info['emoji']} {cat_info['title']} ({count})",
                     callback_data=f"mochila_cat:{category}"
                 )
@@ -115,12 +115,12 @@ async def mostrar_mochila_narrativa(message: Message):
         # Botones adicionales
         keyboard.extend([
             [
-                InlineKeyboardButton("🔗 Combinar Pistas", callback_data="combinar_inicio"),
-                InlineKeyboardButton("🔍 Buscar", callback_data="buscar_pistas")
+                InlineKeyboardButton(text="🔗 Combinar Pistas", callback_data="combinar_inicio"),
+                InlineKeyboardButton(text="🔍 Buscar", callback_data="buscar_pistas")
             ],
             [
-                InlineKeyboardButton("📈 Estadísticas", callback_data="stats_mochila"),
-                InlineKeyboardButton("🎯 Sugerencias", callback_data="sugerencias_diana")
+                InlineKeyboardButton(text="📈 Estadísticas", callback_data="stats_mochila"),
+                InlineKeyboardButton(text="🎯 Sugerencias", callback_data="sugerencias_diana")
             ]
         ])
         
@@ -144,8 +144,8 @@ async def mostrar_mochila_vacia(message: Message):
 *Tu primera pista te está esperando...*"""
     
     keyboard = [
-        [InlineKeyboardButton("🎯 Ver Misiones", callback_data="misiones_disponibles")],
-        [InlineKeyboardButton("📚 Guía del Viajero", callback_data="guia_principiante")]
+        [InlineKeyboardButton(text="🎯 Ver Misiones", callback_data="misiones_disponibles")],
+        [InlineKeyboardButton(text="📚 Guía del Viajero", callback_data="guia_principiante")]
     ]
     
     await message.answer(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
@@ -187,11 +187,11 @@ async def mostrar_categoria(callback: CallbackQuery):
             
             button_text = f"{indicators} {pista.title}"
             keyboard.append([
-                InlineKeyboardButton(button_text, callback_data=f"ver_pista_detail:{pista.id}")
+                InlineKeyboardButton(text=button_text, callback_data=f"ver_pista_detail:{pista.id}")
             ])
         
         keyboard.append([
-            InlineKeyboardButton("⬅️ Volver a Mochila", callback_data="volver_mochila")
+            InlineKeyboardButton(text="⬅️ Volver a Mochila", callback_data="volver_mochila")
         ])
         
         await callback.message.edit_text(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
@@ -252,16 +252,16 @@ async def ver_pista_detallada(callback: CallbackQuery):
             texto += f"\n🔗 **Combinable con:** {len(combinaciones_posibles)} pistas"
         
         keyboard = [
-            [InlineKeyboardButton("👁️ Ver Contenido", callback_data=f"mostrar_contenido:{pista.id}")],
+            [InlineKeyboardButton(text="👁️ Ver Contenido", callback_data=f"mostrar_contenido:{pista.id}")],
         ]
         
         if combinaciones_posibles:
             keyboard.append([
-                InlineKeyboardButton("🔗 Combinar Ahora", callback_data=f"combinar_con:{pista.code_name}")
+                InlineKeyboardButton(text="🔗 Combinar Ahora", callback_data=f"combinar_con:{pista.code_name}")
             ])
         
         keyboard.append([
-            InlineKeyboardButton("⬅️ Volver", callback_data=f"mochila_cat:{pista.category or 'fragmentos'}")
+            InlineKeyboardButton(text="⬅️ Volver", callback_data=f"mochila_cat:{pista.category or 'fragmentos'}")
         ])
         
         await callback.message.edit_text(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
@@ -344,15 +344,15 @@ async def iniciar_combinacion_interactiva(callback: CallbackQuery, state: FSMCon
         keyboard = []
         for pista in pistas:
             keyboard.append([
-                InlineKeyboardButton(
+                InlineKeyboardButton(text=
                     f"📜 {pista.title}",
                     callback_data=f"select_hint:{pista.code_name}"
                 )
             ])
         
         keyboard.append([
-            InlineKeyboardButton("✅ Intentar Combinación", callback_data="try_combination"),
-            InlineKeyboardButton("❌ Cancelar", callback_data="volver_mochila")
+            InlineKeyboardButton(text="✅ Intentar Combinación", callback_data="try_combination"),
+            InlineKeyboardButton(text="❌ Cancelar", callback_data="volver_mochila")
         ])
         
         await state.set_state(CombinationFSM.selecting_hints)
@@ -398,15 +398,15 @@ async def seleccionar_pista_combinacion(callback: CallbackQuery, state: FSMConte
     for pista in pistas:
         indicator = "✅" if pista.code_name in selected_hints else "📜"
         keyboard.append([
-            InlineKeyboardButton(
+            InlineKeyboardButton(text=
                 f"{indicator} {pista.title}",
                 callback_data=f"select_hint:{pista.code_name}"
             )
         ])
     
     keyboard.append([
-        InlineKeyboardButton("🔗 Intentar Combinación", callback_data="try_combination"),
-        InlineKeyboardButton("❌ Cancelar", callback_data="volver_mochila")
+        InlineKeyboardButton(text="🔗 Intentar Combinación", callback_data="try_combination"),
+        InlineKeyboardButton(text="❌ Cancelar", callback_data="volver_mochila")
     ])
     
     await callback.message.edit_text(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
@@ -469,8 +469,8 @@ async def mostrar_exito_combinacion(callback: CallbackQuery, combinacion, hints_
 *Revisa tu mochila para ver tu nueva adquisición...*"""
     
     keyboard = [
-        [InlineKeyboardButton("🎒 Ver Mochila", callback_data="volver_mochila")],
-        [InlineKeyboardButton("🔍 Ver Nueva Pista", callback_data=f"buscar_code:{combinacion.reward_code}")]
+        [InlineKeyboardButton(text="🎒 Ver Mochila", callback_data="volver_mochila")],
+        [InlineKeyboardButton(text="🔍 Ver Nueva Pista", callback_data=f"buscar_code:{combinacion.reward_code}")]
     ]
     
     await callback.message.edit_text(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
@@ -493,8 +493,8 @@ async def mostrar_fallo_combinacion(callback: CallbackQuery, hints_used):
 *Intenta con otras combinaciones o busca más pistas...*"""
     
     keyboard = [
-        [InlineKeyboardButton("🔗 Intentar Otra Vez", callback_data="combinar_inicio")],
-        [InlineKeyboardButton("🎒 Volver a Mochila", callback_data="volver_mochila")]
+        [InlineKeyboardButton(text="🔗 Intentar Otra Vez", callback_data="combinar_inicio")],
+        [InlineKeyboardButton(text="🎒 Volver a Mochila", callback_data="volver_mochila")]
     ]
     
     await callback.message.edit_text(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
@@ -621,7 +621,7 @@ async def mostrar_estadisticas(callback: CallbackQuery):
             texto += f"\n🏆 **Primera pista:** {first_data[0]}"
         
         keyboard = [
-            [InlineKeyboardButton("⬅️ Volver", callback_data="volver_mochila")]
+            [InlineKeyboardButton(text="⬅️ Volver", callback_data="volver_mochila")]
         ]
         
         await callback.message.edit_text(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
