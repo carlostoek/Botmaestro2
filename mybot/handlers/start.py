@@ -96,13 +96,17 @@ async def cmd_start(message: Message, session: AsyncSession):
             delete_origin_message=True
         )
         # Display the reply keyboard without cluttering the chat
-        await menu_manager.send_temporary_message(
-            message,
-            "​",
-            keyboard=main_menu_keyboard,
-            auto_delete_seconds=0,
-            parse_mode="Markdown",
-        )
+        text_to_send = "​"
+        if text_to_send and text:
+            await menu_manager.send_temporary_message(
+                message,
+                text_to_send,
+                keyboard=main_menu_keyboard,
+                auto_delete_seconds=0,
+                parse_mode="Markdown",
+            )
+        else:
+            logger.error("Empty text_to_send or menu text when sending reply keyboard")
         return # Terminar aquí para el flujo de administración
     
     # Lógica para usuarios no-administradores (VIP, Free)

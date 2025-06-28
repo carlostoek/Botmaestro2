@@ -170,6 +170,13 @@ class MenuManager:
         """
         user_id = message.from_user.id
         bot = message.bot
+
+        # Validate text before sending
+        if not text or not text.strip():
+            logger.error(
+                f"Attempted to send empty temporary message to user {user_id}"
+            )
+            return None
         
         # Clean up previous temporary message
         await self._cleanup_temp_messages(bot, user_id)
