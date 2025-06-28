@@ -126,6 +126,13 @@ async def mostrar_mochila_narrativa(message: Message):
         
         await message.answer(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
 
+
+@router.callback_query(F.data == "open_backpack")
+async def open_backpack(callback: CallbackQuery):
+    """Handler to open the backpack from inline buttons."""
+    await mostrar_mochila_narrativa(callback.message)
+    await callback.answer()
+
 async def mostrar_mochila_vacia(message: Message):
     """Mensaje especial para mochila vacía con contexto narrativo"""
     texto = """🎩 **Lucien:**
