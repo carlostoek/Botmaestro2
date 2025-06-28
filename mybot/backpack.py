@@ -245,7 +245,7 @@ async def ver_pista_detallada(callback: CallbackQuery):
         ])
 
         await callback.message.edit_text(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
-    @router.callback_query(F.data.startswith("mochila_cat:"))
+@router.callback_query(F.data.startswith("mochila_cat:"))
 async def mostrar_categoria(callback: CallbackQuery):
     category = callback.data.split(":")[1]
     session_factory = await get_session()
@@ -352,7 +352,7 @@ async def ver_pista_detallada(callback: CallbackQuery):
         ])
 
         await callback.message.edit_text(texto, reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard), parse_mode="Markdown")
-    @router.callback_query(F.data.startswith("select_hint:"), CombinationFSM.selecting_hints)
+@router.callback_query(F.data.startswith("select_hint:"), CombinationFSM.selecting_hints)
 async def seleccionar_pista_combinacion(callback: CallbackQuery, state: FSMContext):
     hint_code = callback.data.split(":")[1]
     data = await state.get_data()
@@ -430,7 +430,7 @@ async def procesar_combinacion_seleccionada(callback: CallbackQuery, state: FSMC
 
         await mostrar_fallo_combinacion(callback, selected_hints)
         await state.clear()
-        async def mostrar_exito_combinacion(callback: CallbackQuery, combinacion, hints_used):
+async def mostrar_exito_combinacion(callback: CallbackQuery, combinacion, hints_used):
     texto = f"""✨ **¡COMBINACIÓN EXITOSA!**
 
 🎩 **Lucien:**
@@ -497,7 +497,7 @@ async def verificar_combinaciones_disponibles(session, user_id, hint_code):
                 combinaciones_posibles.append(combo)
 
     return combinaciones_posibles
-    async def desbloquear_pista_narrativa(bot, user_id, pista_code, context=None):
+async def desbloquear_pista_narrativa(bot, user_id, pista_code, context=None):
     session_factory = await get_session()
     async with session_factory() as session:
         result = await session.execute(
