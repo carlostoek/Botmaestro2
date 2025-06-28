@@ -69,7 +69,7 @@ async def cmd_test_hint(message: Message):
         try:
             target_user_id = int(args[1])
         except ValueError:
-            await message.answer("❌ ID de usuario inválido")
+            await message.answer("❌ ID de usuairio inválido")
             return
     else:
         target_user_id = user_id
