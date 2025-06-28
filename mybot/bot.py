@@ -41,6 +41,8 @@ from handlers.missions_handler import router as missions_router
 from handlers.info_handler import router as info_router
 
 from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
+from handlers.admin_commands import router as admin_router
+
 
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
@@ -81,6 +83,7 @@ async def main() -> None:
     dp.chat_member.outer_middleware(session_middleware_factory(Session, bot))
     dp.poll_answer.outer_middleware(session_middleware_factory(Session, bot))
     dp.message_reaction.outer_middleware(session_middleware_factory(Session, bot))
+    dp.include_router(admin_router)
 
     from middlewares import PointsMiddleware, UserRegistrationMiddleware
     user_reg_mw = UserRegistrationMiddleware()
