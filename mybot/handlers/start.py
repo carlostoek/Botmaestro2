@@ -95,9 +95,13 @@ async def cmd_start(message: Message, session: AsyncSession):
             "admin_main", # Asegúrate de registrar el estado correcto
             delete_origin_message=True
         )
-        await message.answer(
-            "¡Bienvenido! Aquí tienes las opciones principales:",
-            reply_markup=main_menu_keyboard,
+        # Display the reply keyboard without cluttering the chat
+        await menu_manager.send_temporary_message(
+            message,
+            "​",
+            keyboard=main_menu_keyboard,
+            auto_delete_seconds=0,
+            parse_mode="Markdown",
         )
         return # Terminar aquí para el flujo de administración
     
@@ -125,9 +129,13 @@ async def cmd_start(message: Message, session: AsyncSession):
             "main",
             delete_origin_message=True
         )
-        await message.answer(
-            "¡Bienvenido! Aquí tienes las opciones principales:",
-            reply_markup=main_menu_keyboard,
+        # Show the reply keyboard silently so it coexists with the inline menu
+        await menu_manager.send_temporary_message(
+            message,
+            "​",
+            keyboard=main_menu_keyboard,
+            auto_delete_seconds=0,
+            parse_mode="Markdown",
         )
 
     except Exception as e:
