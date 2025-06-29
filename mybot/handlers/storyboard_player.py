@@ -17,6 +17,7 @@ async def start_story(message: Message):
 async def send_next_dialogue(chat_id, user_id):
     progress = user_story_progress.get(user_id)
     if not progress:
+        await router.bot.send_message(chat_id, "No se encontró el progreso del usuario.")
         return
 
     scene_id = progress["scene_id"]
@@ -24,14 +25,14 @@ async def send_next_dialogue(chat_id, user_id):
 
     dialogues = await StoryboardService.get_scene_dialogues(scene_id)
 
-    # Validación 1: Si no hay diálogos
+    # Validación 1: Si la consulta no devolvió ningún diálogo
     if not dialogues:
-        await router.bot.send_message(chat_id, "Esta escena no tiene diálogos disponibles.")
+        await router.bot.send_message(chat_id, "Esta escena no tiene diálogos disponibles. Contacta al administrador.")
         return
 
-    # Validación 2: Si se pasaron del límite
+    # Validación 2: Si el orden supera la cantidad de diálogos
     if order > len(dialogues):
-        await router.bot.send_message(chat_id, "Has llegado al final de la escena.")
+        await router.bot.send_message(chat_id, "Has llegado al final de esta escena.")
         return
 
     dialogue = dialogues[order - 1]
