@@ -6,6 +6,7 @@ from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from mybot.quests.trivia_quest_integration import TriviaQuestIntegration
 from services.trivia_service import TriviaService
 from utils.user_roles import get_user_role, is_admin
 
@@ -62,6 +63,10 @@ async def trivia_response(callback: CallbackQuery, session: AsyncSession, bot: B
     service = TriviaService(session)
     result = await service.save_trivia_answer(user_id, question_id, option, response_time)
 
+    missions_completed = await TriviaQuestIntegration.check_trivia_missions(user_id, result, session, bot)
+    stats = await service.get_user_trivia_stats(user_id)
+    special_missions = await TriviaQuestIntegration.trigger_special_missions(user_id, stats, session, bot)
+
     if result["is_correct"]:
         text = (
             f"✅ ¡Correcto! Has ganado {result['points']} puntos.\n"
@@ -84,9 +89,13 @@ async def trivia_response(callback: CallbackQuery, session: AsyncSession, bot: B
     )
 
     await callback.message.edit_text(text)
+
+    for mission in missions_completed + special_missions:
+        await callback.message.answer(
+            f"🎯 *Misión completada:* {mission['description']}\n"
+            f"🏆 *Recompensa:* {mission['reward_points']} puntos y {mission['reward_lorepiece']}"
+        )
     await callback.answer()
-
-
 @router.message(F.text == "📊 Mis Estadísticas de Trivia")
 async def show_stats(message: Message, session: AsyncSession):
     service = TriviaService(session)
