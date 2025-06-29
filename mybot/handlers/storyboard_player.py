@@ -23,11 +23,24 @@ async def send_next_dialogue(chat_id, user_id):
     order = progress["order"]
 
     dialogues = await StoryboardService.get_scene_dialogues(scene_id)
+
+    # Validación 1: Si no hay diálogos
+    if not dialogues:
+        await router.bot.send_message(chat_id, "Esta escena no tiene diálogos disponibles.")
+        return
+
+    # Validación 2: Si se pasaron del límite
     if order > len(dialogues):
+        await router.bot.send_message(chat_id, "Has llegado al final de la escena.")
         return
 
     dialogue = dialogues[order - 1]
     text = f"*{dialogue.character}*\n{dialogue.dialogue}"
+
+    # Validación 3: Si el texto está vacío
+    if not dialogue.dialogue.strip():
+        await router.bot.send_message(chat_id, "Este diálogo está vacío. Contacta al administrador.")
+        return
 
     if dialogue.media_type == 'text':
         keyboard = InlineKeyboardBuilder().button(text="Siguiente", callback_data="next_dialogue").as_markup()
