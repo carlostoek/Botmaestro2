@@ -97,10 +97,18 @@ async def start_edit_dialogue(callback: CallbackQuery, state: FSMContext):
 
 @router.message(StateFilter(StoryboardStates.waiting_dialogue_id_edit), F.text)
 async def receive_dialogue_id_for_edit(message: Message, state: FSMContext):
-    dialogue_id = int(message.text)
-    await state.update_data(dialogue_id=dialogue_id)
-    await message.answer("✏️ Ingresa el nuevo texto del diálogo:")
-    await state.set_state(StoryboardStates.waiting_dialogue_text)
+    # Ignorar comandos que puedan enviarse accidentalmente en este estado
+    if message.text.startswith("/"):
+        return
+
+    try:
+        dialogue_id = int(message.text)
+        await state.update_data(dialogue_id=dialogue_id)
+        await message.answer("✏️ Ingresa el nuevo texto del diálogo:")
+        await state.set_state(StoryboardStates.waiting_dialogue_text)
+    except ValueError:
+        # Informar al usuario si no se proporciona un número válido
+        await message.answer("❌ Por favor, ingresa solo números.")
 
 @router.message(StateFilter(StoryboardStates.waiting_dialogue_text), F.text)
 async def edit_dialogue_text(message: Message, state: FSMContext):
