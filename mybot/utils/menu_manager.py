@@ -173,7 +173,13 @@ class MenuManager:
         
         # Clean up previous temporary message
         await self._cleanup_temp_messages(bot, user_id)
-        
+
+        if not text.strip():
+            logging.error(
+                f"Intento de enviar mensaje vacío al usuario {message.from_user.id}"
+            )
+            return
+
         try:
             sent_message = await message.answer(
                 text=text,
