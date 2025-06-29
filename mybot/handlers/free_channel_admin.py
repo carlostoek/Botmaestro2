@@ -422,3 +422,9 @@ async def cleanup_old_requests(callback: CallbackQuery, session: AsyncSession):
     
     # Actualizar el menú
     await free_channel_admin_menu(callback, session)
+
+
+@router.callback_query(F.data == "manage_storyboard")
+async def open_storyboard_menu(callback: CallbackQuery):
+    from handlers.storyboard_admin import show_storyboard_menu
+    await show_storyboard_menu(callback.message)
