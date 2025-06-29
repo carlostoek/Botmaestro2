@@ -101,7 +101,7 @@ async def main() -> None:
     mission_srv.narrative_engine = narrative_eng
     level_srv.narrative_engine = narrative_eng
 
-    bot["narrative_engine"] = narrative_eng
+    dp.workflow_data.update({"narrative_engine": narrative_eng})
 
     def session_middleware_factory(session_factory, bot_instance):
         async def middleware(handler, event, data):
