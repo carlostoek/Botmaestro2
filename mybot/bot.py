@@ -6,6 +6,14 @@ from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from handlers import trivia as trivia_handlers
+from services import (
+    narrative_engine,
+    point_service,
+    level_service,
+    mission_service,
+    storyboard_service,
+    lore_piece_service,
+)
 
 
 # --- INICIO DE LA DEFINICIÓN DEL TECLADO PRINCIPAL ---
@@ -71,6 +79,29 @@ async def main() -> None:
 
     bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
+
+    # --- Inicialización del motor narrativo y servicios principales ---
+    session = Session()
+    storyboard_srv = storyboard_service.StoryboardService(session)
+    point_srv = point_service.PointService(session)
+    mission_srv = mission_service.MissionService(session)
+    level_srv = level_service.LevelService(session)
+    lore_srv = lore_piece_service.LorePieceService(session)
+
+    narrative_eng = narrative_engine.NarrativeEngine(
+        storyboard_service=storyboard_srv,
+        point_service=point_srv,
+        mission_service=mission_srv,
+        lore_service=lore_srv,
+        level_service=level_srv,
+        bot=bot,
+    )
+
+    point_srv.narrative_engine = narrative_eng
+    mission_srv.narrative_engine = narrative_eng
+    level_srv.narrative_engine = narrative_eng
+
+    bot["narrative_engine"] = narrative_eng
 
     def session_middleware_factory(session_factory, bot_instance):
         async def middleware(handler, event, data):
