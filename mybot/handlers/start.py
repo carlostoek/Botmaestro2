@@ -96,13 +96,21 @@ async def cmd_start(message: Message, session: AsyncSession):
             delete_origin_message=True
         )
         # Display the reply keyboard without cluttering the chat
-        await menu_manager.send_temporary_message(
-            message,
-            "​",
-            keyboard=main_menu_keyboard,
-            auto_delete_seconds=0,
-            parse_mode="Markdown",
-        )
+        start_message = "​"
+        if start_message.strip():
+            await menu_manager.send_temporary_message(
+                message,
+                start_message,
+                keyboard=main_menu_keyboard,
+                auto_delete_seconds=0,
+                parse_mode="Markdown",
+            )
+        else:
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            return
         return # Terminar aquí para el flujo de administración
     
     # Lógica para usuarios no-administradores (VIP, Free)
@@ -130,13 +138,21 @@ async def cmd_start(message: Message, session: AsyncSession):
             delete_origin_message=True
         )
         # Show the reply keyboard silently so it coexists with the inline menu
-        await menu_manager.send_temporary_message(
-            message,
-            "​",
-            keyboard=main_menu_keyboard,
-            auto_delete_seconds=0,
-            parse_mode="Markdown",
-        )
+        start_message = "​"
+        if start_message.strip():
+            await menu_manager.send_temporary_message(
+                message,
+                start_message,
+                keyboard=main_menu_keyboard,
+                auto_delete_seconds=0,
+                parse_mode="Markdown",
+            )
+        else:
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            return
 
     except Exception as e:
         logger.error(f"Error in start command for user {user_id}: {e}")
