@@ -102,6 +102,16 @@ async def cmd_start(message: Message, session: AsyncSession):
         welcome_prefix = "👑 **¡Bienvenido, Administrador!**\n\n"
         text = welcome_prefix + text.split('\n\n', 1)[-1] # Mantiene el texto del menú, pero reemplaza el saludo inicial
 
+        if not text.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con texto vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
+
         await menu_manager.show_menu(
             message,
             text,
@@ -139,14 +149,24 @@ async def cmd_start(message: Message, session: AsyncSession):
             welcome_prefix = "🌟 **¡Bienvenido!**\n\n"
             if "suscripción vip" in text.lower() or "experiencia premium" in text.lower():
                 welcome_prefix = "✨ **¡Bienvenido, Miembro VIP!**\n\n"
-            
+
             text = welcome_prefix + text
         else:
             if "suscripción vip" in text.lower() or "experiencia premium" in text.lower():
                 text = "✨ **Bienvenido de vuelta**\n\n" + text.split('\n\n', 1)[-1]
             else:
                 text = "🌟 **¡Hola de nuevo!**\n\n" + text.split('\n\n', 1)[-1]
-        
+
+        if not text.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con texto vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
+
         await menu_manager.show_menu(
             message,
             text,
