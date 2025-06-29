@@ -2,12 +2,17 @@ import logging
 
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
+try:
+    from aiogram.types import MessageReactionUpdated
+except ImportError:  # Older aiogram without reactions
+    MessageReactionUpdated = object
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.message_service import MessageService
 from services.channel_service import ChannelService
 from services.message_registry import validate_message
 from utils.messages import BOT_MESSAGES
+from services.narrative_engine import NarrativeEvent, TriggerType
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -74,9 +79,39 @@ async def handle_reaction_callback(
     mission_service = MissionService(session)
     await mission_service.update_progress(callback.from_user.id, "reaction", bot=bot)
 
+    narrative_engine = bot.get("narrative_engine") if hasattr(bot, "get") else bot["narrative_engine"] if isinstance(bot, dict) else None
+    if narrative_engine:
+        event = NarrativeEvent(
+            user_id=callback.from_user.id,
+            trigger_type=TriggerType.REACTION,
+            data={"emoji": reaction_type},
+        )
+        await narrative_engine.process_event(event)
+
     await service.update_reaction_markup(chat_id, message_id)
     await callback.answer(BOT_MESSAGES["reaction_registered_points"].format(points=points))
     await bot.send_message(
         callback.from_user.id,
         BOT_MESSAGES["reaction_registered_points"].format(points=points),
     )
+
+
+@router.message_reaction()
+async def handle_native_reaction(event: MessageReactionUpdated, bot: Bot) -> None:
+    """Trigger narrative engine when a native reaction is received."""
+    user = getattr(event, "user", None)
+    user_id = getattr(user, "id", None)
+    if not user_id:
+        return
+    reactions = getattr(event, "new_reaction", [])
+    reaction = reactions[0] if reactions else None
+    emoji = getattr(reaction, "emoji", None)
+    narrative_engine = bot.get("narrative_engine") if hasattr(bot, "get") else bot["narrative_engine"] if isinstance(bot, dict) else None
+    if narrative_engine and emoji:
+        await narrative_engine.process_event(
+            NarrativeEvent(
+                user_id=user_id,
+                trigger_type=TriggerType.REACTION,
+                data={"emoji": emoji},
+            )
+        )
