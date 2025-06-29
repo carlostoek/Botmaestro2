@@ -156,10 +156,19 @@ async def cmd_start(message: Message, session: AsyncSession):
 
     except Exception as e:
         logger.error(f"Error in start command for user {user_id}: {e}")
+        start_message = (
+            "❌ **Error Temporal**\n\n"
+            "Hubo un problema al cargar el menú. Por favor, intenta nuevamente en unos segundos."
+        )
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            return
         await menu_manager.send_temporary_message(
             message,
-            "❌ **Error Temporal**\n\n"
-            "Hubo un problema al cargar el menú. Por favor, intenta nuevamente en unos segundos.",
-            auto_delete_seconds=5
+            start_message,
+            auto_delete_seconds=5,
         )
         
