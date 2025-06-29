@@ -203,3 +203,6 @@ class StoryboardStates(StatesGroup):
     waiting_dialogue_id_edit = State()
     waiting_dialogue_id_delete = State()
     waiting_for_json = State()
+
+class DatabaseUpdateStates(StatesGroup):
+    waiting_for_sql = State()
