@@ -97,7 +97,7 @@ async def main() -> None:
     dp.message.middleware(PointsMiddleware())
     dp.poll_answer.middleware(PointsMiddleware())
     dp.message_reaction.middleware(PointsMiddleware())
-    dp.include_router(trivia_handlers.router)
+    
 
     # --- INCLUSIÓN DEL ROUTER DE SETUP ---
     # Es crucial incluirlo para que sus handlers sean reconocidos.
