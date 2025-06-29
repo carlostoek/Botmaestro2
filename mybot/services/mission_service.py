@@ -12,6 +12,7 @@ from database.models import (
     LorePiece,
     UserLorePiece,
 )
+from services.narrative_engine import NarrativeEvent, TriggerType
 from utils.text_utils import sanitize_text
 import logging
 
@@ -21,10 +22,11 @@ logger = logging.getLogger(__name__)
 MISSION_PLACEHOLDER: list = []
 
 class MissionService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, narrative_engine=None):
         self.session = session
+        self.narrative_engine = narrative_engine
         from services.point_service import PointService
-        self.point_service = PointService(session)
+        self.point_service = PointService(session, narrative_engine=narrative_engine)
 
     async def get_active_missions(self, user_id: int = None, mission_type: str = None) -> list[Mission]:
         """
@@ -55,6 +57,10 @@ class MissionService:
 
     async def get_mission_by_id(self, mission_id: str) -> Mission | None:
         return await self.session.get(Mission, mission_id)
+
+    async def _get_mission_details(self, mission_id: str) -> Mission | None:
+        """Internal helper to fetch full mission details."""
+        return await self.get_mission_by_id(mission_id)
 
     async def check_mission_completion_status(self, user: User, mission: Mission, target_message_id: int = None) -> tuple[bool, str]:
         """
@@ -98,7 +104,7 @@ class MissionService:
         Returns (True, mission_object) on success, (False, None) on failure.
         """
         user = await self.session.get(User, user_id)
-        mission = await self.session.get(Mission, mission_id)
+        mission = await self._get_mission_details(mission_id)
 
         if not user or not mission or not mission.is_active:
             logger.warning(f"Failed to complete mission: User {user_id} or mission {mission_id} not found or inactive.")
@@ -156,6 +162,15 @@ class MissionService:
 
         await self.session.commit()
         await self.session.refresh(user)
+
+        # Trigger narrative event for mission completion
+        if self.narrative_engine:
+            event = NarrativeEvent(
+                user_id=user_id,
+                trigger_type=TriggerType.MISSION_COMPLETED,
+                data={"mission_id": mission_id, "mission_type": getattr(mission, "type", None)},
+            )
+            await self.narrative_engine.process_event(event)
 
         if bot:
             from utils.message_utils import get_mission_completed_message
