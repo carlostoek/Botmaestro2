@@ -28,6 +28,7 @@ from database.setup import init_db, get_session
 
 from handlers import start, free_user
 from handlers import daily_gift, minigames
+from handlers import trivia as trivia_handlers
 from handlers.channel_access import router as channel_access_router
 from handlers.user import start_token
 from handlers.vip import menu as vip
@@ -117,6 +118,7 @@ async def main() -> None:
     dp.include_router(reaction_callback_router)
     dp.include_router(daily_gift.router)
     dp.include_router(minigames.router)
+    dp.include_router(trivia_handlers.router)
     dp.include_router(free_user.router)
     dp.include_router(lore_router)
     dp.include_router(combinar_pistas.router)
