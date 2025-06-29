@@ -9,6 +9,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 from aiogram.exceptions import TelegramBadRequest, TelegramAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User, set_user_menu_state
+from .config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,10 @@ class MenuManager:
         self._temp_messages: Dict[int, Tuple[int, int, float]] = {}  # user_id -> (chat_id, message_id, expire_time)
         # Navigation history for back button functionality
         self._nav_history: Dict[int, list] = {}  # user_id -> [menu_states]
+
+    async def is_admin(self, user_id: int) -> bool:
+        """Check if the given user ID matches the configured admin ID."""
+        return user_id == Config.ADMIN_ID
     
     async def show_menu(
         self, 
