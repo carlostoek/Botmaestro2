@@ -14,7 +14,8 @@ from sqlalchemy import (
     Enum,
 )
 from uuid import uuid4
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
+from datetime import datetime
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.future import select
@@ -446,10 +447,10 @@ class UserLorePiece(AsyncAttrs, Base):
     )
 
 
-class TriviaQuestion(AsyncAttrs, Base):
+class TriviaQuestion(Base):
     __tablename__ = "trivia_questions"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     question = Column(String, nullable=False)
     options = Column(JSON, nullable=False)
     correct_option = Column(String, nullable=False)
@@ -459,14 +460,14 @@ class TriviaQuestion(AsyncAttrs, Base):
     unlocks = Column(String, nullable=True)
 
 
-class TriviaResult(AsyncAttrs, Base):
+class TriviaResult(Base):
     __tablename__ = "trivia_results"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(BigInteger, nullable=False)
-    question_id = Column(Integer, ForeignKey("trivia_questions.id"))
-    is_correct = Column(Boolean, default=False)
-    timestamp = Column(DateTime, default=func.now())
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    question_id = Column(Integer, ForeignKey("trivia_questions.id"), nullable=False)
+    is_correct = Column(Boolean, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
 
 
 
