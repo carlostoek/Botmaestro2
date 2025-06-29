@@ -15,10 +15,10 @@ async def init_db():
             await conn.run_sync(Base.metadata.create_all)
     return _engine
 
-async def get_session() -> async_sessionmaker[AsyncSession]:
+async def get_session() -> AsyncSession:
     # get_session ya no llamará a init_db directamente
     # Asume que init_db ya fue llamado en el inicio de la app y _engine está disponible
     if _engine is None:
         raise RuntimeError("Database engine not initialized. Call init_db() first.")
     async_session = async_sessionmaker(bind=_engine, class_=AsyncSession, expire_on_commit=False)
-    return async_session
+    return async_session()  # Añadir () para crear la sesión
