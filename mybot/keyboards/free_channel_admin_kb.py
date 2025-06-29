@@ -19,7 +19,8 @@ def get_free_channel_admin_kb(channel_configured: bool = False) -> InlineKeyboar
         builder.button(text="📝 Configurar Reacciones Free", callback_data="free_config_reactions")
     else:
         builder.button(text="⚙️ Configurar Canal Gratuito", callback_data="configure_free_channel")
-    
+
+    builder.button(text="🎮 Administrar Storyboard", callback_data="manage_storyboard")
     builder.button(text="🔙 Volver", callback_data="admin_main_menu")
     builder.adjust(1)
     return builder.as_markup()

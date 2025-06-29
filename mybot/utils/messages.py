@@ -191,6 +191,10 @@ BOT_MESSAGES = {
     **MENU_TEXTS,
     **MISSION_MESSAGES,
     **TRIVIA_MESSAGES,
+    "storyboard_admin": "🗂️ Storyboard Admin",
+    "new_scene_prompt": "Escribe el ID de la nueva escena:",
+    "scene_created": "✅ Escena '{scene_id}' creada.",
+    "available_scenes": "📚 Escenas disponibles:\n{scenes}",
 }
 
 # Badge descriptions
