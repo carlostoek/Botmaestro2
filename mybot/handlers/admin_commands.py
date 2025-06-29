@@ -7,6 +7,7 @@ from utils.menu_manager import menu_manager
 from sqlalchemy.ext.asyncio import create_async_engine
 from utils.config import Config
 import os
+from pathlib import Path
 
 router = Router()
 
@@ -45,3 +46,25 @@ async def execute_sql_file(file_path):
         with open(file_path, 'r', encoding='utf-8') as file:
             sql_commands = file.read()
         await conn.execute(sql_commands)
+
+
+async def update_database(message: Message):
+    """Execute the script.sql file and notify the user of the result."""
+    script_path = Path("script.sql")
+
+    if not script_path.exists():
+        await message.answer(
+            "\u274C Error al ejecutar el archivo SQL: script.sql no encontrado"
+        )
+        return
+
+    try:
+        await execute_sql_file(script_path)
+    except Exception as e:
+        await message.answer(
+            f"\u274C Ocurri\u00f3 un error al actualizar la base de datos: {e}"
+        )
+    else:
+        await message.answer(
+            "\u2705 Base de datos actualizada exitosamente."
+        )
