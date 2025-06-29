@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @router.callback_query(F.data.startswith("ip_"))
 async def handle_reaction_callback(
-    callback: CallbackQuery, session: AsyncSession, bot: Bot
+    callback: CallbackQuery, session: AsyncSession, bot: Bot, data: dict
 ) -> None:
     parts = callback.data.split("_")
     if len(parts) < 4:
@@ -79,7 +79,7 @@ async def handle_reaction_callback(
     mission_service = MissionService(session)
     await mission_service.update_progress(callback.from_user.id, "reaction", bot=bot)
 
-    narrative_engine = bot.get("narrative_engine") if hasattr(bot, "get") else bot["narrative_engine"] if isinstance(bot, dict) else None
+    narrative_engine = data["narrative_engine"]
     if narrative_engine:
         event = NarrativeEvent(
             user_id=callback.from_user.id,
@@ -97,7 +97,7 @@ async def handle_reaction_callback(
 
 
 @router.message_reaction()
-async def handle_native_reaction(event: MessageReactionUpdated, bot: Bot) -> None:
+async def handle_native_reaction(event: MessageReactionUpdated, bot: Bot, data: dict) -> None:
     """Trigger narrative engine when a native reaction is received."""
     user = getattr(event, "user", None)
     user_id = getattr(user, "id", None)
@@ -106,7 +106,7 @@ async def handle_native_reaction(event: MessageReactionUpdated, bot: Bot) -> Non
     reactions = getattr(event, "new_reaction", [])
     reaction = reactions[0] if reactions else None
     emoji = getattr(reaction, "emoji", None)
-    narrative_engine = bot.get("narrative_engine") if hasattr(bot, "get") else bot["narrative_engine"] if isinstance(bot, dict) else None
+    narrative_engine = data["narrative_engine"]
     if narrative_engine and emoji:
         await narrative_engine.process_event(
             NarrativeEvent(
