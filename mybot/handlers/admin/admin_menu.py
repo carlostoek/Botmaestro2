@@ -218,6 +218,33 @@ async def handle_kinky_game_button_from_main(callback: CallbackQuery, session: A
     # No es necesario un callback.answer() aquí porque handle_gamification_content_menu ya lo hace.
 
 
+@router.callback_query(F.data == "admin_trivia")
+async def admin_trivia(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer("Acceso denegado", show_alert=True)
+
+    from keyboards.common import get_back_kb
+
+    text = (
+        "🧩 **Administración de Trivia**\n\n"
+        "Usa el comando:\n"
+        "/add_trivia <pregunta>|<opcion1>|<opcion2>|<opcion3>|<opcion4>|"
+        "<respuesta_correcta>|<categoria>|<dificultad>|<acceso>\n\n"
+        "Ejemplo:\n"
+        "/add_trivia ¿Cuál es la capital de Francia?|Madrid|Berlín|París|"
+        "Londres|2|cultura|easy|free"
+    )
+
+    await menu_manager.update_menu(
+        callback,
+        text,
+        get_back_kb("admin_main_menu"),
+        session,
+        "admin_trivia",
+    )
+    await callback.answer()
+
+
 @router.callback_query(F.data == "admin_bot_config")
 async def admin_bot_config(callback: CallbackQuery, session: AsyncSession):
     """Enhanced bot configuration menu."""

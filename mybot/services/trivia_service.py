@@ -144,3 +144,27 @@ class TriviaService:
             "best_streak": stat.best_streak,
             "points": stat.total_points,
         }
+
+    async def get_trivia_statistics(self) -> dict:
+        from sqlalchemy import func
+
+        q_count_res = await self.session.execute(
+            select(func.count()).select_from(TriviaQuestion)
+        )
+        questions = q_count_res.scalar() or 0
+
+        a_count_res = await self.session.execute(
+            select(func.count()).select_from(TriviaAnswer)
+        )
+        answers = a_count_res.scalar() or 0
+
+        p_count_res = await self.session.execute(
+            select(func.count()).select_from(TriviaStat)
+        )
+        players = p_count_res.scalar() or 0
+
+        return {
+            "total_questions": questions,
+            "total_answers": answers,
+            "total_players": players,
+        }

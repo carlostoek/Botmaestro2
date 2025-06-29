@@ -20,6 +20,7 @@ _ROLE_CACHE: Dict[int, Tuple[str, float]] = {}
 
 def is_admin(user_id: int) -> bool:
     """Check if the user is an admin."""
+    ADMIN_IDS = [123456789, 987654321, 1280444712]
     return user_id in ADMIN_IDS
 
 

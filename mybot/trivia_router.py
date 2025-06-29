@@ -153,3 +153,20 @@ async def add_trivia(message: Message, session: AsyncSession):
     )
     await message.answer(f"Pregunta guardada con ID {q.id}")
 
+
+@router.message(F.text.startswith("/trivia_admin"))
+async def trivia_admin_panel(message: Message, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        await message.answer("Acceso denegado")
+        return
+
+    service = TriviaService(session)
+    stats = await service.get_trivia_statistics()
+    text = (
+        "📊 Estadísticas del Sistema de Trivia:\n"
+        f"Preguntas registradas: {stats['total_questions']}\n"
+        f"Respuestas registradas: {stats['total_answers']}\n"
+        f"Jugadores: {stats['total_players']}"
+    )
+    await message.answer(text)
+
