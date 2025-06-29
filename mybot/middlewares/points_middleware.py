@@ -41,12 +41,18 @@ class PointsMiddleware(BaseMiddleware):
                         bot=bot,
                     )
                     for ch in completed:
+                        text = BOT_MESSAGES["challenge_completed"].format(
+                            challenge_type=ch.type,
+                            points=100,
+                        )
+                        if not text.strip():
+                            logging.error(
+                                f"Intento de enviar mensaje vacío al usuario {event.from_user.id}"
+                            )
+                            return
                         await bot.send_message(
                             event.from_user.id,
-                            BOT_MESSAGES["challenge_completed"].format(
-                                challenge_type=ch.type,
-                                points=100,
-                            ),
+                            text,
                         )
             elif isinstance(event, MessageReactionUpdated):
                 user_id = getattr(event, "user", None)
@@ -61,19 +67,31 @@ class PointsMiddleware(BaseMiddleware):
                         await session.commit()
                     await service.award_reaction(user, message_id, bot)
                     await mission_service.update_progress(user_id, "reaction", bot=bot)
-                    await bot.send_message(user_id, BOT_MESSAGES["reaction_registered"])
+                    text = BOT_MESSAGES["reaction_registered"]
+                    if not text.strip():
+                        logging.error(
+                            f"Intento de enviar mensaje vacío al usuario {event.from_user.id}"
+                        )
+                        return
+                    await bot.send_message(user_id, text)
                     completed = await mission_service.increment_challenge_progress(
                         user_id,
                         "reactions",
                         bot=bot,
                     )
                     for ch in completed:
+                        text = BOT_MESSAGES["challenge_completed"].format(
+                            challenge_type=ch.type,
+                            points=100,
+                        )
+                        if not text.strip():
+                            logging.error(
+                                f"Intento de enviar mensaje vacío al usuario {event.from_user.id}"
+                            )
+                            return
                         await bot.send_message(
                             user_id,
-                            BOT_MESSAGES["challenge_completed"].format(
-                                challenge_type=ch.type,
-                                points=100,
-                            ),
+                            text,
                         )
             elif isinstance(event, PollAnswer):
                 await service.award_poll(event.user.id, bot)
