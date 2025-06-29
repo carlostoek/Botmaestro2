@@ -47,9 +47,12 @@ class StoryboardService:
 
     @staticmethod
     async def get_all_scenes():
-        async with get_session() as session:
+        session = await get_session()
+        try:
             result = await session.execute(select(Storyboard.scene_id).distinct())
             return [row[0] for row in result.all()]
+        finally:
+            await session.close()
 
     @staticmethod
     async def import_storyboard_from_json(file_path: str):
