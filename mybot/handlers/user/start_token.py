@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from datetime import datetime, timedelta
 from aiogram import Router, Bot
 from aiogram.filters import CommandStart

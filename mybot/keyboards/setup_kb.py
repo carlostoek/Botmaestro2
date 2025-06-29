@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Keyboards for initial bot setup and multi-tenant configuration.
 """

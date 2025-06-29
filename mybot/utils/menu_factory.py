@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Menu factory for creating consistent menus based on user role and state.
 Centralizes menu creation logic for better maintainability.

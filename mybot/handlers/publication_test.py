@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 import logging
 from aiogram import Router, Bot, F
 from aiogram.filters import Command

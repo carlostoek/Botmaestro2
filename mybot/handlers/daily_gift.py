@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from aiogram import Router, F, Bot
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession

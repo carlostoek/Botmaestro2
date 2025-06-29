@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from __future__ import annotations
 
 from datetime import datetime, timedelta

@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from .admin_menu import router as admin_router
 from .vip_menu import router as vip_router
 from .free_menu import router as free_router

@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 import re
 from .config import ADMIN_IDS
 

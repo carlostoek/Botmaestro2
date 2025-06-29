@@ -1,4 +1,4 @@
-# mybot/keyboards/suscripcion_kb.py
+# No coloques mybot como módulo, es la raíz del proyecto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardMarkup
 

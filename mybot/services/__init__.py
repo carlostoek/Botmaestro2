@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from .achievement_service import AchievementService
 from .badge_service import BadgeService
 from .level_service import LevelService

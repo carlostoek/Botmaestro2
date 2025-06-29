@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 # utils/messages.py
 """Centralized texts for the bot."""
 

@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Enhanced admin menu with improved navigation and multi-tenant support.
 """

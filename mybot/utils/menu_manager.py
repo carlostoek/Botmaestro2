@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Advanced menu management system for seamless user experience.
 Handles message lifecycle, navigation state, and prevents chat clutter.

@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from aiogram.fsm.state import StatesGroup, State
 
 class LorePieceAdminStates(StatesGroup):

@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from collections import defaultdict
 from typing import Dict, List
 

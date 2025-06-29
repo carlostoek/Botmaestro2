@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from aiogram.types import Message, CallbackQuery
 from aiogram.exceptions import TelegramBadRequest
 import asyncio
