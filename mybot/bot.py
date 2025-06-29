@@ -44,6 +44,7 @@ from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
 
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
+from mybot.trivia_router import router as trivia_router
 import combinar_pistas
 from backpack import router as backpack_router
 
@@ -117,6 +118,7 @@ async def main() -> None:
     dp.include_router(reaction_callback_router)
     dp.include_router(daily_gift.router)
     dp.include_router(minigames.router)
+    dp.include_router(trivia_router)
     dp.include_router(free_user.router)
     dp.include_router(lore_router)
     dp.include_router(combinar_pistas.router)
