@@ -68,10 +68,20 @@ async def admin_menu(message: Message, session: AsyncSession, user_id: int | Non
     """Enhanced admin menu command."""
     uid = user_id if user_id is not None else message.from_user.id
     if not is_admin(uid):
+        start_message = "❌ **Acceso Denegado**\n\nNo tienes permisos de administrador."
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
         await menu_manager.send_temporary_message(
             message,
-            "❌ **Acceso Denegado**\n\nNo tienes permisos de administrador.",
-            auto_delete_seconds=5
+            start_message,
+            auto_delete_seconds=5,
         )
         return
     
@@ -80,10 +90,20 @@ async def admin_menu(message: Message, session: AsyncSession, user_id: int | Non
         await menu_manager.show_menu(message, text, keyboard, session, "admin_main")
     except Exception as e:
         logger.error(f"Error showing admin menu for user {uid}: {e}")
+        start_message = "❌ **Error Temporal**\n\nNo se pudo cargar el panel de administración."
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
         await menu_manager.send_temporary_message(
             message,
-            "❌ **Error Temporal**\n\nNo se pudo cargar el panel de administración.",
-            auto_delete_seconds=5
+            start_message,
+            auto_delete_seconds=5,
         )
 
 @router.callback_query(F.data == "admin_stats")
@@ -264,10 +284,20 @@ async def admin_bot_config(callback: CallbackQuery, session: AsyncSession):
 async def admin_generate_token_cmd(message: Message, session: AsyncSession, bot: Bot):
     """Enhanced token generation command."""
     if not is_admin(message.from_user.id):
+        start_message = "❌ **Acceso Denegado**\n\nNo tienes permisos de administrador."
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
         await menu_manager.send_temporary_message(
             message,
-            "❌ **Acceso Denegado**\n\nNo tienes permisos de administrador.",
-            auto_delete_seconds=5
+            start_message,
+            auto_delete_seconds=5,
         )
         return
     
@@ -276,11 +306,23 @@ async def admin_generate_token_cmd(message: Message, session: AsyncSession, bot:
         tariffs = result.scalars().all()
         
         if not tariffs:
+            start_message = (
+                "❌ **Sin Tarifas Configuradas**\n\n"
+                "Primero debes configurar las tarifas VIP desde el panel de administración."
+            )
+            if not start_message.strip():
+                import logging
+                logging.error(
+                    f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+                )
+                await message.answer(
+                    "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+                )
+                return
             await menu_manager.send_temporary_message(
                 message,
-                "❌ **Sin Tarifas Configuradas**\n\n"
-                "Primero debes configurar las tarifas VIP desde el panel de administración.",
-                auto_delete_seconds=8
+                start_message,
+                auto_delete_seconds=8,
             )
             return
         
@@ -296,10 +338,20 @@ async def admin_generate_token_cmd(message: Message, session: AsyncSession, bot:
         )
     except Exception as e:
         logger.error(f"Error in token generation command: {e}")
+        start_message = "❌ **Error Temporal**\n\nNo se pudo cargar las tarifas."
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
         await menu_manager.send_temporary_message(
             message,
-            "❌ **Error Temporal**\n\nNo se pudo cargar las tarifas.",
-            auto_delete_seconds=5
+            start_message,
+            auto_delete_seconds=5,
         )
 
 @router.callback_query(F.data.startswith("generate_token_"))

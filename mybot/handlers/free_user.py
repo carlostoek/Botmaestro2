@@ -130,9 +130,20 @@ async def cb_vip_explore_interest(callback: CallbackQuery, session: AsyncSession
         f"Interés en VIP de {user.first_name} (@{user.username or user.id})"
     )
     await notify_admins(callback.bot, notify_text)
+    start_message = BOT_MESSAGES.get("VIP_INTEREST_REPLY")
+    if not start_message.strip():
+        import logging
+        logging.error(
+            f"Intento de iniciar flujo con mensaje vacío para el usuario {callback.from_user.id}"
+        )
+        await callback.message.answer(
+            "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+        )
+        await callback.answer()
+        return
     await menu_manager.send_temporary_message(
         callback.message,
-        BOT_MESSAGES.get("VIP_INTEREST_REPLY"),
+        start_message,
         auto_delete_seconds=8,
     )
     await callback.answer()
@@ -149,9 +160,20 @@ async def cb_pack_details(callback: CallbackQuery, session: AsyncSession):
             f"(@{user.username or user.id})"
         )
         await notify_admins(callback.bot, notify_text)
+        start_message = BOT_MESSAGES.get("PACK_INTEREST_REPLY")
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {callback.from_user.id}"
+            )
+            await callback.message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            await callback.answer()
+            return
         await menu_manager.send_temporary_message(
             callback.message,
-            BOT_MESSAGES.get("PACK_INTEREST_REPLY"),
+            start_message,
             auto_delete_seconds=8,
         )
         await callback.answer()

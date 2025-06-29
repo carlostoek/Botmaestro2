@@ -100,10 +100,20 @@ async def process_free_channel_id(message: Message, state: FSMContext, session: 
         try:
             channel_id = int(message.text.strip())
         except ValueError:
+            start_message = "❌ **ID Inválido**\n\nPor favor, reenvía un mensaje del canal o ingresa un ID válido."
+            if not start_message.strip():
+                import logging
+                logging.error(
+                    f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+                )
+                await message.answer(
+                    "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+                )
+                return
             await menu_manager.send_temporary_message(
                 message,
-                "❌ **ID Inválido**\n\nPor favor, reenvía un mensaje del canal o ingresa un ID válido.",
-                auto_delete_seconds=5
+                start_message,
+                auto_delete_seconds=5,
             )
             return
     
@@ -124,10 +134,20 @@ async def process_free_channel_id(message: Message, state: FSMContext, session: 
             "admin_free_channel"
         )
     else:
+        start_message = "❌ **Error de Configuración**\n\nNo se pudo configurar el canal. Intenta nuevamente."
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
         await menu_manager.send_temporary_message(
             message,
-            "❌ **Error de Configuración**\n\nNo se pudo configurar el canal. Intenta nuevamente.",
-            auto_delete_seconds=5
+            start_message,
+            auto_delete_seconds=5,
         )
     
     await state.clear()

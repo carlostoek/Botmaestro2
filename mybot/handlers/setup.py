@@ -45,10 +45,20 @@ class SetupStates(StatesGroup):
 async def start_setup(message: Message, session: AsyncSession):
     """Start the initial setup process for new admins."""
     if not is_admin(message.from_user.id):
+        start_message = "❌ **Acceso Denegado**\n\nSolo los administradores pueden acceder a la configuración inicial."
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
         await menu_manager.send_temporary_message(
             message,
-            "❌ **Acceso Denegado**\n\nSolo los administradores pueden acceder a la configuración inicial.",
-            auto_delete_seconds=5
+            start_message,
+            auto_delete_seconds=5,
         )
         return
     
@@ -58,10 +68,20 @@ async def start_setup(message: Message, session: AsyncSession):
     init_result = await tenant_service.initialize_tenant(message.from_user.id)
     
     if not init_result["success"]:
+        start_message = f"❌ **Error de Inicialización**\n\n{init_result['error']}"
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            return
         await menu_manager.send_temporary_message(
             message,
-            f"❌ **Error de Inicialización**\n\n{init_result['error']}",
-            auto_delete_seconds=10
+            start_message,
+            auto_delete_seconds=10,
         )
         return
     
@@ -171,10 +191,20 @@ async def process_vip_channel(message: Message, state: FSMContext, session: Asyn
                 pass # Se manejará como ID inválido
         
         if not channel_id:
+            start_message = "❌ **ID Inválido**\n\nPor favor, reenvía un mensaje del canal o ingresa un ID válido."
+            if not start_message.strip():
+                import logging
+                logging.error(
+                    f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+                )
+                await message.answer(
+                    "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+                )
+                return await state.set_state(SetupStates.waiting_for_vip_channel)
             await menu_manager.send_temporary_message(
                 message,
-                "❌ **ID Inválido**\n\nPor favor, reenvía un mensaje del canal o ingresa un ID válido.",
-                auto_delete_seconds=5
+                start_message,
+                auto_delete_seconds=5,
             )
             return await state.set_state(SetupStates.waiting_for_vip_channel) # Volver a esperar
     
@@ -219,10 +249,20 @@ async def process_free_channel(message: Message, state: FSMContext, session: Asy
                 pass
         
         if not channel_id:
+            start_message = "❌ **ID Inválido**\n\nPor favor, reenvía un mensaje del canal o ingresa un ID válido."
+            if not start_message.strip():
+                import logging
+                logging.error(
+                    f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+                )
+                await message.answer(
+                    "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+                )
+                return await state.set_state(SetupStates.waiting_for_free_channel)
             await menu_manager.send_temporary_message(
                 message,
-                "❌ **ID Inválido**\n\nPor favor, reenvía un mensaje del canal o ingresa un ID válido.",
-                auto_delete_seconds=5
+                start_message,
+                auto_delete_seconds=5,
             )
             return await state.set_state(SetupStates.waiting_for_free_channel) # Volver a esperar
     
@@ -387,11 +427,24 @@ async def process_manual_channel_id(message: Message, state: FSMContext, session
         await state.set_state(SetupStates.waiting_for_channel_confirmation)
         
     except ValueError:
+        start_message = (
+            "❌ **ID Inválido**\n\nPor favor, ingresa un ID numérico válido para el canal. "
+            "Debe empezar con `-100`."
+        )
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            await state.set_state(SetupStates.waiting_for_manual_channel_id)
+            return
         await menu_manager.send_temporary_message(
             message,
-            "❌ **ID Inválido**\n\nPor favor, ingresa un ID numérico válido para el canal. "
-            "Debe empezar con `-100`.",
-            auto_delete_seconds=7
+            start_message,
+            auto_delete_seconds=7,
         )
         await state.set_state(SetupStates.waiting_for_manual_channel_id) # Volver a esperar
     
