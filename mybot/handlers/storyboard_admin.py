@@ -26,7 +26,7 @@ async def receive_scene_id(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "list_scenes")
 async def handle_list_scenes(callback: CallbackQuery):
-    scenes = await StoryboardService.get_all_scenes()
+    scenes = await StoryboardService.get_available_scenes()
     text = "\n".join([f"- {scene}" for scene in scenes]) or "No hay escenas."
     await callback.message.answer(f"📚 Escenas disponibles:\n{text}")
 
