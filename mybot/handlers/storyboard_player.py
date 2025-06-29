@@ -12,12 +12,12 @@ user_story_progress = {}
 async def start_story(message: Message):
     scene_id = "intro"  # Escena inicial por defecto
     user_story_progress[message.from_user.id] = {"scene_id": scene_id, "order": 1}
-    await send_next_dialogue(message.chat.id, message.from_user.id)
+    await send_next_dialogue(message.bot, message.chat.id, message.from_user.id)
 
-async def send_next_dialogue(chat_id, user_id):
+async def send_next_dialogue(bot, chat_id, user_id):
     progress = user_story_progress.get(user_id)
     if not progress:
-        await router.bot.send_message(chat_id, "No se encontró el progreso del usuario.")
+        await bot.send_message(chat_id, "No se encontró el progreso del usuario.")
         return
 
     scene_id = progress["scene_id"]
@@ -25,30 +25,28 @@ async def send_next_dialogue(chat_id, user_id):
 
     dialogues = await StoryboardService.get_scene_dialogues(scene_id)
 
-    # Validación 1: Si la consulta no devolvió ningún diálogo
     if not dialogues:
-        await router.bot.send_message(chat_id, "Esta escena no tiene diálogos disponibles. Contacta al administrador.")
+        await bot.send_message(chat_id, "Esta escena no tiene diálogos disponibles. Contacta al administrador.")
         return
 
-    # Validación 2: Si el orden supera la cantidad de diálogos
     if order > len(dialogues):
-        await router.bot.send_message(chat_id, "Has llegado al final de esta escena.")
+        await bot.send_message(chat_id, "Has llegado al final de esta escena.")
         return
 
     dialogue = dialogues[order - 1]
-    text = f"*{dialogue.character}*\n{dialogue.dialogue}"
 
-    # Validación 3: Si el texto está vacío
     if not dialogue.dialogue.strip():
-        await router.bot.send_message(chat_id, "Este diálogo está vacío. Contacta al administrador.")
+        await bot.send_message(chat_id, "Este diálogo está vacío. Contacta al administrador.")
         return
+
+    text = f"*{dialogue.character}*\n{dialogue.dialogue}"
 
     if dialogue.media_type == 'text':
         keyboard = InlineKeyboardBuilder().button(text="Siguiente", callback_data="next_dialogue").as_markup()
-        await router.bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=keyboard)
+        await bot.send_message(chat_id, text, parse_mode="Markdown", reply_markup=keyboard)
 
     progress["order"] += 1
 
 @router.callback_query(F.data == "next_dialogue")
 async def handle_next_dialogue(callback: CallbackQuery):
-    await send_next_dialogue(callback.message.chat.id, callback.from_user.id)
+    await send_next_dialogue(callback.bot, callback.message.chat.id, callback.from_user.id)
