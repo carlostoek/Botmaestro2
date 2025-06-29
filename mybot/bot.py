@@ -44,7 +44,8 @@ from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
 
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
-from mybot.trivia_router import router as trivia_router
+from mybot.routers import trivia_router
+from mybot.schedulers.trivia_scheduler import trivia_scheduler_worker
 import combinar_pistas
 from backpack import router as backpack_router
 
@@ -130,6 +131,7 @@ async def main() -> None:
     membership_task = asyncio.create_task(vip_membership_scheduler(bot, Session))
     auction_task = asyncio.create_task(auction_monitor_scheduler(bot, Session))
     cleanup_task = asyncio.create_task(free_channel_cleanup_scheduler(bot, Session))
+    trivia_task = asyncio.create_task(trivia_scheduler_worker(bot, Session))
 
     try:
         logging.info("Bot is starting polling...")
@@ -140,8 +142,9 @@ async def main() -> None:
         membership_task.cancel()
         auction_task.cancel()
         cleanup_task.cancel()
+        trivia_task.cancel()
         await asyncio.gather(
-            pending_task, vip_task, membership_task, auction_task, cleanup_task,
+            pending_task, vip_task, membership_task, auction_task, cleanup_task, trivia_task,
             return_exceptions=True
         )
 
