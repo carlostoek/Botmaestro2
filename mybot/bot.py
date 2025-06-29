@@ -5,6 +5,8 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from handlers import trivia as trivia_handlers
+dp.include_router(trivia_handlers.router)
 
 # --- INICIO DE LA DEFINICIÓN DEL TECLADO PRINCIPAL ---
 main_menu_keyboard = ReplyKeyboardMarkup(
