@@ -215,3 +215,23 @@ NIVEL_TEMPLATE = """
 📊 Progreso hacia el siguiente nivel: {percentage:.1%}
 🎯 Te faltan {points_needed} puntos para alcanzar el nivel {next_level}.
 """
+
+# --- TRIVIA MESSAGES ---
+TRIVIA_QUESTION_TEMPLATE = "🧠 **Trivia Narrativa:**\n\n_{question_text}_\n\nElige la opción correcta:"
+TRIVIA_CORRECT_ANSWER = "✅ ¡Respuesta Correcta! El mayordomo asiente con aprobación. Has ganado {points} puntos."
+TRIVIA_INCORRECT_ANSWER_SARCASTIC = [
+    "❌ Respuesta incorrecta. Vaya, parece que hoy no es tu día de lucidez. Inténtalo de nuevo, o no.",
+    "❌ Incorrecto. Mi paciencia es limitada, pero tu capacidad de errar no lo es. Prueba otra vez.",
+    "❌ Equivocado. Supongo que incluso los cerebros más brillantes tienen sus momentos... menos brillantes. ¿Quieres otro intento?",
+    "❌ Fallaste. Para ser un mayordomo, he visto jugadas más ingeniosas en el ajedrez contra una tostadora. ¿Reintentar?"
+]
+TRIVIA_ALREADY_ANSWERED = "💡 Ya has respondido correctamente esta trivia. No hay más recompensas aquí, maestro."
+TRIVIA_NO_MORE_AVAILABLE = "🤔 Parece que no hay trivias disponibles para ti en este momento, o ya las has completado todas."
+TRIVIA_RETRY_PROMPT = "¿Quieres intentarlo de nuevo?"
+TRIVIA_RETRY_BUTTON = "🔄 Reintentar Trivia"
+TRIVIA_CANCEL_RETRY_BUTTON = "🚫 Dejar así"
+TRIVIA_NO_RETRY_ALLOWED = "❌ Lo siento, no puedes reintentar esta trivia por ahora. Quizás más adelante..."
+TRIVIA_EXCLUSIVE_CONTENT_UNLOCKED = "🎉 ¡Felicidades! Al resolver esta trivia, has desbloqueado contenido exclusivo: **{unlocked_item}**."
+TRIVIA_POINTS_ONLY = "✅ ¡Correcto! Ganaste {points} puntos. Tu intelecto brilla como plata pulida."
+# --- END TRIVIA MESSAGES ---
+
