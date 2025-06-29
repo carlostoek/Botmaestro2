@@ -189,3 +189,16 @@ class AdminVipSubscriberStates(StatesGroup):
 
     waiting_for_days = State()
     waiting_for_new_date = State()
+
+
+class StoryboardStates(StatesGroup):
+    waiting_scene_id = State()
+    waiting_dialogue_scene = State()
+    waiting_dialogue_order = State()
+    waiting_dialogue_character = State()
+    waiting_dialogue_text = State()
+    waiting_dialogue_media_type = State()
+    waiting_dialogue_media_path = State()
+    waiting_dialogue_condition = State()
+    waiting_dialogue_id_edit = State()
+    waiting_dialogue_id_delete = State()

@@ -486,3 +486,16 @@ async def set_user_menu_state(session, user_id: int, state: str):
         user.menu_state = state
         await session.commit()
         await session.refresh(user)
+
+
+class Storyboard(Base):
+    __tablename__ = 'storyboard'
+
+    id = Column(Integer, primary_key=True)
+    scene_id = Column(String)
+    order = Column(Integer)
+    character = Column(String)
+    dialogue = Column(Text)
+    media_type = Column(String)
+    media_path = Column(String, nullable=True)
+    condition = Column(String, nullable=True)
