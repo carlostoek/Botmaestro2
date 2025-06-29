@@ -4,6 +4,7 @@ from aiogram import Bot
 
 from database.models import User, Level, LorePiece, UserLorePiece
 from utils.messages import BOT_MESSAGES
+from services.narrative_engine import NarrativeEvent, TriggerType
 import logging
 
 logger = logging.getLogger(__name__)
@@ -47,8 +48,9 @@ LEVELS = [
 ]
 
 class LevelService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, narrative_engine=None):
         self.session = session
+        self.narrative_engine = narrative_engine
 
     async def _init_levels(self) -> None:
         result = await self.session.execute(select(Level))
@@ -134,7 +136,13 @@ class LevelService:
                 break
         return current
 
+    async def get_user_level(self, user_id: int) -> int:
+        """Return the current level of a user by their ID."""
+        user = await self.session.get(User, user_id)
+        return user.level if user else 1
+
     async def check_for_level_up(self, user: User, *, bot: Bot | None = None) -> bool:
+        old_level = user.level
         new_level = await self.get_level_for_points(user.points)
         if new_level.level_id != user.level:
             user.level = new_level.level_id
@@ -173,6 +181,13 @@ class LevelService:
                         logger.info(
                             f"User {user.id} unlocked lore piece {unlock_code} via level {new_level.level_id}"
                         )
+            if self.narrative_engine:
+                event = NarrativeEvent(
+                    user_id=user.id,
+                    trigger_type=TriggerType.LEVEL_UP,
+                    data={"old_level": old_level, "new_level": new_level.level_id},
+                )
+                await self.narrative_engine.process_event(event)
             return True
         return False
 
