@@ -174,12 +174,23 @@ MISSION_MESSAGES = {
     "view_all_missions_button_text": "📋 Ver Todas las Misiones",
 }
 
+# --- TRIVIA MESSAGES ---
+TRIVIA_MESSAGES = {
+    "trivia_intro": "🧠 *Ponte a prueba con esta trivia!*",
+    "trivia_correct_answer": "🎉 ¡Respuesta correcta! Ganaste {points} puntos.",
+    "trivia_wrong_answer": "❌ Respuesta incorrecta.",
+    "trivia_retry": "¿Quieres intentarlo de nuevo?",
+    "trivia_no_questions": "No hay preguntas disponibles en este momento.",
+    "trivia_back": "⬅️ Volver",
+}
+
 # Aggregate all messages for backward compatibility
 BOT_MESSAGES = {
     **BUTLER_MESSAGES,
     **KINKY_MESSAGES,
     **MENU_TEXTS,
     **MISSION_MESSAGES,
+    **TRIVIA_MESSAGES,
 }
 
 # Badge descriptions

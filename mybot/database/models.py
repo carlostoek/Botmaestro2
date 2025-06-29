@@ -446,6 +446,29 @@ class UserLorePiece(AsyncAttrs, Base):
     )
 
 
+class TriviaQuestion(AsyncAttrs, Base):
+    __tablename__ = "trivia_questions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    question = Column(String, nullable=False)
+    options = Column(JSON, nullable=False)
+    correct_option = Column(String, nullable=False)
+    points = Column(Integer, default=0)
+    mission_required = Column(String, nullable=True)
+    exclusive_content = Column(Boolean, default=False)
+    unlocks = Column(String, nullable=True)
+
+
+class TriviaResult(AsyncAttrs, Base):
+    __tablename__ = "trivia_results"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False)
+    question_id = Column(Integer, ForeignKey("trivia_questions.id"))
+    is_correct = Column(Boolean, default=False)
+    timestamp = Column(DateTime, default=func.now())
+
+
 
 # Funciones para manejar el estado del menú del usuario
 async def get_user_menu_state(session, user_id: int) -> str:
