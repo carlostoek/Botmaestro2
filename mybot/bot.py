@@ -6,7 +6,7 @@ from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from handlers import trivia as trivia_handlers
-dp.include_router(trivia_handlers.router)
+
 
 # --- INICIO DE LA DEFINICIÓN DEL TECLADO PRINCIPAL ---
 main_menu_keyboard = ReplyKeyboardMarkup(
@@ -97,6 +97,7 @@ async def main() -> None:
     dp.message.middleware(PointsMiddleware())
     dp.poll_answer.middleware(PointsMiddleware())
     dp.message_reaction.middleware(PointsMiddleware())
+    dp.include_router(trivia_handlers.router)
 
     # --- INCLUSIÓN DEL ROUTER DE SETUP ---
     # Es crucial incluirlo para que sus handlers sean reconocidos.
