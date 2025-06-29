@@ -1,3 +1,4 @@
+import json
 from sqlalchemy import select, delete, update
 from database.setup import get_session
 from database.models import Storyboard
@@ -49,3 +50,23 @@ class StoryboardService:
         async with get_session() as session:
             result = await session.execute(select(Storyboard.scene_id).distinct())
             return [row[0] for row in result.all()]
+
+    @staticmethod
+    async def import_storyboard_from_json(file_path: str):
+        async with get_session() as session:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            for item in data:
+                dialogue_entry = Storyboard(
+                    scene_id=item['scene_id'],
+                    order=item['order'],
+                    character=item['character'],
+                    dialogue=item['dialogue'],
+                    media_type=item['media_type'],
+                    media_path=item.get('media_path'),
+                    condition=item.get('condition')
+                )
+                session.add(dialogue_entry)
+
+            await session.commit()

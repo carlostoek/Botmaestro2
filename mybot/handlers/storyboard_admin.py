@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from keyboards.storyboard_admin_kb import get_storyboard_admin_kb
@@ -139,4 +139,22 @@ async def receive_dialogue_id_for_delete(message: Message, state: FSMContext):
     dialogue_id = int(message.text)
     await StoryboardService.delete_dialogue(dialogue_id)
     await message.answer("✅ Diálogo eliminado exitosamente.")
+    await state.clear()
+
+
+@router.message(Command("import_storyboard"))
+async def handle_import_storyboard(message: Message, state: FSMContext):
+    await message.answer("Por favor, envía el archivo JSON del storyboard que deseas importar.")
+    await state.set_state(StoryboardStates.waiting_for_json)
+
+
+@router.message(F.document, state=StoryboardStates.waiting_for_json)
+async def receive_json_file(message: Message, state: FSMContext):
+    file = await message.bot.get_file(message.document.file_id)
+    file_path = f"temp/{message.document.file_name}"
+    await message.bot.download_file(file.file_path, destination=file_path)
+
+    await StoryboardService.import_storyboard_from_json(file_path)
+
+    await message.answer("✅ Storyboard importado correctamente.")
     await state.clear()
