@@ -72,11 +72,26 @@ async def cmd_start(message: Message, session: AsyncSession):
         # Esto es importante para que el panel de administración funcione correctamente
         init_result = await tenant_service.initialize_tenant(user_id)
         if not init_result["success"]:
-            logger.error(f"Failed to initialize tenant for admin {user_id}: {init_result['error']}")
+            logger.error(
+                f"Failed to initialize tenant for admin {user_id}: {init_result['error']}"
+            )
+            start_message = (
+                "❌ **Error Crítico**\n\n"
+                "No se pudo inicializar la configuración de administrador. Por favor, contacta a soporte."
+            )
+            if not start_message.strip():
+                import logging
+                logging.error(
+                    f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+                )
+                await message.answer(
+                    "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+                )
+                return
             await menu_manager.send_temporary_message(
                 message,
-                f"❌ **Error Crítico**\n\nNo se pudo inicializar la configuración de administrador. Por favor, contacta a soporte.",
-                auto_delete_seconds=10
+                start_message,
+                auto_delete_seconds=10,
             )
             return
 
@@ -97,20 +112,23 @@ async def cmd_start(message: Message, session: AsyncSession):
         )
         # Display the reply keyboard without cluttering the chat
         start_message = "​"
-        if start_message.strip():
-            await menu_manager.send_temporary_message(
-                message,
-                start_message,
-                keyboard=main_menu_keyboard,
-                auto_delete_seconds=0,
-                parse_mode="Markdown",
-            )
-        else:
+        if not start_message.strip():
             import logging
             logging.error(
                 f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
             )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
             return
+
+        await menu_manager.send_temporary_message(
+            message,
+            start_message,
+            keyboard=main_menu_keyboard,
+            auto_delete_seconds=0,
+            parse_mode="Markdown",
+        )
         return # Terminar aquí para el flujo de administración
     
     # Lógica para usuarios no-administradores (VIP, Free)
@@ -139,20 +157,23 @@ async def cmd_start(message: Message, session: AsyncSession):
         )
         # Show the reply keyboard silently so it coexists with the inline menu
         start_message = "​"
-        if start_message.strip():
-            await menu_manager.send_temporary_message(
-                message,
-                start_message,
-                keyboard=main_menu_keyboard,
-                auto_delete_seconds=0,
-                parse_mode="Markdown",
-            )
-        else:
+        if not start_message.strip():
             import logging
             logging.error(
                 f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
             )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
             return
+
+        await menu_manager.send_temporary_message(
+            message,
+            start_message,
+            keyboard=main_menu_keyboard,
+            auto_delete_seconds=0,
+            parse_mode="Markdown",
+        )
 
     except Exception as e:
         logger.error(f"Error in start command for user {user_id}: {e}")

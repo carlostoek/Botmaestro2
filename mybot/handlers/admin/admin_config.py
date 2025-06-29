@@ -48,7 +48,22 @@ async def free_config_reactions(callback: CallbackQuery, state: FSMContext):
 @router.message(AdminConfigStates.waiting_for_reactions_input)
 async def process_reactions_input(message: Message, state: FSMContext):
     if not is_admin(message.from_user.id):
-        await menu_manager.send_temporary_message(message, "❌ Acceso Denegado.", auto_delete_seconds=3)
+        start_message = "❌ Acceso Denegado."
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            await state.clear()
+            return
+        await menu_manager.send_temporary_message(
+            message,
+            start_message,
+            auto_delete_seconds=3,
+        )
         await state.clear()
         return
 
@@ -93,7 +108,22 @@ async def process_reactions_input(message: Message, state: FSMContext):
 @router.message(AdminConfigStates.waiting_for_points_input)
 async def process_points_input(message: Message, state: FSMContext):
     if not is_admin(message.from_user.id):
-        await menu_manager.send_temporary_message(message, "❌ Acceso Denegado.", auto_delete_seconds=3)
+        start_message = "❌ Acceso Denegado."
+        if not start_message.strip():
+            import logging
+            logging.error(
+                f"Intento de iniciar flujo con mensaje vacío para el usuario {message.from_user.id}"
+            )
+            await message.answer(
+                "Ocurrió un error al iniciar el flujo. Por favor intenta más tarde."
+            )
+            await state.clear()
+            return
+        await menu_manager.send_temporary_message(
+            message,
+            start_message,
+            auto_delete_seconds=3,
+        )
         await state.clear()
         return
 
