@@ -7,14 +7,16 @@ class StoryboardService:
 
     @staticmethod
     async def create_scene(scene_id: str):
-        async with get_session() as session:
+        session_factory = await get_session()
+        async with session_factory() as session:
             scene = Storyboard(scene_id=scene_id, order=0, character='', dialogue='', media_type='text')
             session.add(scene)
             await session.commit()
 
     @staticmethod
     async def add_dialogue(scene_id, order, character, dialogue, media_type, media_path=None, condition=None):
-        async with get_session() as session:
+        session_factory = await get_session()
+        async with session_factory() as session:
             dialogue_entry = Storyboard(
                 scene_id=scene_id,
                 order=order,
@@ -29,34 +31,36 @@ class StoryboardService:
 
     @staticmethod
     async def edit_dialogue(dialogue_id, **kwargs):
-        async with get_session() as session:
+        session_factory = await get_session()
+        async with session_factory() as session:
             await session.execute(update(Storyboard).where(Storyboard.id == dialogue_id).values(**kwargs))
             await session.commit()
 
     @staticmethod
     async def delete_dialogue(dialogue_id):
-        async with get_session() as session:
+        session_factory = await get_session()
+        async with session_factory() as session:
             await session.execute(delete(Storyboard).where(Storyboard.id == dialogue_id))
             await session.commit()
 
     @staticmethod
     async def get_scene_dialogues(scene_id):
-        async with get_session() as session:
+        session_factory = await get_session()
+        async with session_factory() as session:
             result = await session.execute(select(Storyboard).where(Storyboard.scene_id == scene_id).order_by(Storyboard.order))
             return result.scalars().all()
 
     @staticmethod
     async def get_all_scenes():
-        session = await get_session()
-        try:
+        session_factory = await get_session()
+        async with session_factory() as session:
             result = await session.execute(select(Storyboard.scene_id).distinct())
             return [row[0] for row in result.all()]
-        finally:
-            await session.close()
 
     @staticmethod
     async def import_storyboard_from_json(file_path: str):
-        async with get_session() as session:
+        session_factory = await get_session()
+        async with session_factory() as session:
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
 
