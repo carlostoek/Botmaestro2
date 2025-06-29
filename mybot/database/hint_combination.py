@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from sqlalchemy import Column, Integer, String, DateTime, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.declarative import declarative_base

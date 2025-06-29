@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 # database/setup.py
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool # NullPool es adecuado para Railway, para SQLite local puedes mantenerlo o quitarlo

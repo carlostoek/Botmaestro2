@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Servicio para gestión completa del canal gratuito.
 Incluye aprobación automática, envío de mensajes y protección de contenido.

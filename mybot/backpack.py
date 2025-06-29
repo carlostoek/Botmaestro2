@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 # mochila_narrativa.py
 
 from aiogram import Router, F

@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """Handlers para mostrar y gestionar las piezas de lore desbloqueadas."""
 
 import logging

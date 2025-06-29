@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 # database/models.py
 from sqlalchemy import (
     Column,

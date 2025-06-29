@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 # utils/message_utils.py
 from database.models import User, Mission, Reward, UserAchievement
 from services.level_service import LevelService

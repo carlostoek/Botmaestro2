@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Menu creators for specific menu types.
 Separated to avoid circular imports and improve maintainability.

@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 # services/mission_service.py
 import datetime
 import random

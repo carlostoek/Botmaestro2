@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
@@ -44,8 +45,8 @@ from handlers import setup as setup_handlers # ¡IMPORTACIÓN CLAVE!
 
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
-from mybot.routers import trivia_router
-from mybot.schedulers.trivia_scheduler import trivia_scheduler_worker
+from routers import trivia_router
+from schedulers.trivia_scheduler import trivia_scheduler_worker
 import combinar_pistas
 from backpack import router as backpack_router
 
