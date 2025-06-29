@@ -6,14 +6,16 @@ from aiogram import Bot
 from services.level_service import LevelService
 from services.achievement_service import AchievementService
 from services.event_service import EventService
+from services.narrative_engine import NarrativeEvent, TriggerType
 import datetime
 import logging
 
 logger = logging.getLogger(__name__)
 
 class PointService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, narrative_engine=None):
         self.session = session
+        self.narrative_engine = narrative_engine
 
     async def _get_or_create_progress(self, user_id: int) -> UserStats:
         progress = await self.session.get(UserStats, user_id)
@@ -24,7 +26,9 @@ class PointService:
             await self.session.refresh(progress)
         return progress
 
-    async def award_message(self, user_id: int, bot: Bot) -> UserStats | None:
+    async def award_message(
+        self, user_id: int, bot: Bot, *, channel_id: int | None = None
+    ) -> UserStats | None:
         progress = await self._get_or_create_progress(user_id)
         now = datetime.datetime.utcnow()
         if progress.last_activity_at and (now - progress.last_activity_at).total_seconds() < 30:
@@ -42,10 +46,23 @@ class PointService:
                     user_id,
                     f"🏅 Has obtenido la insignia {badge.icon or ''} {badge.name}!",
                 )
+        if self.narrative_engine:
+            event = NarrativeEvent(
+                user_id=user_id,
+                trigger_type=TriggerType.POINTS_GAINED,
+                data={"points": 1, "source": "message", "channel_id": channel_id},
+            )
+            await self.narrative_engine.process_event(event)
         return progress
 
     async def award_reaction(
-        self, user: User, message_id: int, bot: Bot
+        self,
+        user: User,
+        message_id: int,
+        bot: Bot,
+        *,
+        channel_id: int | None = None,
+        reaction_emoji: str | None = None,
     ) -> UserStats | None:
         progress = await self.add_points(user.id, 0.5, bot=bot)
         ach_service = AchievementService(self.session)
@@ -57,6 +74,17 @@ class PointService:
                     user.id,
                     f"🏅 Has obtenido la insignia {badge.icon or ''} {badge.name}!",
                 )
+        if self.narrative_engine:
+            event = NarrativeEvent(
+                user_id=user.id,
+                trigger_type=TriggerType.REACTION,
+                data={
+                    "emoji": reaction_emoji,
+                    "points": 0.5,
+                    "channel_id": channel_id,
+                },
+            )
+            await self.narrative_engine.process_event(event)
         return progress
 
     async def award_poll(self, user_id: int, bot: Bot) -> UserStats:
