@@ -20,6 +20,7 @@ from utils.keyboard_utils import (
     get_admin_content_auctions_keyboard,
     get_admin_content_daily_gifts_keyboard,
     get_admin_content_minigames_keyboard,
+    get_admin_content_trivias_keyboard,
     get_badge_selection_keyboard,
     get_reward_type_keyboard,
 )
@@ -30,10 +31,12 @@ from utils.admin_state import (
     AdminDailyGiftStates,
     AdminRewardStates,
     AdminLevelStates,
+    AdminTriviaStates,
 )
 from services.mission_service import MissionService
 from services.reward_service import RewardService
 from services.level_service import LevelService
+from services.trivia_service import TriviaService
 from database.models import User, Mission, LorePiece
 from services.lore_piece_service import LorePieceService
 from services.point_service import PointService
@@ -704,6 +707,20 @@ async def toggle_minigames(callback: CallbackQuery, session: AsyncSession):
     await service.set_value("minigames_enabled", new_value)
     await callback.answer("Configuración actualizada", show_alert=True)
     await admin_content_minigames(callback, session)
+
+
+@router.callback_query(F.data == "admin_content_trivias")
+async def admin_content_trivias(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    await update_menu(
+        callback,
+        "❓ Trivias - Selecciona una opción:",
+        get_admin_content_trivias_keyboard(),
+        session,
+        "admin_content_trivias",
+    )
+    await callback.answer()
 
 
 @router.callback_query(F.data == "admin_manage_hints")
@@ -1574,6 +1591,250 @@ async def save_text_content(message: Message, state: FSMContext, session: AsyncS
     await message.answer(
         "✅ Pista creada correctamente",
         reply_markup=get_back_keyboard("admin_content_lore_pieces"),
+    )
+    await state.clear()
+
+
+# --- Gestión de Trivias ---
+
+@router.callback_query(F.data == "admin_trivia_create")
+async def admin_trivia_create(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    await callback.message.edit_text(
+        "Pregunta de la trivia:", reply_markup=get_back_keyboard("admin_content_trivias")
+    )
+    await state.set_state(AdminTriviaStates.creating_question)
+    await callback.answer()
+
+
+@router.message(AdminTriviaStates.creating_question)
+async def trivia_set_question(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    await state.update_data(question=message.text.strip())
+    await message.answer(
+        "Opciones separadas por punto y coma (ej. A;B;C):"
+    )
+    await state.set_state(AdminTriviaStates.creating_options)
+
+
+@router.message(AdminTriviaStates.creating_options)
+async def trivia_set_options(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    options = [opt.strip() for opt in message.text.split(";") if opt.strip()]
+    if len(options) < 2:
+        await message.answer("Ingresa al menos dos opciones, separadas por ';'")
+        return
+    await state.update_data(options=options)
+    await message.answer("Índice de la respuesta correcta (empezando en 1):")
+    await state.set_state(AdminTriviaStates.creating_correct_index)
+
+
+@router.message(AdminTriviaStates.creating_correct_index)
+async def trivia_set_correct_index(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    try:
+        idx = int(message.text) - 1
+    except ValueError:
+        await message.answer("Ingresa un número válido")
+        return
+    data = await state.get_data()
+    if idx < 0 or idx >= len(data.get("options", [])):
+        await message.answer("El índice está fuera de rango")
+        return
+    await state.update_data(correct_index=idx)
+    await message.answer("Puntos de recompensa por acertar:")
+    await state.set_state(AdminTriviaStates.creating_reward)
+
+
+@router.message(AdminTriviaStates.creating_reward)
+async def trivia_set_reward(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    try:
+        points = int(message.text)
+    except ValueError:
+        await message.answer("Ingresa un número válido")
+        return
+    await state.update_data(reward=points)
+    await message.answer("Identificador único para esta trivia:")
+    await state.set_state(AdminTriviaStates.creating_code)
+
+
+@router.message(AdminTriviaStates.creating_code)
+async def trivia_create_finish(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    data = await state.get_data()
+    service = TriviaService(session)
+    await service.create_trivia(
+        message.text.strip(),
+        data.get("question"),
+        data.get("options"),
+        data.get("correct_index"),
+        data.get("reward"),
+    )
+    await message.answer(
+        "Trivia creada.", reply_markup=get_admin_content_trivias_keyboard()
+    )
+    await state.clear()
+
+
+@router.callback_query(F.data == "admin_trivia_list")
+async def admin_trivia_list(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    service = TriviaService(session)
+    trivias = await service.list_trivias()
+    if trivias:
+        lines = [f"{t.id}. {t.code_name} - {t.question}" for t in trivias]
+        text = "\n".join(lines)
+    else:
+        text = "No hay trivias."
+    await callback.message.edit_text(
+        text, reply_markup=get_back_keyboard("admin_content_trivias")
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin_trivia_delete")
+async def admin_trivia_delete(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    service = TriviaService(session)
+    trivias = await service.list_trivias()
+    keyboard = [
+        [InlineKeyboardButton(text=t.code_name, callback_data=f"del_trivia_{t.id}")]
+        for t in trivias
+    ]
+    keyboard.append([InlineKeyboardButton(text="⬅️ Volver", callback_data="admin_content_trivias")])
+    await callback.message.edit_text(
+        "Selecciona la trivia a eliminar:",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("del_trivia_"))
+async def admin_trivia_confirm_delete(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    trivia_id = int(callback.data.split("del_trivia_")[-1])
+    service = TriviaService(session)
+    await service.delete_trivia(trivia_id)
+    await callback.message.edit_text(
+        "Trivia eliminada", reply_markup=get_admin_content_trivias_keyboard()
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "admin_trivia_edit")
+async def admin_trivia_edit(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    service = TriviaService(session)
+    trivias = await service.list_trivias()
+    keyboard = [
+        [InlineKeyboardButton(text=t.code_name, callback_data=f"edit_trivia_{t.id}")]
+        for t in trivias
+    ]
+    keyboard.append([InlineKeyboardButton(text="⬅️ Volver", callback_data="admin_content_trivias")])
+    await callback.message.edit_text(
+        "Selecciona la trivia a editar:",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard),
+    )
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith("edit_trivia_"))
+async def admin_trivia_start_edit(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer()
+    trivia_id = int(callback.data.split("edit_trivia_")[-1])
+    trivia = await TriviaService(session).get_trivia_by_id(trivia_id)
+    if not trivia:
+        await callback.answer("Trivia no encontrada", show_alert=True)
+        return
+    await state.update_data(trivia_id=trivia_id)
+    await callback.message.edit_text(
+        "Nueva pregunta:", reply_markup=get_back_keyboard("admin_trivia_edit")
+    )
+    await state.set_state(AdminTriviaStates.editing_question)
+    await callback.answer()
+
+
+@router.message(AdminTriviaStates.editing_question)
+async def admin_trivia_edit_question(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    await state.update_data(question=message.text.strip())
+    await message.answer("Opciones separadas por ';':")
+    await state.set_state(AdminTriviaStates.editing_options)
+
+
+@router.message(AdminTriviaStates.editing_options)
+async def admin_trivia_edit_options(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    options = [opt.strip() for opt in message.text.split(";") if opt.strip()]
+    if len(options) < 2:
+        await message.answer("Ingresa al menos dos opciones")
+        return
+    await state.update_data(options=options)
+    await message.answer("Índice correcto (desde 1):")
+    await state.set_state(AdminTriviaStates.editing_correct_index)
+
+
+@router.message(AdminTriviaStates.editing_correct_index)
+async def admin_trivia_edit_correct_index(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    try:
+        idx = int(message.text) - 1
+    except ValueError:
+        await message.answer("Número inválido")
+        return
+    data = await state.get_data()
+    if idx < 0 or idx >= len(data.get("options", [])):
+        await message.answer("Índice fuera de rango")
+        return
+    await state.update_data(correct_index=idx)
+    await message.answer("Puntos de recompensa:")
+    await state.set_state(AdminTriviaStates.editing_reward)
+
+
+@router.message(AdminTriviaStates.editing_reward)
+async def admin_trivia_edit_reward(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    try:
+        points = int(message.text)
+    except ValueError:
+        await message.answer("Ingresa un número válido")
+        return
+    await state.update_data(reward=points)
+    await message.answer("Nuevo identificador:")
+    await state.set_state(AdminTriviaStates.editing_code)
+
+
+@router.message(AdminTriviaStates.editing_code)
+async def admin_trivia_finish_edit(message: Message, state: FSMContext, session: AsyncSession):
+    if not is_admin(message.from_user.id):
+        return
+    data = await state.get_data()
+    await TriviaService(session).update_trivia(
+        data["trivia_id"],
+        code_name=message.text.strip(),
+        question=data.get("question"),
+        options=data.get("options"),
+        correct_index=data.get("correct_index"),
+        reward_points=data.get("reward"),
+    )
+    await message.answer(
+        "Trivia actualizada", reply_markup=get_admin_content_trivias_keyboard()
     )
     await state.clear()
 

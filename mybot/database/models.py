@@ -411,6 +411,39 @@ class MiniGamePlay(AsyncAttrs, Base):
     cost_points = Column(Float, default=0)
 
 
+class Trivia(AsyncAttrs, Base):
+    """Multiple choice trivia questions for the gamification system."""
+
+    __tablename__ = "trivias"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code_name = Column(String, unique=True, nullable=False)
+    question = Column(Text, nullable=False)
+    options = Column(JSON, nullable=False)
+    correct_index = Column(Integer, nullable=False)
+    reward_points = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+
+
+class UserTriviaResult(AsyncAttrs, Base):
+    """Stores user answers and scores for trivias."""
+
+    __tablename__ = "user_trivia_results"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    trivia_id = Column(Integer, ForeignKey("trivias.id"), nullable=False)
+    selected_index = Column(Integer, nullable=False)
+    is_correct = Column(Boolean, nullable=False)
+    points_awarded = Column(Integer, default=0)
+    answered_at = Column(DateTime, default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "trivia_id", name="uix_user_trivia"),
+    )
+
+
 class LorePiece(AsyncAttrs, Base):
     """Discrete lore or clue piece that users can unlock."""
 

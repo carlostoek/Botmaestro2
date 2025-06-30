@@ -189,3 +189,21 @@ class AdminVipSubscriberStates(StatesGroup):
 
     waiting_for_days = State()
     waiting_for_new_date = State()
+
+
+class AdminTriviaStates(StatesGroup):
+    """States for creating and editing trivia questions."""
+
+    creating_question = State()
+    creating_options = State()
+    creating_correct_index = State()
+    creating_reward = State()
+    creating_code = State()
+
+    editing_select_trivia = State()
+    editing_question = State()
+    editing_options = State()
+    editing_correct_index = State()
+    editing_reward = State()
+    editing_code = State()
+    deleting_trivia = State()
