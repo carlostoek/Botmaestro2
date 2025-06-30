@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 import logging
 from aiogram import Bot
 from utils.config import ADMIN_IDS

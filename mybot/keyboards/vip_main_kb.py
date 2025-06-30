@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """Keyboard helpers for VIP menus."""
 
 from utils.keyboard_utils import get_main_menu_keyboard

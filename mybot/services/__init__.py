@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from .achievement_service import AchievementService
 from .badge_service import BadgeService
 from .level_service import LevelService
@@ -15,6 +16,7 @@ from .message_service import MessageService
 from .auction_service import AuctionService
 from .user_service import UserService
 from .lore_piece_service import LorePieceService
+from .trivia_service import TriviaService
 from .scheduler import channel_request_scheduler, vip_subscription_scheduler, vip_membership_scheduler
 
 __all__ = [
@@ -40,4 +42,6 @@ __all__ = [
     "AuctionService",
     "UserService",
     "LorePieceService",
+    "TriviaService",
 ]
+

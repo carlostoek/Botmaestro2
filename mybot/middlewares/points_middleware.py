@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from aiogram import BaseMiddleware, Bot
 from aiogram.types import Message, PollAnswer, ChatMemberUpdated
 try:

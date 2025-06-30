@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.future import select

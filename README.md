@@ -53,6 +53,10 @@ python scripts/init_db.py
 python mybot/bot.py
 ```
 
+## ¿mybot es módulo o raíz?
+
+### ¡mybot es la raíz del proyecto!
+
 ## 🛠️ Configuración Multi-Tenant
 
 ### Primer Uso (Administradores)

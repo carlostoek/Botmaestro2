@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Enhanced start handler with improved user experience and multi-tenant support.
 """

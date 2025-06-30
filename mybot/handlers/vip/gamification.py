@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Enhanced gamification handlers with improved menu management.
 """

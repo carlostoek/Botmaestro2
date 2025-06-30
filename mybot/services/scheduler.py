@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 import asyncio
 import logging
 from datetime import datetime, timedelta

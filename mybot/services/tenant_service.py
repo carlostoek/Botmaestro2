@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Multi-tenant service for managing independent bot configurations.
 Allows multiple users to set up their own bot instances with separate channels and settings.

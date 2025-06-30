@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 """
 Setup handlers for multi-tenant bot configuration.
 Guides new admins through the initial setup process.
@@ -463,8 +464,6 @@ async def setup_levels(callback: CallbackQuery, session: AsyncSession):
         "setup_levels_info"
     )
     await callback.answer()
-
-# mybot/handlers/setup.py.txt (Continuación desde "--- Tariff Handlers ---")
 
 # --- Tariff Handlers ---
 # setup_tariffs_menu ya existe

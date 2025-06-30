@@ -1,3 +1,4 @@
+# No coloques mybot como módulo, es la raíz del proyecto
 # utils/keyboard_utils.py
 from aiogram.types import (
     InlineKeyboardMarkup,
