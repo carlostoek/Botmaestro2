@@ -25,6 +25,7 @@ main_menu_keyboard = ReplyKeyboardMarkup(
 # --- FIN DE LA DEFINICIÓN DEL TECLADO PRINCIPAL ---
 
 from database.setup import init_db, get_session
+from utils.message_safety import patch_message_methods
 
 from handlers import start, free_user
 from handlers import daily_gift, minigames
@@ -58,6 +59,7 @@ from services.scheduler import auction_monitor_scheduler, free_channel_cleanup_s
 
 async def main() -> None:
     await init_db()
+    patch_message_methods()
     Session = await get_session()
 
     logging.basicConfig(level=logging.INFO)

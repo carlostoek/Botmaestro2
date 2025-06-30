@@ -141,6 +141,7 @@ Accede al panel de administración con `/admin_menu` para:
 - **MenuManager**: Gestión centralizada de mensajes y navegación
 - **MenuFactory**: Creación consistente de menús basada en roles
 - **Navegación Inteligente**: Historial y funcionalidad de "volver"
+- **safe_answer / safe_edit**: Utiliza estas funciones para enviar mensajes de forma segura
 
 ### Servicios Multi-Tenant
 - **TenantService**: Gestión de configuraciones independientes
@@ -163,6 +164,7 @@ Accede al panel de administración con `/admin_menu` para:
 ### Consideraciones de Seguridad
 - **Validación de Permisos**: Verificación estricta de roles
 - **Sanitización de Datos**: Limpieza automática de inputs
+- **Envío Seguro de Mensajes**: Todas las respuestas utilizan `safe_answer` y `safe_edit` para evitar textos vacíos
 - **Logs de Auditoría**: Registro detallado de acciones administrativas
 
 ## 📈 Métricas y Estadísticas
