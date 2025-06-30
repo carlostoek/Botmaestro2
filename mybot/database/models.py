@@ -462,3 +462,48 @@ async def set_user_menu_state(session, user_id: int, state: str):
         user.menu_state = state
         await session.commit()
         await session.refresh(user)
+
+class Trivia(Base):
+    __tablename__ = "trivias"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    reward_points = Column(Integer, default=10)
+    unlocks_lore_piece_code = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+
+
+class TriviaQuestion(Base):
+    __tablename__ = "trivia_questions"
+
+    id = Column(Integer, primary_key=True)
+    trivia_id = Column(Integer, ForeignKey("trivias.id"), nullable=False)
+    question_text = Column(Text, nullable=False)
+    question_type = Column(Enum("multiple_choice", "open_ended", "visual", name="question_types"))
+    options = Column(JSON, nullable=True)  # {"A": "Opción 1", "B": "Opción 2"}
+    correct_answer = Column(String, nullable=False)
+    media_type = Column(String, nullable=True)  # image, video, none
+    media_path = Column(String, nullable=True)
+    order = Column(Integer, default=0)
+
+
+class TriviaAttempt(Base):
+    __tablename__ = "trivia_attempts"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    trivia_id = Column(Integer, ForeignKey("trivias.id"), nullable=False)
+    score = Column(Integer, default=0)
+    completed_at = Column(DateTime, default=func.now())
+
+
+class TriviaUserAnswer(Base):
+    __tablename__ = "trivia_user_answers"
+
+    id = Column(Integer, primary_key=True)
+    attempt_id = Column(Integer, ForeignKey("trivia_attempts.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("trivia_questions.id"), nullable=False)
+    user_answer = Column(Text, nullable=True)
+    is_correct = Column(Boolean, default=False)
