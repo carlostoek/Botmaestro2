@@ -5,6 +5,11 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from utils.safe_message_patch import SafeMessagePatch
+
+# Aplicar parche una sola vez al inicio
+SafeMessagePatch.apply_patch()
+
 
 # --- INICIO DE LA DEFINICIÓN DEL TECLADO PRINCIPAL ---
 main_menu_keyboard = ReplyKeyboardMarkup(
