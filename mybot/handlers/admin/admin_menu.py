@@ -33,6 +33,7 @@ from .subscription_plans import router as subscription_plans_router
 from .game_admin import router as game_admin_router
 from .event_admin import router as event_admin_router
 from .admin_config import router as admin_config_router
+from .trivia_admin import router as trivia_admin_router
 
 router.include_router(vip_router)
 router.include_router(free_router)
@@ -42,6 +43,7 @@ router.include_router(subscription_plans_router)
 router.include_router(game_admin_router)
 router.include_router(event_admin_router)
 router.include_router(admin_config_router)
+router.include_router(trivia_admin_router)
 
 @router.message(CommandStart())
 async def admin_start(message: Message, session: AsyncSession):

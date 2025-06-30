@@ -7,6 +7,7 @@ from .subscription_plans import router as subscription_plans_router
 from .game_admin import router as game_admin_router
 from .event_admin import router as event_admin_router
 from .admin_config import router as admin_config_router
+from .trivia_admin import router as trivia_admin_router
 
 __all__ = [
     "admin_router",
@@ -18,4 +19,5 @@ __all__ = [
     "game_admin_router",
     "event_admin_router",
     "admin_config_router",
+    "trivia_admin_router",
 ]
