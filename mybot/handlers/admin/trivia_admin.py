@@ -134,3 +134,51 @@ async def paginate_questions(callback: CallbackQuery, session: AsyncSession):
         page = 1
     await QuestionCRUD.list_questions_paginated(callback, session, page)
     await callback.answer()
+
+
+@router.callback_query(F.data == "admin_trivia_config")
+async def show_system_config(callback: CallbackQuery, session: AsyncSession):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer("Acceso denegado", show_alert=True)
+
+    await TriviaSystemConfig.show_config_menu(callback, session)
+    await callback.answer()
+
+
+class TriviaSystemConfig:
+    @staticmethod
+    async def show_config_menu(callback: CallbackQuery, session: AsyncSession):
+        """Panel de configuración del sistema"""
+        from services.trivia_admin_service import get_trivia_system_config
+
+        config = await get_trivia_system_config(session)
+
+        text = "⚙️ **CONFIGURACIÓN DEL SISTEMA**\n\n"
+        text += f"🎮 **Sesiones:**\n"
+        text += f"• Máximo concurrentes: {config['max_concurrent_sessions']}\n"
+        text += f"• Timeout por defecto: {config['default_timeout']}s\n"
+        text += f"• Cooldown entre trivias: {config['cooldown_minutes']}min\n\n"
+
+        text += f"🎯 **Preguntas:**\n"
+        text += f"• Máximo por sesión: {config['max_questions_per_session']}\n"
+        text += f"• Tiempo límite por defecto: {config['default_question_time']}s\n"
+        text += f"• Selección adaptativa: {'✅' if config['adaptive_selection'] else '❌'}\n\n"
+
+        text += f"🎁 **Recompensas:**\n"
+        text += f"• Multiplicador de puntos: {config['points_multiplier']}x\n"
+        text += f"• Bonificación por velocidad: {'✅' if config['speed_bonus'] else '❌'}"
+
+        builder = InlineKeyboardBuilder()
+        builder.button(text="🎮 Sesiones", callback_data="config_sessions")
+        builder.button(text="🎯 Preguntas", callback_data="config_questions")
+        builder.button(text="🎁 Recompensas", callback_data="config_rewards")
+        builder.button(text="📊 Analytics", callback_data="config_analytics")
+        builder.button(text="🔔 Notificaciones", callback_data="config_notifications")
+        builder.button(text="🔙 Volver", callback_data="admin_trivia_main")
+        builder.adjust(2, 2, 1, 1)
+
+        await callback.message.edit_text(
+            text=text,
+            reply_markup=builder.as_markup(),
+            parse_mode="Markdown",
+        )

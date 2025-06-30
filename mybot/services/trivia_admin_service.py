@@ -3,7 +3,12 @@ from __future__ import annotations
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import TriviaQuestionModel, TriviaTemplate, UserTriviaHistory
+from database.models import (
+    TriviaQuestionModel,
+    TriviaTemplate,
+    UserTriviaHistory,
+    TriviaSystemConfig,
+)
 
 
 class TriviaAdminService:
@@ -62,3 +67,29 @@ class TriviaAdminService:
 
     async def get_question_by_id(self, question_id: str):
         return await self.session.get(TriviaQuestionModel, question_id)
+
+    async def get_system_config(self) -> dict:
+        """Return the global configuration for the trivia system."""
+        config = await self.session.get(TriviaSystemConfig, 1)
+        if not config:
+            config = TriviaSystemConfig(id=1)
+            self.session.add(config)
+            await self.session.commit()
+            await self.session.refresh(config)
+
+        return {
+            "max_concurrent_sessions": config.max_concurrent_sessions,
+            "default_timeout": config.default_timeout,
+            "cooldown_minutes": config.cooldown_minutes,
+            "max_questions_per_session": config.max_questions_per_session,
+            "default_question_time": config.default_question_time,
+            "adaptive_selection": config.adaptive_selection,
+            "points_multiplier": config.points_multiplier,
+            "speed_bonus": config.speed_bonus,
+        }
+
+
+async def get_trivia_system_config(session: AsyncSession) -> dict:
+    """Convenience wrapper to fetch trivia system config."""
+    service = TriviaAdminService(session)
+    return await service.get_system_config()
