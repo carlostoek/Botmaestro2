@@ -446,6 +446,67 @@ class UserLorePiece(AsyncAttrs, Base):
     )
 
 
+# --- Trivia System Models ---
+class TriviaTemplate(AsyncAttrs, Base):
+    __tablename__ = "trivia_templates"
+
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    description = Column(Text)
+    trigger_events = Column(JSON)
+    trigger_conditions = Column(JSON)
+    question_pool = Column(JSON)
+    selection_strategy = Column(String)
+    max_questions = Column(Integer, default=5)
+    min_score_percentage = Column(Float, default=0.6)
+    rewards = Column(JSON)
+    unlock_storyboards = Column(JSON)
+    special_content_unlocks = Column(JSON)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+
+
+class TriviaQuestionModel(AsyncAttrs, Base):
+    __tablename__ = "trivia_questions"
+
+    id = Column(String, primary_key=True)
+    question = Column(Text, nullable=False)
+    question_type = Column(String)
+    options = Column(JSON)
+    correct_answer = Column(JSON)
+    explanation = Column(Text)
+    difficulty = Column(Integer, default=1)
+    time_limit = Column(Integer)
+    media_url = Column(String)
+    tags = Column(JSON)
+    created_at = Column(DateTime, default=func.now())
+
+
+class UserTriviaHistory(AsyncAttrs, Base):
+    __tablename__ = "user_trivia_history"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(BigInteger, nullable=False)
+    template_id = Column(String)
+    session_id = Column(String)
+    score = Column(Integer)
+    total_questions = Column(Integer)
+    completion_time = Column(Integer)
+    triggered_by = Column(String)
+    rewards_earned = Column(JSON)
+    completed_at = Column(DateTime, default=func.now())
+
+
+class UnlockedContent(AsyncAttrs, Base):
+    __tablename__ = "unlocked_content"
+
+    user_id = Column(BigInteger, primary_key=True)
+    content_type = Column(String, primary_key=True)
+    content_id = Column(String, primary_key=True)
+    unlocked_by = Column(String)
+    unlocked_at = Column(DateTime, default=func.now())
+
+
 
 # Funciones para manejar el estado del menú del usuario
 async def get_user_menu_state(session, user_id: int) -> str:
