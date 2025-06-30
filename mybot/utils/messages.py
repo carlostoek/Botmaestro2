@@ -204,3 +204,5 @@ NIVEL_TEMPLATE = """
 📊 Progreso hacia el siguiente nivel: {percentage:.1%}
 🎯 Te faltan {points_needed} puntos para alcanzar el nivel {next_level}.
 """
+TRIVIA_INTRO_MESSAGE = "🎲 *Selecciona una trivia:*"
+TRIVIA_COMPLETE_MESSAGE = "🎉 *Has completado la trivia con {score} respuestas correctas.*"
