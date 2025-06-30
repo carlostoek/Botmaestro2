@@ -9,6 +9,8 @@ def get_admin_main_kb():
     builder.button(text="💬 Canal Free", callback_data="admin_free")
     builder.button(text="🎮 Juego Kinky", callback_data="admin_kinky_game")
 
+    builder.button(text="🎲 Trivias", callback_data="admin_trivia_main")
+
    
     builder.button(text="🛠 Configuración del Bot", callback_data="admin_config")
     builder.button(text="📈 Estadísticas", callback_data="admin_stats")
