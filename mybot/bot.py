@@ -48,6 +48,7 @@ import combinar_pistas
 from backpack import router as backpack_router
 
 from utils.config import BOT_TOKEN, VIP_CHANNEL_ID
+from trivia import trivia_router, TriviaManager
 from services import (
     channel_request_scheduler,
     vip_subscription_scheduler,
@@ -66,6 +67,7 @@ async def main() -> None:
 
     bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
+    trivia_manager = TriviaManager(bot, Session, None, None)
 
     def session_middleware_factory(session_factory, bot_instance):
         async def middleware(handler, event, data):
@@ -90,6 +92,15 @@ async def main() -> None:
     dp.chat_member.outer_middleware(user_reg_mw)
     dp.poll_answer.outer_middleware(user_reg_mw)
     dp.message_reaction.outer_middleware(user_reg_mw)
+
+    def trivia_middleware_factory(manager: TriviaManager):
+        async def middleware(handler, event, data):
+            data["trivia_manager"] = manager
+            return await handler(event, data)
+        return middleware
+
+    dp.message.outer_middleware(trivia_middleware_factory(trivia_manager))
+    dp.callback_query.outer_middleware(trivia_middleware_factory(trivia_manager))
 
     dp.message.middleware(PointsMiddleware())
     dp.poll_answer.middleware(PointsMiddleware())
@@ -117,6 +128,7 @@ async def main() -> None:
     dp.include_router(reaction_callback_router)
     dp.include_router(daily_gift.router)
     dp.include_router(minigames.router)
+    dp.include_router(trivia_router)
     dp.include_router(free_user.router)
     dp.include_router(lore_router)
     dp.include_router(combinar_pistas.router)
