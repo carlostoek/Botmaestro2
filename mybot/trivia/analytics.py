@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 from sqlalchemy import select
 
-from ..database.models import UserTriviaHistory, TriviaTemplate
+from database.models import UserTriviaHistory, TriviaTemplate
 
 
 class TriviaAnalytics:
