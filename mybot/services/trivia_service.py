@@ -39,3 +39,18 @@ class TriviaService:
         attempt.score = total_correct
         attempt.completed_at = datetime.utcnow()
         await session.commit()
+
+    @staticmethod
+    async def create_trivia(session: AsyncSession, data: dict):
+        trivia = Trivia(title=data["title"], is_active=True)
+        session.add(trivia)
+        await session.flush()
+
+        for q in data["questions"]:
+            question = TriviaQuestion(
+                question=q["text"], options=q["options"], correct_option=q["answer"],
+                points=q["points"], exclusive_content=q["unlocks_content"], trivia_id=trivia.id
+            )
+            session.add(question)
+
+        await session.commit()
