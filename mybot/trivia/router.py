@@ -4,7 +4,7 @@ from aiogram.filters import StateFilter, Command
 from aiogram.fsm.context import FSMContext
 
 from .manager import TriviaManager
-from ..states.trivia_states import TriviaStates
+from states.trivia_states import TriviaStates
 
 router = Router()
 
