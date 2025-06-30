@@ -507,6 +507,22 @@ class UnlockedContent(AsyncAttrs, Base):
     unlocked_at = Column(DateTime, default=func.now())
 
 
+class TriviaSystemConfig(AsyncAttrs, Base):
+    """Global configuration for the trivia system."""
+
+    __tablename__ = "trivia_system_config"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    max_concurrent_sessions = Column(Integer, default=5)
+    default_timeout = Column(Integer, default=30)
+    cooldown_minutes = Column(Integer, default=1)
+    max_questions_per_session = Column(Integer, default=10)
+    default_question_time = Column(Integer, default=30)
+    adaptive_selection = Column(Boolean, default=True)
+    points_multiplier = Column(Float, default=1.0)
+    speed_bonus = Column(Boolean, default=False)
+
+
 
 # Funciones para manejar el estado del menú del usuario
 async def get_user_menu_state(session, user_id: int) -> str:
