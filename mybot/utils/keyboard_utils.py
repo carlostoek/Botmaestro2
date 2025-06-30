@@ -231,6 +231,11 @@ def get_admin_manage_content_keyboard():
             ],
             [
                 InlineKeyboardButton(
+                    text="❓ Trivias", callback_data="admin_content_trivia"
+                )
+            ],
+            [
+                InlineKeyboardButton(
                     text="🎒 Administrar Pistas",
                     callback_data="admin_content_lore_pieces",
                 )
@@ -423,6 +428,18 @@ def get_admin_content_minigames_keyboard():
                     text="🔙 Volver", callback_data="admin_manage_content"
                 )
             ],
+        ]
+    )
+    return keyboard
+
+
+def get_admin_content_trivia_keyboard():
+    """Keyboard for managing trivia questions."""
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="➕ Crear Trivia", callback_data="admin_trivia_create")],
+            [InlineKeyboardButton(text="📋 Ver Trivias", callback_data="admin_trivia_list")],
+            [InlineKeyboardButton(text="🔙 Volver", callback_data="admin_manage_content")],
         ]
     )
     return keyboard

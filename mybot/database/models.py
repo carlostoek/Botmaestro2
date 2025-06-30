@@ -446,6 +446,38 @@ class UserLorePiece(AsyncAttrs, Base):
     )
 
 
+class Trivia(AsyncAttrs, Base):
+    """Trivia questions for gamification."""
+
+    __tablename__ = "trivia"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trigger_code = Column(String, unique=True, nullable=False)
+    question = Column(Text, nullable=False)
+    options = Column(JSON, nullable=False)  # list of option strings
+    correct_index = Column(Integer, nullable=False)
+    reward_points = Column(Integer, default=0)
+    unlocks_lore_piece_code = Column(String, nullable=True)
+    level_increment = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+
+
+class TriviaResult(AsyncAttrs, Base):
+    """Stores results of trivia answers per user."""
+
+    __tablename__ = "trivia_results"
+
+    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    trivia_id = Column(Integer, ForeignKey("trivia.id"), primary_key=True)
+    is_correct = Column(Boolean, nullable=False)
+    answered_at = Column(DateTime, default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "trivia_id", name="uix_trivia_result"),
+    )
+
+
 
 # Funciones para manejar el estado del menú del usuario
 async def get_user_menu_state(session, user_id: int) -> str:
