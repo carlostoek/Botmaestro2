@@ -9,6 +9,7 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ErrorEvent
+from constants.keyboards import main_menu_keyboard
 
 # --- CONFIGURACIÓN DE LOGGING MEJORADA ---
 def setup_logging():
@@ -26,22 +27,7 @@ def setup_logging():
     logging.getLogger('aiogram').setLevel(logging.WARNING)
     logging.getLogger('aiohttp').setLevel(logging.WARNING)
 
-# --- TECLADO PRINCIPAL ---
-main_menu_keyboard = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="🎒 Mochila"),
-            KeyboardButton(text="💰 Billetera"),
-            KeyboardButton(text="🎯 Misiones"),
-        ],
-        [
-            KeyboardButton(text="⚙️ Configuración"),
-            KeyboardButton(text="❓ Ayuda"),
-        ],
-    ],
-    resize_keyboard=True,
-    one_time_keyboard=False,
-)
+
 
 # Imports
 from database.setup import init_db, get_session
