@@ -1,15 +1,12 @@
 import asyncio
 import logging
 import sys
-from contextlib import asynccontextmanager
-from typing import Optional
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ErrorEvent
-from constants.keyboards import main_menu_keyboard
+from aiogram.types import ErrorEvent
 
 # --- CONFIGURACIÓN DE LOGGING MEJORADA ---
 def setup_logging():
