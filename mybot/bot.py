@@ -45,6 +45,7 @@ from handlers.missions_handler import router as missions_router
 from handlers.info_handler import router as info_router
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
+from handlers.main_menu import router as main_menu_router
 
 import combinar_pistas
 from backpack import router as backpack_router
@@ -195,17 +196,18 @@ async def main() -> None:
             ("auction_admin", auction_admin_router),
             ("start_token", start_token),
             ("start", start.router),
+            ("main_menu", main_menu_router),
             ("backpack", backpack_router),
             ("missions", missions_router),
             ("info", info_router),
             ("free_channel_admin", free_channel_admin_router),
             ("publication_test", publication_test_router),
             ("vip_menu", vip.router),
-            ("gamification", gamification.router),
             ("auction_user", auction_user_router),
             ("reaction_callback", reaction_callback_router),
             ("daily_gift", daily_gift.router),
             ("minigames", minigames.router),
+            ("gamification", gamification.router),
             ("free_user", free_user.router),
             ("lore", lore_router),
             ("combinar_pistas", combinar_pistas.router),
