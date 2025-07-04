@@ -4,7 +4,7 @@ Enhanced start handler with improved user experience and multi-tenant support.
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from mybot.constants.keyboards import main_menu_keyboard
+from constants.keyboards import main_menu_keyboard
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import User
