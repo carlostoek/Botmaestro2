@@ -60,6 +60,7 @@ from services.scheduler import auction_monitor_scheduler, free_channel_cleanup_s
 
 # Middlewares
 from middlewares import PointsMiddleware, UserRegistrationMiddleware
+from middlewares.debug_middleware import DebugMiddleware
 
 # --- MANEJO DE ERRORES GLOBAL ---
 async def global_error_handler(event: ErrorEvent) -> None:
@@ -154,10 +155,14 @@ async def main() -> None:
 
         # Configuración del bot
         bot = Bot(
-            BOT_TOKEN, 
+            BOT_TOKEN,
             default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         )
         dp = Dispatcher(storage=MemoryStorage())
+
+        # Debug middleware para usuarios normales
+        dp.message.outer_middleware(DebugMiddleware())
+        dp.callback_query.outer_middleware(DebugMiddleware())
 
         # Registrar manejo de errores PRIMERO
         dp.error.register(global_error_handler)
@@ -191,11 +196,11 @@ async def main() -> None:
         # Registrar routers en orden de prioridad
         logger.info("Registrando handlers...")
         routers = [
+            ("start", start.router),
             ("setup", setup_handlers.router),
             ("admin", admin_router),
             ("auction_admin", auction_admin_router),
             ("start_token", start_token),
-            ("start", start.router),
             ("main_menu", main_menu_router),
             ("backpack", backpack_router),
             ("missions", missions_router),

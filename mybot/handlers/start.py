@@ -156,3 +156,10 @@ async def cmd_start(message: Message, session: AsyncSession):
             "❌ **Error del Sistema**\n\n"
             "Ocurrió un error inesperado. El equipo técnico ha sido notificado."
         )
+
+
+@router.message()
+async def debug_unhandled_message(message: Message):
+    """Captura mensajes no manejados para debugging"""
+    logger.warning(f"\N{magnifying glass tilted left} UNHANDLED MESSAGE from {message.from_user.id}: {message.text}")
+    # Solo registrar, sin responder
