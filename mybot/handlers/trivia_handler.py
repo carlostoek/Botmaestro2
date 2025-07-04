@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from services.trivia_service import TriviaService
 from keyboards.trivia_keyboards import trivia_selection_keyboard, trivia_question_keyboard
-from states.trivia_states import TriviaStates
+from services.trivia_states import TriviaStates
 from utils.messages import TRIVIA_INTRO_MESSAGE, TRIVIA_COMPLETE_MESSAGE
 
 router = Router()
