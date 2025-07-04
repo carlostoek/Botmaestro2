@@ -171,6 +171,12 @@ MISSION_MESSAGES = {
     "weekly_ranking_title": "🏅 Ranking Semanal de Reacciones",
     "weekly_ranking_entry": "#{rank}. @{username} - {count} reacciones",
     "challenge_started": "Reto iniciado! Reacciona a {count} publicaciones para ganar puntos.",
+    "mission_details_text": (
+        "🎯 *{mission_name}*\n"
+        "{mission_description}\n\n"
+        "🏆 Recompensa: {points_reward} puntos\n"
+        "🗂 Tipo: {mission_type}"
+    ),
     "view_all_missions_button_text": "📋 Ver Todas las Misiones",
 }
 
