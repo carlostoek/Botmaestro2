@@ -1,13 +1,14 @@
 from aiogram.fsm.state import StatesGroup, State
 
-class TriviaStates(StatesGroup):
-    waiting_trigger = State()
-    trivia_intro = State()
-    answering_question = State()
-    waiting_answer = State()
-    processing_answer = State()
-    showing_result = State()
-    showing_explanation = State()
-    session_complete = State()
-    reward_processing = State()
-    unlocking_content = State()
+
+class CreateTrivia(StatesGroup):
+    waiting_for_title = State()
+    waiting_for_total_questions = State()
+    waiting_for_question_text = State()
+    waiting_for_question_type = State()
+    waiting_for_question_options = State()
+    waiting_for_correct_answer = State()
+    waiting_for_points = State()
+    waiting_for_unlock_content = State()
+    confirm_trivia = State()
+

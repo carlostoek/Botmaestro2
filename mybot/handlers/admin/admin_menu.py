@@ -56,7 +56,7 @@ async def admin_start(message: Message, session: AsyncSession):
     if not tenant_status["basic_setup_complete"]:
         # Redirect to setup
         from handlers.setup import start_setup
-        await start_setup(message, session, user_id=message.from_user.id)
+        await start_setup(message, session)
         return
     
     # Show admin panel

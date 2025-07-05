@@ -6,6 +6,12 @@ import asyncio
 import logging
 from typing import Dict, Optional, Tuple, Any
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
+from utils.message_safety import (
+    safe_answer,
+    safe_edit,
+    safe_send_message,
+    safe_edit_message_text,
+)
 from aiogram.exceptions import TelegramBadRequest, TelegramAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import User, set_user_menu_state
@@ -57,12 +63,13 @@ class MenuManager:
             chat_id, msg_id = existing
             try:
                 # Intenta editar el mensaje del menú *anterior*
-                await bot.edit_message_text(
-                    text=text,
-                    chat_id=chat_id,
-                    message_id=msg_id,
+                await safe_edit_message_text(
+                    bot,
+                    chat_id,
+                    msg_id,
+                    text,
                     reply_markup=keyboard,
-                    parse_mode=parse_mode
+                    parse_mode=parse_mode,
                 )
                 await set_user_menu_state(session, user_id, menu_state)
                 
@@ -89,10 +96,11 @@ class MenuManager:
         
         # Create new menu message (either because no existing, or update failed)
         try:
-            sent_message = await message.answer(
-                text=text,
+            sent_message = await safe_answer(
+                message,
+                text,
                 reply_markup=keyboard,
-                parse_mode=parse_mode
+                parse_mode=parse_mode,
             )
             self._active_menus[user_id] = (sent_message.chat.id, sent_message.message_id)
             await set_user_menu_state(session, user_id, menu_state)
@@ -133,10 +141,11 @@ class MenuManager:
         await self._cleanup_temp_messages(bot, user_id)
         
         try:
-            await message.edit_text(
-                text=text,
+            await safe_edit(
+                message,
+                text,
                 reply_markup=keyboard,
-                parse_mode=parse_mode
+                parse_mode=parse_mode,
             )
             
             # Update stored menu reference - this is crucial to ensure _active_menus points to the correct message
@@ -175,10 +184,11 @@ class MenuManager:
         await self._cleanup_temp_messages(bot, user_id)
         
         try:
-            sent_message = await message.answer(
-                text=text,
+            sent_message = await safe_answer(
+                message,
+                text,
                 reply_markup=keyboard,
-                parse_mode=parse_mode
+                parse_mode=parse_mode,
             )
             
             # Schedule for deletion

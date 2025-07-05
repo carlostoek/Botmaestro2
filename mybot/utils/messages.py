@@ -171,6 +171,12 @@ MISSION_MESSAGES = {
     "weekly_ranking_title": "🏅 Ranking Semanal de Reacciones",
     "weekly_ranking_entry": "#{rank}. @{username} - {count} reacciones",
     "challenge_started": "Reto iniciado! Reacciona a {count} publicaciones para ganar puntos.",
+    "mission_details_text": (
+        "🎯 *{mission_name}*\n"
+        "{mission_description}\n\n"
+        "🏆 Recompensa: {points_reward} puntos\n"
+        "🗂 Tipo: {mission_type}"
+    ),
     "view_all_missions_button_text": "📋 Ver Todas las Misiones",
 }
 
@@ -204,3 +210,6 @@ NIVEL_TEMPLATE = """
 📊 Progreso hacia el siguiente nivel: {percentage:.1%}
 🎯 Te faltan {points_needed} puntos para alcanzar el nivel {next_level}.
 """
+TRIVIA_INTRO_MESSAGE = "🎲 *Selecciona una trivia:*"
+TRIVIA_COMPLETE_MESSAGE = "🎉 *Has completado la trivia con {score} respuestas correctas.*"
+TRIVIA_ADMIN_MENU = "🛠️ *Panel de Administración de Trivias*"
