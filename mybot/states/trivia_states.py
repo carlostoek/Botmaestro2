@@ -1,5 +1,6 @@
 from aiogram.fsm.state import StatesGroup, State
 
+
 class CreateTrivia(StatesGroup):
     waiting_for_title = State()
     waiting_for_total_questions = State()
@@ -10,3 +11,4 @@ class CreateTrivia(StatesGroup):
     waiting_for_points = State()
     waiting_for_unlock_content = State()
     confirm_trivia = State()
+

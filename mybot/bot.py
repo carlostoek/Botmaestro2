@@ -50,7 +50,12 @@ from handlers.main_menu import router as main_menu_router
 import combinar_pistas
 from backpack import router as backpack_router
 
+
+from utils.config import BOT_TOKEN, VIP_CHANNEL_ID
+from trivia import trivia_router, TriviaManager
+
 # Services imports
+
 from services import (
     channel_request_scheduler,
     vip_subscription_scheduler,
@@ -62,24 +67,31 @@ from services.scheduler import auction_monitor_scheduler, free_channel_cleanup_s
 from middlewares import PointsMiddleware, UserRegistrationMiddleware
 from middlewares.debug_middleware import DebugMiddleware
 
-# --- MANEJO DE ERRORES GLOBAL ---
-async def global_error_handler(event: ErrorEvent) -> None:
-    """Manejo centralizado de errores"""
-    logger = logging.getLogger(__name__)
-    
-    # Log del error
-    logger.error(
-        f"Error en {event.update.update_id if event.update else 'Unknown'}: "
-        f"{type(event.exception).__name__}: {event.exception}",
-        exc_info=True
-    )
-    
-    # Notificar errores críticos a admins (opcional)
-    if isinstance(event.exception, (ConnectionError, TimeoutError)):
-        logger.critical("Error de conexión crítico detectado")
-        # Aquí podrías notificar a admins
-    
-    return True  # Marca el error como manejado
+# Asignación de rol de administrador y validación de token
+
+# Asignar rol de administrador si corresponde
+
+if user_data.id in [6181290784]:  # ID de admin
+
+    user.role = UserRole.ADMIN
+
+    db.commit()
+
+    db.refresh(user)
+
+# Validar token si fue proporcionado
+
+if token_param:
+
+    link = await ChannelService().validate_token(user_data.id, token_param)
+
+    if link:
+
+        await update.message.reply_text("✅ Token válido. Procesando acceso...")
+
+        await update.message.reply_text(link)
+
+# Continuar con mensaje de bienvenida y menú según rol
 
 # --- MIDDLEWARE MEJORADO ---
 class SessionMiddleware:
@@ -95,9 +107,77 @@ class SessionMiddleware:
                 data["session"] = session
                 data["bot"] = self.bot_instance
                 return await handler(event, data)
+
+        return middleware
+
+    dp.message.outer_middleware(session_middleware_factory(Session, bot))
+    dp.callback_query.outer_middleware(session_middleware_factory(Session, bot))
+    dp.chat_join_request.outer_middleware(session_middleware_factory(Session, bot))
+    dp.chat_member.outer_middleware(session_middleware_factory(Session, bot))
+    dp.poll_answer.outer_middleware(session_middleware_factory(Session, bot))
+    dp.message_reaction.outer_middleware(session_middleware_factory(Session, bot))
+
+    from middlewares import PointsMiddleware, UserRegistrationMiddleware
+    user_reg_mw = UserRegistrationMiddleware()
+    dp.message.outer_middleware(user_reg_mw)
+    dp.callback_query.outer_middleware(user_reg_mw)
+    dp.chat_join_request.outer_middleware(user_reg_mw)
+    dp.chat_member.outer_middleware(user_reg_mw)
+    dp.poll_answer.outer_middleware(user_reg_mw)
+    dp.message_reaction.outer_middleware(user_reg_mw)
+
+    def trivia_middleware_factory(manager: TriviaManager):
+        async def middleware(handler, event, data):
+            data["trivia_manager"] = manager
+            return await handler(event, data)
+        return middleware
+
+    dp.message.outer_middleware(trivia_middleware_factory(trivia_manager))
+    dp.callback_query.outer_middleware(trivia_middleware_factory(trivia_manager))
+
+    dp.message.middleware(PointsMiddleware())
+    dp.poll_answer.middleware(PointsMiddleware())
+    dp.message_reaction.middleware(PointsMiddleware())
+
+    # --- INCLUSIÓN DEL ROUTER DE SETUP ---
+    # Es crucial incluirlo para que sus handlers sean reconocidos.
+    # Colocarlo aquí, antes de otros routers que puedan tener handlers genéricos,
+    # ayuda a asegurar que el comando /setup sea manejado por el handler correcto.
+    dp.include_router(setup_handlers.router) 
+    # --- FIN INCLUSIÓN ROUTER DE SETUP ---
+
+    dp.include_router(start_token)
+    dp.include_router(start.router)
+    dp.include_router(backpack_router)
+    dp.include_router(missions_router)
+    dp.include_router(info_router)
+    dp.include_router(admin_router)
+    dp.include_router(auction_admin_router)
+    dp.include_router(free_channel_admin_router)  # Nuevo router para canal gratuito
+    dp.include_router(publication_test_router)
+    dp.include_router(vip.router)
+    dp.include_router(gamification.router)
+    dp.include_router(auction_user_router)
+    dp.include_router(reaction_callback_router)
+    dp.include_router(daily_gift.router)
+    dp.include_router(minigames.router)
+    dp.include_router(trivia_router)
+    dp.include_router(free_user.router)
+    dp.include_router(lore_router)
+    dp.include_router(combinar_pistas.router)
+    dp.include_router(channel_access_router)
+
+    # Tareas programadas
+    pending_task = asyncio.create_task(channel_request_scheduler(bot, Session))
+    vip_task = asyncio.create_task(vip_subscription_scheduler(bot, Session))
+    membership_task = asyncio.create_task(vip_membership_scheduler(bot, Session))
+    auction_task = asyncio.create_task(auction_monitor_scheduler(bot, Session))
+    cleanup_task = asyncio.create_task(free_channel_cleanup_scheduler(bot, Session))
+
         except Exception as e:
             logging.error(f"Error en SessionMiddleware: {e}", exc_info=True)
             raise
+
 
 # --- GESTOR DE TAREAS EN SEGUNDO PLANO ---
 class BackgroundTaskManager:
