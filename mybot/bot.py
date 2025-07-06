@@ -71,7 +71,7 @@ from handlers.narrative import (
     narrative_missions,
     enhanced_backpack
 )
-from services.narrative.narrative_events import narrative_event_scheduler
+# from services.narrative.narrative_events import narrative_event_scheduler
 from middlewares.narrative_middleware import NarrativeContextMiddleware
 
 # --- MANEJO DE ERRORES GLOBAL ---
@@ -264,10 +264,10 @@ async def main() -> None:
             "channel_cleanup"
         )
 
-        task_manager.add_task(
-            narrative_event_scheduler(bot, Session),
-            "narrative_events"
-        )
+        # task_manager.add_task(
+        #     narrative_event_scheduler(bot, Session),
+        #     "narrative_events"
+        # )
 
         # Iniciar polling
         logger.info("Bot iniciado correctamente. Comenzando polling...")
