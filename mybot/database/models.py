@@ -23,6 +23,22 @@ import enum
 
 Base = declarative_base()
 
+# DUMMY CLASSES FOR NARRATIVE MODELS (TEMPORARY WORKAROUND)
+# These are placeholders to resolve ImportErrors if the environment is not
+# correctly reflecting changes to narrative_models.py.
+# The actual models are in mybot/database/narrative_models.py
+class LorePiece(Base):
+    __tablename__ = "dummy_lore_pieces"
+    id = Column(Integer, primary_key=True)
+    code_name = Column(String)
+    title = Column(String)
+
+class UserLorePiece(Base):
+    __tablename__ = "dummy_user_lore_pieces"
+    user_id = Column(BigInteger, primary_key=True)
+    lore_piece_id = Column(Integer, primary_key=True)
+
+
 
 class AuctionStatus(enum.Enum):
     PENDING = "pending"
