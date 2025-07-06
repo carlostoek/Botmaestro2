@@ -2,7 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from aiogram import Bot
 
-from database.models import User, Level, LorePiece, UserLorePiece
+from database.models import User, Level
+from database.narrative_models import LorePiece, UserLorePiece
 from utils.messages import BOT_MESSAGES
 import logging
 
