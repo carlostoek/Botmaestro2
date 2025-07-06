@@ -1,324 +1,307 @@
-# services/narrative/memory_system.py
+# handlers/narrative/diana_dialogue.py
 """
-Sistema de memorias compartidas y callbacks narrativos.
-Gestiona las referencias a momentos pasados y su impacto en la narrativa.
+Handler principal para las interacciones con Diana.
+Maneja todos los diálogos y la progresión narrativa.
 """
 
-from typing import List, Optional, Dict
-from datetime import datetime, timedelta
+from aiogram import Router, F, types
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import and_, or_, func
+from typing import Optional
 
-from database.narrative_models import (
-    DialogueMemory, NarrativeState, UserArchetype
-)
+from database.narrative_models import NarrativeState, RelationshipStage
 from database.models import User
+from services.narrative.dialogue_manager import DianaDialogueManager
+from services.narrative.memory_system import MemoryCallbackSystem
+from handlers.utils import check_user_in_vip_channel
 
-class MemoryCallbackSystem:
-    """Gestiona las memorias y sus referencias en conversaciones futuras"""
-    
-    def __init__(self):
-        self.memory_weights = {
-            "vulnerability": 1.0,
-            "understanding": 0.8,
-            "conflict": 0.6,
-            "breakthrough": 1.2,
-            "boundary_respect": 0.9,
-            "shared_secret": 1.1,
-        }
-        
-        self.callback_cooldown = timedelta(hours=12)  # Tiempo mÃ­nimo entre referencias
-    
-    async def find_relevant_memory(
-        self,
-        session: AsyncSession,
-        user_id: int,
-        current_context: Dict,
-        memory_type: Optional[str] = None
-    ) -> Optional[DialogueMemory]:
-        """Encuentra una memoria relevante para el contexto actual"""
-        
-        # Query base
-        query = select(DialogueMemory).filter(
-            and_(
-                DialogueMemory.user_id == user_id,
-                DialogueMemory.can_be_referenced == True,
-                DialogueMemory.times_referenced < 5  # LÃ­mite de referencias
-            )
-        )
-        
-        # Filtrar por tipo si se especifica
-        if memory_type:
-            query = query.filter(DialogueMemory.memory_type == memory_type)
-        
-        # Evitar memorias referenciadas recientemente
-        cooldown_time = datetime.utcnow() - self.callback_cooldown
-        query = query.filter(
-            or_(
-                DialogueMemory.last_referenced == None,
-                DialogueMemory.last_referenced < cooldown_time
-            )
-        )
-        
-        result = await session.execute(query)
-        memories = result.scalars().all()
-        
-        if not memories:
-            return None
-        
-        # Calcular relevancia de cada memoria
-        scored_memories = []
-        for memory in memories:
-            score = self._calculate_memory_relevance(memory, current_context)
-            scored_memories.append((score, memory))
-        
-        # Ordenar por relevancia y seleccionar la mejor
-        scored_memories.sort(key=lambda x: x[0], reverse=True)
-        
-        if scored_memories and scored_memories[0][0] > 0.5:  # Umbral de relevancia
-            return scored_memories[0][1]
-        
-        return None
-    
-    def _calculate_memory_relevance(
-        self,
-        memory: DialogueMemory,
-        current_context: Dict
-    ) -> float:
-        """Calcula quÃ© tan relevante es una memoria para el contexto actual"""
-        
-        relevance = 0.0
-        
-        # Peso base por tipo de memoria
-        relevance += self.memory_weights.get(memory.memory_type, 0.5)
-        
-        # Bonus por memorias breakthrough
-        if memory.is_breakthrough_moment:
-            relevance += 0.3
-        
-        # Ajustar por contexto emocional similar
-        if current_context.get("emotional_tone") == memory.emotional_context:
-            relevance += 0.4
-        
-        # Penalizar memorias muy referenciadas
-        relevance -= (memory.times_referenced * 0.2)
-        
-        # Bonus por tiempo transcurrido (memorias mÃ¡s antiguas pueden ser nostÃ¡lgicas)
-        days_ago = (datetime.utcnow() - memory.created_at).days
-        if days_ago > 7:
-            relevance += 0.2
-        
-        return max(0.0, min(1.0, relevance))  # Clamp entre 0 y 1
-    
-    async def create_memory(
-        self,
-        session: AsyncSession,
-        user_id: int,
-        memory_type: str,
-        user_message: str,
-        diana_response: str,
-        context: Dict,
-        emotional_impact: Dict
-    ) -> DialogueMemory:
-        """Crea una nueva memoria significativa"""
-        
-        memory = DialogueMemory(
-            user_id=user_id,
-            memory_type=memory_type,
-            chapter=context.get("chapter", "unknown"),
-            emotional_context=context.get("emotional_tone", "neutral"),
-            trigger_context=context.get("trigger", "conversation"),
-            user_message=user_message[:1000],  # Limitar longitud
-            diana_response=diana_response[:1000],
-            trust_impact=emotional_impact.get("trust", 0.0),
-            vulnerability_impact=emotional_impact.get("vulnerability", 0.0),
-            relationship_impact=emotional_impact.get("relationship", 0.0),
-            is_breakthrough_moment=emotional_impact.get("is_breakthrough", False),
-            unlocked_new_responses=context.get("unlocked_responses", [])
-        )
-        
-        session.add(memory)
-        await session.commit()
-        
-        return memory
-    
-    async def reference_memory(
-        self,
-        session: AsyncSession,
-        memory: DialogueMemory
-    ) -> str:
-        """Genera una referencia a una memoria y actualiza su uso"""
-        
-        # Actualizar contadores
-        memory.times_referenced += 1
-        memory.last_referenced = datetime.utcnow()
-        await session.commit()
-        
-        # Generar referencia contextual
-        return self._generate_memory_reference(memory)
-    
-    def _generate_memory_reference(self, memory: DialogueMemory) -> str:
-        """Genera el texto de referencia para una memoria"""
-        
-        references = {
-            "vulnerability": {
-                "first_time": [
-                    f"Recuerdo cuando me confiaste que {self._extract_key_phrase(memory.user_message)}...",
-                    f"AÃºn pienso en lo que compartiste sobre {self._extract_topic(memory.user_message)}...",
-                ],
-                "repeated": [
-                    "Como aquella vez que fuiste tan honesto conmigo...",
-                    "Me recuerda a esa conversaciÃ³n donde bajaste la guardia...",
-                ],
-            },
-            "understanding": {
-                "first_time": [
-                    f"Como cuando entendiste que {self._extract_key_phrase(memory.diana_response)}...",
-                    "Ese momento cuando simplemente... supiste lo que necesitaba escuchar...",
-                ],
-                "repeated": [
-                    "Igual que aquella vez que no necesitÃ© explicar todo...",
-                    "Como cuando demostraste esa comprensiÃ³n Ãºnica...",
-                ],
-            },
-            "boundary_respect": {
-                "first_time": [
-                    "Cuando respetaste mi necesidad de espacio sin alejarte...",
-                    f"Recuerdo cÃ³mo entendiste que {self._extract_boundary(memory)}...",
-                ],
-                "repeated": [
-                    "Como siempre has sabido respetar mis lÃ­mites...",
-                    "Tu forma de estar cerca sin invadir...",
-                ],
-            },
-            "breakthrough": {
-                "first_time": [
-                    "Ese momento que cambiÃ³ algo entre nosotros...",
-                    f"Cuando {self._extract_breakthrough_moment(memory)}...",
-                ],
-                "repeated": [
-                    "Aquel punto de inflexiÃ³n en nuestra relaciÃ³n...",
-                    "Ese instante que lo cambiÃ³ todo...",
-                ],
-            },
-        }
-        
-        memory_refs = references.get(memory.memory_type, {})
-        
-        if memory.times_referenced == 0:
-            options = memory_refs.get("first_time", ["Recuerdo ese momento especial..."])
-        else:
-            options = memory_refs.get("repeated", ["Como aquella vez..."])
-        
-        return random.choice(options)
-    
-    def _extract_key_phrase(self, text: str) -> str:
-        """Extrae una frase clave del texto"""
-        # Simplificado - en producciÃ³n usarÃ­a NLP
-        words = text.split()[:10]
-        return " ".join(words).lower().rstrip(".,!?") + "..."
-    
-    def _extract_topic(self, text: str) -> str:
-        """Extrae el tema principal del texto"""
-        # Buscar palabras clave comunes
-        topics = {
-            "miedo": ["miedo", "temo", "asusta", "temor"],
-            "amor": ["amor", "quiero", "siento", "corazÃ³n"],
-            "pasado": ["pasado", "antes", "recuerdo", "historia"],
-            "futuro": ["futuro", "serÃ¡", "espero", "algÃºn dÃ­a"],
-            "soledad": ["solo", "soledad", "aislado", "vacÃ­o"],
-        }
-        
-        text_lower = text.lower()
-        for topic, keywords in topics.items():
-            if any(keyword in text_lower for keyword in keywords):
-                return topic
-        
-        return "eso"
-    
-    def _extract_boundary(self, memory: DialogueMemory) -> str:
-        """Extrae informaciÃ³n sobre el lÃ­mite respetado"""
-        if "espacio" in memory.user_message.lower():
-            return "necesitaba espacio para procesar"
-        elif "tiempo" in memory.user_message.lower():
-            return "necesitaba tiempo"
-        else:
-            return "tenÃ­a mis razones para mantener distancia"
-    
-    def _extract_breakthrough_moment(self, memory: DialogueMemory) -> str:
-        """Extrae la esencia del momento breakthrough"""
-        if memory.vulnerability_impact > 0.5:
-            return "ambos nos permitimos ser vulnerables"
-        elif memory.trust_impact > 0.5:
-            return "la confianza se volviÃ³ mutua"
-        else:
-            return "algo cambiÃ³ entre nosotros"
+router = Router(name="diana_dialogue")
+dialogue_manager = DianaDialogueManager()
+memory_system = MemoryCallbackSystem()
 
-    async def get_shared_memories_summary(
-        self,
-        session: AsyncSession,
-        user_id: int
-    ) -> Dict:
-        """Obtiene un resumen de las memorias compartidas"""
-        
-        result = await session.execute(
-            select(
-                DialogueMemory.memory_type,
-                func.count(DialogueMemory.id).label('count'),
-                func.avg(DialogueMemory.trust_impact).label('avg_trust_impact')
-            )
-            .filter(DialogueMemory.user_id == user_id)
-            .group_by(DialogueMemory.memory_type)
+class DianaStates(StatesGroup):
+    """Estados de conversación con Diana"""
+    greeting = State()
+    conversation = State()
+    deep_conversation = State()
+    vulnerable_moment = State()
+    mission_briefing = State()
+    emotional_response = State()
+
+@router.message(Command("diana"))
+async def cmd_diana(
+    message: types.Message,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User
+):
+    """Comando principal para iniciar conversación con Diana"""
+    
+    # Verificar acceso según nivel
+    if user.narrative_level == 0:
+        await message.answer(
+            "🎩 <b>Lucien:</b> Diana no está disponible en este momento. "
+            "Quizás más adelante, cuando hayas progresado más en tu viaje..."
         )
-        
-        summary = {
-            "total_memories": 0,
-            "by_type": {},
-            "breakthrough_moments": 0,
-            "average_trust_impact": 0.0,
-            "most_impactful": None,
+        return
+    
+    # Obtener o crear estado narrativo
+    narrative_state = await session.get(NarrativeState, user.id)
+    if not narrative_state:
+        narrative_state = NarrativeState(user_id=user.id)
+        session.add(narrative_state)
+        await session.commit()
+    
+    # Generar saludo contextual
+    greeting = await dialogue_manager.generate_contextual_response(
+        session,
+        user.id,
+        "greeting",
+        {"first_interaction": narrative_state.total_interactions == 0}
+    )
+    
+    # Enviar saludo con foto apropiada
+    photo_url = await _get_contextual_photo(narrative_state)
+    
+    await message.answer_photo(
+        photo=photo_url,
+        caption=f"🌸 <b>Diana:</b> {greeting}"
+    )
+    
+    # Actualizar estado
+    narrative_state.total_interactions += 1
+    await session.commit()
+    
+    # Establecer estado de conversación
+    await state.set_state(DianaStates.conversation)
+    await state.update_data(
+        conversation_start=datetime.utcnow(),
+        messages_count=0,
+        emotional_depth=0
+    )
+
+@router.message(DianaStates.conversation)
+async def handle_conversation(
+    message: types.Message,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User
+):
+    """Maneja la conversación general con Diana"""
+    
+    narrative_state = await session.get(NarrativeState, user.id)
+    state_data = await state.get_data()
+    
+    # Analizar mensaje y generar respuesta
+    response, analysis = await dialogue_manager.process_user_response(
+        session,
+        user.id,
+        message.text,
+        {
+            "chapter": _get_current_chapter(user),
+            "conversation_depth": state_data.get("emotional_depth", 0),
+            "messages_in_conversation": state_data.get("messages_count", 0)
         }
-        
-        for row in result:
-            summary["total_memories"] += row.count
-            summary["by_type"][row.memory_type] = {
-                "count": row.count,
-                "avg_trust_impact": float(row.avg_trust_impact or 0)
-            }
-        
-        # Contar breakthrough moments
-        breakthrough_result = await session.execute(
-            select(func.count(DialogueMemory.id))
-            .filter(
-                DialogueMemory.user_id == user_id,
-                DialogueMemory.is_breakthrough_moment == True
-            )
+    )
+    
+    # Verificar si debemos transicionar a un momento más profundo
+    if analysis.get("vulnerability_indicators", 0) > 2:
+        await state.set_state(DianaStates.vulnerable_moment)
+        response = await _handle_vulnerable_moment(
+            session, user, narrative_state, message.text, response
         )
-        summary["breakthrough_moments"] = breakthrough_result.scalar() or 0
-        
-        # Encontrar la memoria mÃ¡s impactante
-        most_impactful_result = await session.execute(
-            select(DialogueMemory)
-            .filter(DialogueMemory.user_id == user_id)
-            .order_by(
-                (DialogueMemory.trust_impact + 
-                 DialogueMemory.vulnerability_impact + 
-                 DialogueMemory.relationship_impact).desc()
-            )
-            .limit(1)
+    
+    # Buscar memorias relevantes para callback
+    if state_data.get("messages_count", 0) > 3:  # Después de algunos mensajes
+        relevant_memory = await memory_system.find_relevant_memory(
+            session,
+            user.id,
+            {"emotional_tone": analysis.get("emotional_tone", "neutral")}
         )
         
-        most_impactful = most_impactful_result.scalar_one_or_none()
-        if most_impactful:
-            summary["most_impactful"] = {
-                "type": most_impactful.memory_type,
-                "created_at": most_impactful.created_at.isoformat(),
-                "total_impact": float(
-                    most_impactful.trust_impact + 
-                    most_impactful.vulnerability_impact + 
-                    most_impactful.relationship_impact
-                )
+        if relevant_memory:
+            memory_reference = await memory_system.reference_memory(
+                session, relevant_memory
+            )
+            response = f"{memory_reference}\n\n{response}"
+    
+    # Enviar respuesta con foto apropiada
+    photo_url = await _get_contextual_photo(
+        narrative_state, 
+        emotional_context=analysis.get("emotional_context")
+    )
+    
+    await message.answer_photo(
+        photo=photo_url,
+        caption=f"🌸 <b>Diana:</b> {response}"
+    )
+    
+    # Actualizar métricas
+    await state.update_data(
+        messages_count=state_data.get("messages_count", 0) + 1,
+        emotional_depth=state_data.get("emotional_depth", 0) + analysis.get("emotional_value", 0)
+    )
+
+async def _handle_vulnerable_moment(
+    session: AsyncSession,
+    user: User,
+    narrative_state: NarrativeState,
+    user_message: str,
+    initial_response: str
+) -> str:
+    """Maneja momentos de vulnerabilidad especial"""
+    
+    # Crear memoria si es significativo
+    if narrative_state.vulnerability_shown < 0.5:  # Primera vulnerabilidad importante
+        memory = await memory_system.create_memory(
+            session,
+            user.id,
+            "vulnerability",
+            user_message,
+            initial_response,
+            {
+                "chapter": _get_current_chapter(user),
+                "trigger": "user_vulnerability",
+                "emotional_tone": "intimate"
+            },
+            {
+                "trust": 0.2,
+                "vulnerability": 0.3,
+                "relationship": 0.2,
+                "is_breakthrough": True
             }
+        )
         
-        return summary
+        # Actualizar estado narrativo
+        narrative_state.vulnerability_shown += 0.1
+        narrative_state.trust_level += 0.05
+        
+        if not user.has_shared_vulnerability:
+            user.has_shared_vulnerability = True
+            await session.commit()
+            
+            # Respuesta especial por primera vulnerabilidad
+            return (
+                f"{initial_response}\n\n"
+                "[Diana se acerca un poco más, su expresión suavizándose]\n\n"
+                "Gracias por confiar en mí con esto. No muchos se atreven a ser "
+                "tan honestos... Significa más de lo que imaginas."
+            )
+    
+    return initial_response
+
+async def _get_contextual_photo(
+    narrative_state: NarrativeState,
+    emotional_context: Optional[Dict] = None
+) -> str:
+    """Selecciona foto apropiada según contexto"""
+    
+    # URLs de placeholder por ahora
+    base_url = "https://placehold.co/1080x1350"
+    
+    # Mapeo de estados a descripciones para alt text
+    photo_contexts = {
+        RelationshipStage.STRANGER: {
+            "default": f"{base_url}?text=Diana+Distant",
+            "alt": "Diana de pie junto a una ventana, mirando hacia afuera con expresión contemplativa y distante, vestida elegantemente"
+        },
+        RelationshipStage.CURIOUS: {
+            "default": f"{base_url}?text=Diana+Curious", 
+            "alt": "Diana sentada en un sofá, mirando directamente con una sonrisa sutil y curiosa, ambiente cálido pero con cierta reserva"
+        },
+        RelationshipStage.ACQUAINTANCE: {
+            "default": f"{base_url}?text=Diana+Warm",
+            "alt": "Diana en una pose más relajada, sonrisa genuina, en un ambiente acogedor con luz suave"
+        },
+        RelationshipStage.TRUSTED: {
+            "default": f"{base_url}?text=Diana+Open",
+            "alt": "Diana con expresión abierta y cálida, postura relajada, ambiente íntimo con iluminación dorada"
+        },
+        RelationshipStage.CONFIDANT: {
+            "default": f"{base_url}?text=Diana+Intimate",
+            "alt": "Diana en un momento íntimo, expresión vulnerable pero confiada, ambiente muy personal"
+        },
+        RelationshipStage.INTIMATE: {
+            "default": f"{base_url}?text=Diana+Connected",
+            "alt": "Diana completamente relajada y auténtica, mirada profunda y significativa, ambiente de total confianza"
+        },
+    }
+    
+    # Ajustar según contexto emocional si se proporciona
+    if emotional_context:
+        if emotional_context.get("vulnerability", 0) > 0.7:
+            return f"{base_url}?text=Diana+Vulnerable"
+        elif emotional_context.get("playfulness", 0) > 0.7:
+            return f"{base_url}?text=Diana+Playful"
+        elif emotional_context.get("intensity", 0) > 0.7:
+            return f"{base_url}?text=Diana+Intense"
+    
+    # Retornar según stage de relación
+    stage_photos = photo_contexts.get(
+        narrative_state.relationship_stage,
+        photo_contexts[RelationshipStage.STRANGER]
+    )
+    
+    return stage_photos["default"]
+
+def _get_current_chapter(user: User) -> str:
+    """Determina el capítulo narrativo actual basado en el nivel"""
+    
+    chapters = {
+        0: "prologue",
+        1: "the_invitation",
+        2: "first_observations", 
+        3: "the_kinky_revelation",
+        4: "beyond_the_wall",
+        5: "emotional_depths",
+        6: "ultimate_connection"
+    }
+    
+    return chapters.get(user.narrative_level, "unknown")
+
+@router.message(Command("diana_stats"))
+async def cmd_diana_stats(
+    message: types.Message,
+    session: AsyncSession,
+    user: User
+):
+    """Muestra estadísticas de la relación con Diana"""
+    
+    narrative_state = await session.get(NarrativeState, user.id)
+    if not narrative_state:
+        await message.answer("Aún no has comenzado tu historia con Diana.")
+        return
+    
+    # Obtener resumen de memorias
+    memories_summary = await memory_system.get_shared_memories_summary(
+        session, user.id
+    )
+    
+    # Generar estadísticas
+    trust_bar = "█" * int(narrative_state.trust_level * 10)
+    vulnerability_bar = "█" * int(narrative_state.vulnerability_shown * 10)
+    
+    stats_text = f"""
+📊 <b>Tu Relación con Diana</b>
+
+🤝 <b>Etapa:</b> {narrative_state.relationship_stage.value}
+🗨️ <b>Conversaciones:</b> {narrative_state.total_interactions}
+
+<b>Niveles de Conexión:</b>
+Confianza: {trust_bar} {narrative_state.trust_level:.0%}
+Vulnerabilidad: {vulnerability_bar} {narrative_state.vulnerability_shown:.0%}
+
+<b>Memorias Compartidas:</b> {memories_summary['total_memories']}
+├ Momentos Especiales: {memories_summary['breakthrough_moments']}
+└ Impacto Promedio: {'⭐' * int(memories_summary.get('average_trust_impact', 0) * 5)}
+
+<b>Tu Perfil:</b> {narrative_state.user_archetype.value if narrative_state.user_archetype else 'Por descubrir'}
+"""
+    
+    if memories_summary.get('most_impactful'):
+        stats_text += f"\n<b>Momento más significativo:</b> {memories_summary['most_impactful']['type']}"
+    
+    await message.answer(stats_text)
+        
