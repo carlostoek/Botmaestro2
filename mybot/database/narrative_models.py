@@ -17,7 +17,35 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from mybot.database.enums import RelationshipStage, EmotionalState, UserArchetype
+# Enums para el sistema narrativo
+class RelationshipStage(PyEnum):
+    STRANGER = "stranger"
+    CURIOUS = "curious"
+    ACQUAINTANCE = "acquaintance"
+    TRUSTED = "trusted"
+    CONFIDANT = "confidant"
+    INTIMATE = "intimate"
+
+class EmotionalState(PyEnum):
+    NEUTRAL = "neutral"
+    INTRIGUED = "intrigued"
+    PLAYFUL = "playful"
+    VULNERABLE = "vulnerable"
+    DEFENSIVE = "defensive"
+    WARM = "warm"
+    MYSTERIOUS = "mysterious"
+    INTENSE = "intense"
+    NOSTALGIC = "nostalgic"
+    HOPEFUL = "hopeful"
+
+class UserArchetype(PyEnum):
+    UNKNOWN = "unknown"
+    ROMANTIC = "romantic"
+    DIRECT = "direct"
+    ANALYTICAL = "analytical"
+    EXPLORER = "explorer"
+    PATIENT = "patient"
+    PERSISTENT = "persistent"
 
 Base = declarative_base()
 
