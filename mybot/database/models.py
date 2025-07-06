@@ -14,6 +14,7 @@ from sqlalchemy import (
     Enum,
 )
 from uuid import uuid4
+from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -76,6 +77,9 @@ class User(AsyncAttrs, Base):
     has_shared_vulnerability = Column(Boolean, default=False)
     has_found_secret_room = Column(Boolean, default=False)
     chosen_ending_path = Column(String, nullable=True)  # "guardian", "confidant", "mystery_lover"
+
+    # En la sección de relaciones de la clase User:
+    narrative_state = relationship("NarrativeState", back_populates="user", uselist=False)
 
 
 
