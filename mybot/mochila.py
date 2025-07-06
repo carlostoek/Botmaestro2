@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from sqlalchemy.future import select
-from .database.narrative_models import UserLorePiece, LorePiece
+from database.narrative_models import UserLorePiece, LorePiece
 from database.setup import get_session
 
 router = Router()

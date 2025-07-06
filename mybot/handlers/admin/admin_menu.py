@@ -28,14 +28,14 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 # Include all sub-routers
-from .vip_menu import router as vip_router
-from .free_menu import router as free_router
-from .config_menu import router as config_router
-from .channel_admin import router as channel_admin_router
-from .subscription_plans import router as subscription_plans_router
-from .game_admin import router as game_admin_router
-from .event_admin import router as event_admin_router
-from .admin_config import router as admin_config_router
+from vip_menu import router as vip_router
+from free_menu import router as free_router
+from config_menu import router as config_router
+from channel_admin import router as channel_admin_router
+from subscription_plans import router as subscription_plans_router
+from game_admin import router as game_admin_router
+from event_admin import router as event_admin_router
+from admin_config import router as admin_config_router
 
 router.include_router(vip_router)
 router.include_router(free_router)

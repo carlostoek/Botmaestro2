@@ -1,5 +1,5 @@
 import re
-from .config import ADMIN_IDS
+from config import ADMIN_IDS
 
 
 def sanitize_text(value: str | None) -> str | None:

@@ -2,8 +2,8 @@ import datetime
 from aiogram import Bot
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.models import UserStats, MiniGamePlay, Mission, UserMissionEntry
-from .point_service import PointService
-from .mission_service import MissionService
+from point_service import PointService
+from mission_service import MissionService
 
 class MiniGameService:
     def __init__(self, session: AsyncSession):
