@@ -9,6 +9,7 @@ from aiogram.filters import StateFilter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from typing import List, Optional
+from typing import Dict, List, Optional, Tuple  # Agrega esta línea
 
 from database.models import Mission, UserMissionEntry, User
 from database.narrative_models import NarrativeState, LorePiece, UserLorePiece
