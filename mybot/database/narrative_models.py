@@ -201,3 +201,69 @@ class NarrativeEvent(Base):
 
     def __repr__(self):
         return f"<NarrativeEvent(user_id={self.user_id}, type={self.event_type}, code={self.event_code})>"
+
+
+class UnsentLetter(Base):
+    """Cartas no enviadas de Diana - elementos narrativos especiales"""
+    __tablename__ = "unsent_letters"
+
+    id = Column(Integer, primary_key=True)
+    code_name = Column(String, unique=True, nullable=False)
+
+    # Contenido
+    title = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    postscript = Column(Text)
+
+    # Metadata narrativa
+    written_date = Column(String)
+    emotional_state = Column(String)
+    trigger_memory = Column(String)
+
+    # Condiciones de desbloqueo
+    required_narrative_level = Column(Integer, default=3)
+    required_trust_level = Column(Float, default=0.5)
+    required_event = Column(String)
+    special_condition = Column(String)
+
+    # Estado
+    is_discoverable = Column(Boolean, default=True)
+    discovery_hint = Column(Text)
+
+    # Impacto al descubrirla
+    trust_impact = Column(Float, default=0.1)
+    vulnerability_reveal = Column(Float, default=0.2)
+    unlocks_dialogue_option = Column(String)
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<UnsentLetter(code_name={self.code_name}, title={self.title})>"
+
+
+class UserUnsentLetter(Base):
+    """Registro de cartas descubiertas por usuarios"""
+    __tablename__ = "user_unsent_letters"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    letter_id = Column(Integer, ForeignKey("unsent_letters.id"), nullable=False)
+
+    # Descubrimiento
+    found_at = Column(DateTime, default=datetime.utcnow)
+    found_through = Column(String)
+
+    # Interacción
+    times_read = Column(Integer, default=1)
+    last_read = Column(DateTime, default=datetime.utcnow)
+    user_reaction = Column(String)
+    asked_diana_about_it = Column(Boolean, default=False)
+    diana_response_given = Column(Text)
+
+    # Relaciones
+    user = relationship("User", backref="found_letters")
+    letter = relationship("UnsentLetter")
+
+    def __repr__(self):
+        return f"<UserUnsentLetter(user_id={self.user_id}, letter_id={self.letter_id})>"
