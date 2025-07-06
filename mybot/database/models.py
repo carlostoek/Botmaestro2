@@ -524,4 +524,12 @@ class TriviaAttempt(Base):
     completed_at = Column(DateTime, default=func.now())
 
 
-class TriviaUserAnswer(Bas
+class TriviaUserAnswer(Base):
+    __tablename__ = "trivia_user_answers"
+
+    id = Column(Integer, primary_key=True)
+    attempt_id = Column(Integer, ForeignKey("trivia_attempts.id"), nullable=False)
+    question_id = Column(Integer, ForeignKey("trivia_questions.id"), nullable=False)
+    user_answer = Column(Text, nullable=True)
+    is_correct = Column(Boolean, default=False)
+
