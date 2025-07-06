@@ -124,6 +124,39 @@ class LorePiece(Base):
     behavior_change_description = Column(Text, nullable=True)
     created_at = Column(DateTime, default=func.now())
 
+class UserLorePiece(Base):
+    """Relación entre usuarios y las piezas de lore que han encontrado"""
+    __tablename__ = "user_lore_pieces"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    lore_piece_id = Column(Integer, ForeignKey("narrative_lore_pieces.id"), nullable=False)
+    
+    # Cuándo y cómo la encontró
+    found_at = Column(DateTime, default=datetime.utcnow)
+    found_through = Column(String)  # "mission", "exploration", "gift", "combination"
+    
+    # Interacción con la pieza
+    times_viewed = Column(Integer, default=1)
+    last_viewed = Column(DateTime, default=datetime.utcnow)
+    has_asked_diana = Column(Boolean, default=False)
+    diana_revealed_extra = Column(Boolean, default=False)
+    
+    # Si la ha usado para combinar
+    used_in_combination = Column(Boolean, default=False)
+    combination_result_id = Column(Integer, ForeignKey("narrative_lore_pieces.id"))
+    
+    # Notas o reflexiones del usuario
+    user_notes = Column(Text)
+    
+    # Relaciones
+    user = relationship("User", backref="found_lore_pieces")
+    lore_piece = relationship("LorePiece", foreign_keys=[lore_piece_id])
+    combination_result = relationship("LorePiece", foreign_keys=[combination_result_id])
+    
+    def __repr__(self):
+        return f"<UserLorePiece(user_id={self.user_id}, piece={self.lore_piece_id})>"
+
 class UnsentLetter(Base):
     __tablename__ = "narrative_unsent_letters"
     id = Column(Integer, primary_key=True, autoincrement=True)

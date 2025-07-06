@@ -452,39 +452,7 @@ class MiniGamePlay(AsyncAttrs, Base):
     cost_points = Column(Float, default=0)
 
 
-class LorePiece(AsyncAttrs, Base):
-    """Discrete lore or clue piece that users can unlock."""
 
-    __tablename__ = "lore_pieces"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    code_name = Column(String, unique=True, nullable=False)
-    title = Column(String, nullable=False)
-    description = Column(Text, nullable=True)
-    content_type = Column(String, nullable=False)
-    content = Column(Text, nullable=False)
-    category = Column(String, nullable=True)
-    is_main_story = Column(Boolean, default=False)
-    unlock_condition_type = Column(String, nullable=True)
-    unlock_condition_value = Column(String, nullable=True)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-    is_active = Column(Boolean, default=True)
-
-
-class UserLorePiece(AsyncAttrs, Base):
-    """Mapping of unlocked lore pieces per user."""
-
-    __tablename__ = "user_lore_pieces"
-
-    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
-    lore_piece_id = Column(Integer, ForeignKey("lore_pieces.id"), primary_key=True)
-    unlocked_at = Column(DateTime, default=func.now())
-    context = Column(JSON, nullable=True)
-
-    __table_args__ = (
-        UniqueConstraint("user_id", "lore_piece_id", name="uix_user_lore_pieces"),
-    )
 
 
 
