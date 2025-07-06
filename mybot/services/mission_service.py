@@ -55,11 +55,11 @@ class MissionService:
 
     async def get_mission_by_id(self, mission_id: str) -> Mission | None:
         return await self.session.get(Mission, mission_id)
-  class Item:
-    pass
+    class Item:
+       pass
 
-  class UserItem:
-    pass
+   class UserItem:
+       pass
       
     async def check_mission_completion_status(self, user: User, mission: Mission, target_message_id: int = None) -> tuple[bool, str]:
         """
