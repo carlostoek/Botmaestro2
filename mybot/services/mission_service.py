@@ -6,7 +6,7 @@ from sqlalchemy import select, update
 from ..database.models import (
     Mission, User, UserMission, Item, UserItem, Hint, UserHint, Combination, UserCombination, Level, UserLevel, UserDailyGift, UserReferral, Referral
 )
-from ..database.narrative_models import LorePiece, UserLorePiece
+from database.narrative_models import LorePiece, UserLorePiece
 from utils.text_utils import sanitize_text
 import logging
 
