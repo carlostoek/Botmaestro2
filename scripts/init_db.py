@@ -13,7 +13,7 @@ from services.achievement_service import AchievementService
 from services.level_service import LevelService
 from services.mission_service import MissionService
 from sqlalchemy.future import select
-from database.models import LorePiece
+from mybot.database.narrative_models import LorePiece
 
 DEFAULT_MISSIONS = [
     {

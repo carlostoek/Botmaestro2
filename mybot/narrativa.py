@@ -1,6 +1,6 @@
 from aiogram import Bot
 from sqlalchemy.future import select
-from database.models import UserLorePiece, LorePiece
+from mybot.database.narrative_models import UserLorePiece, LorePiece
 from database.setup import get_session
 
 async def desbloquear_pista(bot: Bot, user_id: int, pista_code: str):

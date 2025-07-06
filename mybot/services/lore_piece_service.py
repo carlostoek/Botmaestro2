@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import LorePiece
+from mybot.database.narrative_models import LorePiece
 
 class LorePieceService:
     def __init__(self, session: AsyncSession):

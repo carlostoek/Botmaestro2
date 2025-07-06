@@ -6,7 +6,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.filters import Command
 from sqlalchemy.future import select
 from database.setup import get_session
-from database.models import UserLorePiece, LorePiece
+from mybot.database.narrative_models import UserLorePiece, LorePiece
 from database.hint_combination import HintCombination
 from narrativa import desbloquear_pista
 
