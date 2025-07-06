@@ -36,7 +36,7 @@ class MissionService:
         missions = [m for m in result.scalars().all() if not m.duration_days or 
                    (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()]
 
-        if user_id: # Filter out completed missions for a specific user based on reset rules
+        if user_id:  # Filter out completed missions for a specific user based on reset rules
             user = await self.session.get(User, user_id)
             if user:
                 filtered_missions = []
@@ -70,4 +70,18 @@ class MissionService:
         elif mission.type == "daily":
             if mission_completion_record:
                 last_completed = datetime.datetime.fromisoformat(mission_completion_record)
-                if
+                if (datetime.datetime.now() - last_completed) < datetime.timedelta(days=1):
+                    return True, "daily_limit_reached"
+        elif mission.type == "weekly":
+            if mission_completion_record:
+                last_completed = datetime.datetime.fromisoformat(mission_completion_record)
+                if (datetime.datetime.now() - last_completed) < datetime.timedelta(weeks=1):
+                    return True, "weekly_limit_reached"
+        elif mission.type == "reaction":
+            if mission_completion_record:
+                return True, "already_completed"
+        
+        return False, ""  # Not completed for current period or not a one-time mission
+
+    # Resto de las funciones...
+    
