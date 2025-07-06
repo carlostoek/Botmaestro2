@@ -14,7 +14,6 @@ from sqlalchemy import (
     Enum,
 )
 from uuid import uuid4
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncAttrs
@@ -22,22 +21,6 @@ from sqlalchemy.future import select
 import enum
 
 Base = declarative_base()
-
-# DUMMY CLASSES FOR NARRATIVE MODELS (TEMPORARY WORKAROUND)
-# These are placeholders to resolve ImportErrors if the environment is not
-# correctly reflecting changes to narrative_models.py.
-# The actual models are in mybot/database/narrative_models.py
-class LorePiece(Base):
-    __tablename__ = "dummy_lore_pieces"
-    id = Column(Integer, primary_key=True)
-    code_name = Column(String)
-    title = Column(String)
-
-class UserLorePiece(Base):
-    __tablename__ = "dummy_user_lore_pieces"
-    user_id = Column(BigInteger, primary_key=True)
-    lore_piece_id = Column(Integer, primary_key=True)
-
 
 
 class AuctionStatus(enum.Enum):
@@ -72,30 +55,6 @@ class User(AsyncAttrs, Base):
     menu_state = Column(
         String, default="root"
     )  # e.g., "root", "profile", "missions", "rewards"
-
-    # Sistema narrativo
-    narrative_level = Column(Integer, default=0)  # 0-6 progreso narrativo
-    diana_affinity = Column(Float, default=0.0)  # -1 a 1, nivel de conexión
-    total_diana_interactions = Column(Integer, default=0)
-    last_diana_interaction = Column(DateTime, nullable=True)
-    
-    # Para detectar patrones de comportamiento
-    interaction_patterns = Column(JSON, default={
-        "response_times": [],  # Lista de tiempos de respuesta
-        "message_lengths": [],  # Longitudes de mensajes
-        "emotional_words": 0,  # Contador de palabras emocionales
-        "boundary_respect": 0,  # Veces que respetó límites
-        "curiosity_shown": 0  # Veces que mostró curiosidad genuina
-    })
-    
-    # Estados especiales narrativos
-    has_seen_diana_vulnerable = Column(Boolean, default=False)
-    has_shared_vulnerability = Column(Boolean, default=False)
-    has_found_secret_room = Column(Boolean, default=False)
-    chosen_ending_path = Column(String, nullable=True)  # "guardian", "confidant", "mystery_lover"
-
-    # En la sección de relaciones de la clase User:
-    narrative_state = relationship("NarrativeState", back_populates="user", uselist=False)
 
 
 
@@ -156,22 +115,6 @@ class Mission(AsyncAttrs, Base):
     # Código de pista que se desbloquea al completar esta misión
     unlocks_lore_piece_code = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now())
-
-    # Contexto narrativo
-    narrative_chapter = Column(String, nullable=True)  # A qué capítulo pertenece
-    diana_intro_dialogue = Column(Text, nullable=True)  # Lo que dice Diana al dar la misión
-    diana_completion_dialogue = Column(Text, nullable=True)  # Al completarla
-    
-    # Impacto narrativo
-    affects_trust = Column(Boolean, default=False)
-    trust_impact = Column(Float, default=0.0)  # -0.2 a 0.2
-    reveals_lore = Column(Boolean, default=False)
-    lore_piece_reward = Column(String, nullable=True)  # Código de lore piece
-    
-    # Requisitos narrativos
-    requires_relationship_stage = Column(String, nullable=True)
-    requires_specific_memory = Column(String, nullable=True)
-    requires_archetype = Column(String, nullable=True)
 
 
 class UserMissionEntry(AsyncAttrs, Base):
@@ -468,7 +411,39 @@ class MiniGamePlay(AsyncAttrs, Base):
     cost_points = Column(Float, default=0)
 
 
+class LorePiece(AsyncAttrs, Base):
+    """Discrete lore or clue piece that users can unlock."""
 
+    __tablename__ = "lore_pieces"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code_name = Column(String, unique=True, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    content_type = Column(String, nullable=False)
+    content = Column(Text, nullable=False)
+    category = Column(String, nullable=True)
+    is_main_story = Column(Boolean, default=False)
+    unlock_condition_type = Column(String, nullable=True)
+    unlock_condition_value = Column(String, nullable=True)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    is_active = Column(Boolean, default=True)
+
+
+class UserLorePiece(AsyncAttrs, Base):
+    """Mapping of unlocked lore pieces per user."""
+
+    __tablename__ = "user_lore_pieces"
+
+    user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    lore_piece_id = Column(Integer, ForeignKey("lore_pieces.id"), primary_key=True)
+    unlocked_at = Column(DateTime, default=func.now())
+    context = Column(JSON, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "lore_piece_id", name="uix_user_lore_pieces"),
+    )
 
 
 
