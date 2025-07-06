@@ -13,6 +13,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Enum,
 )
+from sqlalchemy.orm import relationship
 from uuid import uuid4
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
@@ -55,6 +56,10 @@ class User(AsyncAttrs, Base):
     menu_state = Column(
         String, default="root"
     )  # e.g., "root", "profile", "missions", "rewards"
+
+    narrative_state = relationship(
+        "NarrativeState", back_populates="user", uselist=False
+    )
 
 
 

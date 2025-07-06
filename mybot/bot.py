@@ -46,6 +46,7 @@ from handlers.info_handler import router as info_router
 from handlers.free_channel_admin import router as free_channel_admin_router
 from handlers.publication_test import router as publication_test_router
 from handlers.main_menu import router as main_menu_router
+from handlers.narrative import diana_dialogue_router
 
 import combinar_pistas
 from backpack import router as backpack_router
@@ -225,6 +226,7 @@ async def main() -> None:
             ("free_user", free_user.router),
             ("lore", lore_router),
             ("combinar_pistas", combinar_pistas.router),
+            ("diana_dialogue", diana_dialogue_router),
             ("channel_access", channel_access_router),
         ]
         
