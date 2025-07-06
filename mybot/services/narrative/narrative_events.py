@@ -14,7 +14,7 @@ from aiogram import Bot
 
 from database.narrative_models import (
     NarrativeEvent, UserNarrativeEvent,
-    NarrativeState, UnsentLetter
+    NarrativeState
 )
 from database.models import User
 from utils.config import CHANNEL_ID, VIP_CHANNEL_ID
