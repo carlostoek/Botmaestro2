@@ -95,6 +95,9 @@ class NarrativeState(Base):
     
     # Relaciones
     user = relationship("User", back_populates="narrative_state", uselist=False)
+    dialogue_history = relationship(
+        "DialogueHistory", back_populates="narrative_state"
+    )
     
     def __repr__(self):
         return f"<NarrativeState(user_id={self.user_id}, level={self.narrative_level}, trust={self.trust_level})>"
@@ -115,3 +118,86 @@ class UserLorePiece(Base):
     user_notes = Column(Text)
     user = relationship("User ", backref="found_lore_pieces")
     lore_piece = relationship("LorePiece", foreign_keys=[lore_piece_id])
+
+
+class DialogueHistory(Base):
+    """Historial de diálogos con Diana"""
+    __tablename__ = "dialogue_history"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    narrative_state_id = Column(Integer, ForeignKey("narrative_states.id"))
+
+    # Contenido del diálogo
+    user_message = Column(Text, nullable=False)
+    diana_response = Column(Text, nullable=False)
+
+    # Contexto
+    narrative_level = Column(Integer)
+    emotional_state = Column(Enum(EmotionalState))
+    detected_archetype = Column(Enum(UserArchetype))
+
+    # Análisis del mensaje
+    message_sentiment = Column(Float)  # -1 a 1
+    detected_intent = Column(String)  # "flirt", "question", "share", "challenge"
+    emotional_words_count = Column(Integer, default=0)
+    vulnerability_score = Column(Float, default=0.0)
+
+    # Impacto
+    trust_change = Column(Float, default=0.0)
+    connection_change = Column(Float, default=0.0)
+
+    # Metadata
+    response_time = Column(Float)
+    message_length = Column(Integer)
+    contains_emoji = Column(Boolean, default=False)
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relaciones
+    user = relationship("User", backref="dialogue_history")
+    narrative_state = relationship("NarrativeState", back_populates="dialogue_history")
+
+    def __repr__(self):
+        return f"<DialogueHistory(user_id={self.user_id}, level={self.narrative_level})>"
+
+
+class NarrativeEvent(Base):
+    """Eventos narrativos que ocurren durante la interacción"""
+    __tablename__ = "narrative_events"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=False)
+    event_type = Column(String, nullable=False)
+    event_code = Column(String, nullable=False)
+
+    # Detalles del evento
+    title = Column(String, nullable=False)
+    description = Column(Text)
+    impact_description = Column(Text)
+
+    # Contexto
+    narrative_level = Column(Integer)
+    chapter = Column(String)
+    trigger_condition = Column(String)
+
+    # Impacto
+    trust_impact = Column(Float, default=0.0)
+    vulnerability_impact = Column(Float, default=0.0)
+    mystery_impact = Column(Float, default=0.0)
+
+    # Datos adicionales
+    dialogue_shown = Column(Text)
+    user_response = Column(Text)
+    choices_presented = Column(JSON)
+    choice_made = Column(String)
+
+    # Timestamps
+    occurred_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relaciones
+    user = relationship("User", backref="narrative_events")
+
+    def __repr__(self):
+        return f"<NarrativeEvent(user_id={self.user_id}, type={self.event_type}, code={self.event_code})>"
