@@ -26,61 +26,48 @@ class MissionService:
         self.point_service = PointService(session)
 
     async def get_active_missions(self, user_id: int = None, mission_type: str = None) -> list[Mission]:
-        # ... (código existente) ...
+        """
+        Retrieves active missions, optionally filtered by user completion status and type.
+        """
+        stmt = select(Mission).where(Mission.is_active == True)
+        if mission_type:
+            stmt = stmt.where(Mission.type == mission_type)
+        result = await self.session.execute(stmt)
+        missions = [m for m in result.scalars().all() if not m.duration_days or 
+                   (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()]
+
+        if user_id: # Filter out completed missions for a specific user based on reset rules
+            user = await self.session.get(User, user_id)
+            if user:
+                filtered_missions = []
+                now = datetime.datetime.now()
+
+                for mission in missions:
+                    is_completed_for_period, _ = await self.check_mission_completion_status(user, mission)
+                    if not is_completed_for_period:
+                        filtered_missions.append(mission)
+                return filtered_missions
+        return missions
 
     async def get_daily_active_missions(self, user_id: int | None = None) -> list[Mission]:
-        # ... (código existente) ...
+        """Return missions of type 'daily' that are active today."""
+        return await self.get_active_missions(user_id=user_id, mission_type="daily")
 
     async def get_mission_by_id(self, mission_id: str) -> Mission | None:
-        # ... (código existente) ...
+        return await self.session.get(Mission, mission_id)
 
     async def check_mission_completion_status(self, user: User, mission: Mission, target_message_id: int = None) -> tuple[bool, str]:
-        # ... (código existente) ...
-
-    async def complete_mission(
-        self,
-        user_id: int,
-        mission_id: str,
-        reaction_type: str = None,
-        target_message_id: int = None,
-        *,
-        bot=None,
-    ) -> tuple[bool, Mission | None]:
-        # ... (código existente) ...
-
-    async def create_mission(
-        self,
-        name: str,
-        description: str,
-        mission_type: str,
-        target_value: int,
-        reward_points: int,
-        duration_days: int = 0,
-        *,
-        requires_action: bool = False,
-        action_data: dict | None = None,
-    ) -> Mission:
-        # ... (código existente) ...
-
-    async def toggle_mission_status(self, mission_id: str, status: bool) -> bool:
-        # ... (código existente) ...
-
-    async def update_progress(
-        self,
-        user_id: int,
-        mission_type: str,
-        *,
-        increment: int = 1,
-        current_value: int | None = None,
-        bot=None,
-    ) -> None:
-        # ... (código existente) ...
-
-    async def delete_mission(self, mission_id: str) -> bool:
-        # ... (código existente) ...
-
-    async def get_active_challenges(self, challenge_type: str | None = None) -> list[Challenge]:
-        # ... (código existente) ...
-
-    async def increment_challenge_progress(self, user_id: int, goal_type: str, increment: int = 1, bot=None) -> list[Challenge]:
-        # ... (código existente) ...
+        """
+        Checks if a user has completed a mission for the current reset period,
+        or if it's a one-time mission already completed.
+        Returns (is_completed_for_period, reason_if_completed)
+        """
+        mission_completion_record = user.missions_completed.get(mission.id)
+        
+        if mission.type == "one_time":
+            if mission_completion_record:
+                return True, "already_completed"
+        elif mission.type == "daily":
+            if mission_completion_record:
+                last_completed = datetime.datetime.fromisoformat(mission_completion_record)
+                if
