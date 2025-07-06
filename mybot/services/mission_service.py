@@ -3,8 +3,17 @@ import random
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from database.models import ( Mission, User, UserMissionEntry, UserItem, Hint, UserHint, Combination, UserCombination, Level, UserLevel, UserDailyGift, UserReferral, Referral ) from database.narrative_models import LorePiece, UserLorePiece from utils.text_utils import sanitize_text from services.point_service import PointService
+from database.models import (
+    Mission, User, UserMissionEntry, UserItem, Hint, UserHint,
+    Combination, UserCombination, Level, UserLevel, UserDailyGift,
+    UserReferral, Referral
+)
 
+from database.narrative_models import LorePiece, UserLorePiece
+
+from utils.text_utils import sanitize_text
+
+from services.point_service import PointService
 logger = logging.getLogger(name)
 
 MISSION_PLACEHOLDER: list = []
