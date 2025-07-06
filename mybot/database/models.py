@@ -56,6 +56,27 @@ class User(AsyncAttrs, Base):
         String, default="root"
     )  # e.g., "root", "profile", "missions", "rewards"
 
+    # Sistema narrativo
+    narrative_level = Column(Integer, default=0)  # 0-6 progreso narrativo
+    diana_affinity = Column(Float, default=0.0)  # -1 a 1, nivel de conexión
+    total_diana_interactions = Column(Integer, default=0)
+    last_diana_interaction = Column(DateTime, nullable=True)
+    
+    # Para detectar patrones de comportamiento
+    interaction_patterns = Column(JSON, default={
+        "response_times": [],  # Lista de tiempos de respuesta
+        "message_lengths": [],  # Longitudes de mensajes
+        "emotional_words": 0,  # Contador de palabras emocionales
+        "boundary_respect": 0,  # Veces que respetó límites
+        "curiosity_shown": 0  # Veces que mostró curiosidad genuina
+    })
+    
+    # Estados especiales narrativos
+    has_seen_diana_vulnerable = Column(Boolean, default=False)
+    has_shared_vulnerability = Column(Boolean, default=False)
+    has_found_secret_room = Column(Boolean, default=False)
+    chosen_ending_path = Column(String, nullable=True)  # "guardian", "confidant", "mystery_lover"
+
 
 
 class Reward(AsyncAttrs, Base):
@@ -115,6 +136,22 @@ class Mission(AsyncAttrs, Base):
     # Código de pista que se desbloquea al completar esta misión
     unlocks_lore_piece_code = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now())
+
+    # Contexto narrativo
+    narrative_chapter = Column(String, nullable=True)  # A qué capítulo pertenece
+    diana_intro_dialogue = Column(Text, nullable=True)  # Lo que dice Diana al dar la misión
+    diana_completion_dialogue = Column(Text, nullable=True)  # Al completarla
+    
+    # Impacto narrativo
+    affects_trust = Column(Boolean, default=False)
+    trust_impact = Column(Float, default=0.0)  # -0.2 a 0.2
+    reveals_lore = Column(Boolean, default=False)
+    lore_piece_reward = Column(String, nullable=True)  # Código de lore piece
+    
+    # Requisitos narrativos
+    requires_relationship_stage = Column(String, nullable=True)
+    requires_specific_memory = Column(String, nullable=True)
+    requires_archetype = Column(String, nullable=True)
 
 
 class UserMissionEntry(AsyncAttrs, Base):
