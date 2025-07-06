@@ -9,7 +9,7 @@ from sqlalchemy import select, and_
 
 from database.models import User
 from database.narrative_models import (
-    NarrativeState, LorePiece, UnsentLetter, NarrativeEvent,
+    NarrativeState, LorePiece, NarrativeEvent,
     UserArchetype, RelationshipStage, EmotionalState
 )
 
