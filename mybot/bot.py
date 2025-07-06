@@ -1,6 +1,10 @@
 import asyncio
 import logging
 import sys
+import os
+
+# Añadir el directorio raíz del proyecto al sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums.parse_mode import ParseMode

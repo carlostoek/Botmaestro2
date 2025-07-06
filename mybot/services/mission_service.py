@@ -3,14 +3,10 @@ import datetime
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from mybot.database.models import (
-    Mission,
-    User,
-    UserMissionEntry,
-    Challenge,
-    UserChallengeProgress,
+from ..database.models import (
+    Mission, User, UserMission, Item, UserItem, Hint, UserHint, Combination, UserCombination, Level, UserLevel, UserDailyGift, UserReferral, Referral
 )
-from mybot.database.narrative_models import LorePiece, UserLorePiece
+from ..database.narrative_models import LorePiece, UserLorePiece
 from utils.text_utils import sanitize_text
 import logging
 

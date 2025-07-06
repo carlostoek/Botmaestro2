@@ -34,8 +34,8 @@ from utils.admin_state import (
 from services.mission_service import MissionService
 from services.reward_service import RewardService
 from services.level_service import LevelService
-from mybot.database.models import User, Mission
-from mybot.database.narrative_models import LorePiece
+from ...database.models import User, Mission
+from ...database.narrative_models import LorePiece
 from services.lore_piece_service import LorePieceService
 from services.point_service import PointService
 from services.config_service import ConfigService
