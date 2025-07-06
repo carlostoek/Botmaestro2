@@ -61,6 +61,15 @@ from services.scheduler import auction_monitor_scheduler, free_channel_cleanup_s
 # Middlewares
 from middlewares import PointsMiddleware, UserRegistrationMiddleware
 
+# Nuevas importaciones para narrativa
+from handlers.narrative import (
+    diana_dialogue,
+    narrative_missions,
+    enhanced_backpack
+)
+from services.narrative.narrative_events import narrative_event_scheduler
+from middlewares.narrative_middleware import NarrativeContextMiddleware
+
 # --- MANEJO DE ERRORES GLOBAL ---
 async def global_error_handler(event: ErrorEvent) -> None:
     """Manejo centralizado de errores"""
@@ -188,6 +197,11 @@ async def main() -> None:
         dp.poll_answer.middleware(points_middleware)
         dp.message_reaction.middleware(points_middleware)
 
+        # Agregar middleware narrativo
+        narrative_middleware = NarrativeContextMiddleware()
+        dp.message.middleware(narrative_middleware)
+        dp.callback_query.middleware(narrative_middleware)
+
         # Registrar routers en orden de prioridad
         logger.info("Registrando handlers...")
         routers = [
@@ -212,6 +226,9 @@ async def main() -> None:
             ("lore", lore_router),
             ("combinar_pistas", combinar_pistas.router),
             ("channel_access", channel_access_router),
+            ("diana_dialogue", diana_dialogue.router),
+            ("narrative_missions", narrative_missions.router),
+            ("enhanced_backpack", enhanced_backpack.router),
         ]
         
         for name, router in routers:
@@ -241,6 +258,11 @@ async def main() -> None:
         task_manager.add_task(
             free_channel_cleanup_scheduler(bot, Session), 
             "channel_cleanup"
+        )
+
+        task_manager.add_task(
+            narrative_event_scheduler(bot, Session),
+            "narrative_events"
         )
 
         # Iniciar polling

@@ -20,6 +20,9 @@ from utils.keyboard_utils import get_admin_manage_content_keyboard # Importar la
 from backpack import desbloquear_pista_narrativa
 
 import logging
+import subprocess
+import asyncio
+
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -235,9 +238,9 @@ async def admin_bot_config(callback: CallbackQuery, session: AsyncSession):
         if "error" not in tenant_summary:
             status = tenant_summary["configuration_status"]
             config_text += "**Estado actual:**\n"
-            config_text += f"📢 Canales: {'✅ Configurados' if status['channels_configured'] else '❌ Pendiente'}\n"
-            config_text += f"💳 Tarifas: {'✅ Configuradas' if status['tariffs_configured'] else '❌ Pendiente'}\n"
-            config_text += f"🎮 Gamificación: {'✅ Configurada' if status['gamification_configured'] else '❌ Pendiente'}\n\n"
+            config_text += f"📢 Canales: {'✅' if status['channels_configured'] else '❌'}\n"
+            config_text += f"💳 Tarifas: {'✅' if status['tariffs_configured'] else '❌'}\n"
+            config_text += f"🎮 Gamificación: {'✅' if status['gamification_configured'] else '❌'}\n\n"
             
             if not status["basic_setup_complete"]:
                 config_text += "⚠️ **Configuración incompleta**\nAlgunas funciones pueden no estar disponibles."
@@ -410,3 +413,27 @@ async def cmd_give_hint(message: Message):
             parse_mode="HTML",
         )
 
+@router.message(Command("poblarbase"))
+async def populate_database(message: Message):
+    """Runs the narrative data initialization script."""
+    if not is_admin(message.from_user.id):
+        await message.answer(
+            "❌ **Acceso Denegado**\n\nNo tienes permisos para usar este comando.",
+            parse_mode="HTML",
+        )
+        return
+
+    try:
+        process = await asyncio.create_subprocess_shell(
+            'python scripts/init_narrative_data.py',
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await process.communicate()
+
+        if process.returncode == 0:
+            await message.answer(f"✅ Base de datos poblada exitosamente.\n<pre>{stdout.decode()}</pre>", parse_mode='HTML')
+        else:
+            await message.answer(f"❌ Error al poblar la base de datos.\n<pre>{stderr.decode()}</pre>", parse_mode='HTML')
+    except Exception as e:
+        await message.answer(f"❌ Ocurrió un error inesperado: {e}")
