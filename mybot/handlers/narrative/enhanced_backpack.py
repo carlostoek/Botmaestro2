@@ -11,8 +11,8 @@ from sqlalchemy import select, and_
 from typing import List, Optional, Tuple
 
 from database.narrative_models import (
-    LorePiece, UserLorePiece, UnsentLetter, 
-    UserUnsentLetter, DialogueMemory
+    LorePiece, UserLorePiece, UnsentLetter,
+    UserUnsentLetter, DialogueHistory
 )
 from database.models import User
 
