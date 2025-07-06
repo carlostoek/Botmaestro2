@@ -18,16 +18,22 @@ logger = logging.getLogger(name)
 
 MISSION_PLACEHOLDER: list = []
 
-class MissionService: def init(self, session: AsyncSession): self.session = session self.point_service = PointService(session)
 
-async def get_active_missions(self, user_id: int = None, mission_type: str = None) -> list[Mission]:
-    stmt = select(Mission).where(Mission.is_active == True)
-    if mission_type:
-        stmt = stmt.where(Mission.type == mission_type)
-    result = await self.session.execute(stmt)
-    missions = [m for m in result.scalars().all() if not m.duration_days or 
-               (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()]
+class MissionService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.point_service = PointService(session)
 
+    async def get_active_missions(self, user_id: int = None, mission_type: str = None) -> list[Mission]:
+        stmt = select(Mission).where(Mission.is_active == True)
+        if mission_type:
+            stmt = stmt.where(Mission.type == mission_type)
+        result = await self.session.execute(stmt)
+        missions = [
+            m for m in result.scalars().all()
+            if not m.duration_days or (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()
+        ]
+        return missions
     if user_id:
         user = await self.session.get(User, user_id)
         if user:
