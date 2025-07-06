@@ -304,4 +304,4 @@ class DianaDialogueManager:
         # Seleccionar y personalizar diálogo
         dialogue = self._select_and_personalize_dialogue(
             dialogue_pool, user, narrative_state, emotional_context
-        )j
+        )

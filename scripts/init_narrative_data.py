@@ -12,11 +12,11 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from mybot.database.setup import get_session, init_db
-from mybot.database.narrative_models import (
+from database.setup import get_session, init_db
+from database.narrative_models import (
     LorePiece, UnsentLetter, NarrativeEvent
 )
-from mybot.database.models import Mission
+from database.models import Mission
 
 async def init_lore_pieces(session: AsyncSession):
     """Inicializa las pistas del lore"""

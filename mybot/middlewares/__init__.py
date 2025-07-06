@@ -1,5 +1,5 @@
-from points_middleware import PointsMiddleware
-from user_middleware import UserRegistrationMiddleware
+from middlewares.points_middleware import PointsMiddleware
+from middlewares.user_middleware import UserRegistrationMiddleware
 
 __all__ = [
     "PointsMiddleware",

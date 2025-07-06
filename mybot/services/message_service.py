@@ -12,8 +12,8 @@ from sqlalchemy import select, func
 import datetime
 import logging
 
-from config_service import ConfigService
-from channel_service import ChannelService
+from services.config_service import ConfigService
+from services.channel_service import ChannelService
 from database.models import ButtonReaction
 from keyboards.inline_post_kb import get_reaction_kb
 from services.message_registry import store_message
