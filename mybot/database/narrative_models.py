@@ -336,5 +336,6 @@ class MemoryFragment(Base):
     prerequisite_memory = Column(String)  # code_name de memoria previa requerida
     
     # Efectos
-    unlocks_dialogue_branch = Column(String)
-    reveals_personality
+unlocks_dialogue_branch = Column(String)
+reveals_personality_aspect = Column(String)  # ESTA LÍNEA ESTABA INCOMPLETA
+trust_impact = Column(Float, default=0.05)
