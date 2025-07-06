@@ -7,7 +7,7 @@ from sqlalchemy import select, update
 
 # Importaciones corregidas
 from database.models import (
-    Mission, User, UserMissionEntry, Item, UserItem, Hint, UserHint, 
+    Mission, User, UserMissionEntry, UserItem, Hint, UserHint, 
     Combination, UserCombination, Level, UserLevel, UserDailyGift, 
     UserReferral, Referral
 )
