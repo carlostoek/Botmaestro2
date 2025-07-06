@@ -8,7 +8,7 @@ from aiogram import Router, types, F
 from aiogram.filters import Command
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from database.narrative_models import (
     LorePiece, UserLorePiece, UnsentLetter,
