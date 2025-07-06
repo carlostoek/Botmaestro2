@@ -1,14 +1,19 @@
 # services/mission_service.py
 import datetime
 import random
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
-from ..database.models import (
-    Mission, User, UserMission, Item, UserItem, Hint, UserHint, Combination, UserCombination, Level, UserLevel, UserDailyGift, UserReferral, Referral
+
+# Importaciones corregidas
+from database.models import (
+    Mission, User, UserMission, Item, UserItem, Hint, UserHint, 
+    Combination, UserCombination, Level, UserLevel, UserDailyGift, 
+    UserReferral, Referral
 )
 from database.narrative_models import LorePiece, UserLorePiece
 from utils.text_utils import sanitize_text
-import logging
+from services.point_service import PointService
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +23,6 @@ MISSION_PLACEHOLDER: list = []
 class MissionService:
     def __init__(self, session: AsyncSession):
         self.session = session
-        from services.point_service import PointService
         self.point_service = PointService(session)
 
     async def get_active_missions(self, user_id: int = None, mission_type: str = None) -> list[Mission]:
@@ -29,7 +33,8 @@ class MissionService:
         if mission_type:
             stmt = stmt.where(Mission.type == mission_type)
         result = await self.session.execute(stmt)
-        missions = [m for m in result.scalars().all() if not m.duration_days or (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()]
+        missions = [m for m in result.scalars().all() if not m.duration_days or 
+                   (m.created_at + datetime.timedelta(days=m.duration_days)) > datetime.datetime.utcnow()]
 
         if user_id: # Filter out completed missions for a specific user based on reset rules
             user = await self.session.get(User, user_id)
@@ -102,24 +107,15 @@ class MissionService:
         # Check if already completed for the current period
         is_completed, reason = await self.check_mission_completion_status(user, mission, target_message_id)
         if is_completed:
-            logger.info(f"User {user_id} attempted to complete mission {mission_id} but it was already completed ({reason}).")
+            logger.info(f"User  {user_id} attempted to complete mission {mission_id} but it was already completed ({reason}).")
             return False, None
 
         # Add mission to user's completed list with timestamp
         now = datetime.datetime.now().isoformat()
         user.missions_completed[mission.id] = now
         
-
-        # Add points to user. Event multiplier should be handled by PointService or calling context.
-        # For simplicity here, we just add the base points.
-        # If event multiplier logic is outside this, ensure it's applied before calling add_points.
-        # If it's inside PointService, this is fine.
-        point_service = self.point_service # assuming point_service is still available in __init__
-        if not hasattr(self, 'point_service'): # Fallback if not initialized in __init__
-             from services.point_service import PointService
-             point_service = PointService(self.session)
-
-        await point_service.add_points(user_id, mission.reward_points, bot=bot)
+        # Add points to user
+        await self.point_service.add_points(user_id, mission.reward_points, bot=bot)
 
         # Update last reset timestamps for daily/weekly missions
         if mission.type == "daily":
@@ -143,7 +139,7 @@ class MissionService:
                 if not exists:
                     self.session.add(UserLorePiece(user_id=user_id, lore_piece_id=lore_piece.id))
                     logger.info(
-                        f"User {user_id} unlocked lore piece {unlock_code} via mission {mission_id}"
+                        f"User  {user_id} unlocked lore piece {unlock_code} via mission {mission_id}"
                     )
 
         # Ensure JSON field updates are marked for SQLAlchemy
@@ -164,7 +160,7 @@ class MissionService:
             )
 
         logger.info(
-            f"User {user_id} successfully completed mission {mission_id} (Type: {mission.type}, Message: {target_message_id})."
+            f"User  {user_id} successfully completed mission {mission_id} (Type: {mission.type}, Message: {target_message_id})."
         )
         return True, mission
 
@@ -290,3 +286,4 @@ class MissionService:
                 await self.point_service.add_points(user_id, 100, bot=bot)
         await self.session.commit()
         return completed
+        
