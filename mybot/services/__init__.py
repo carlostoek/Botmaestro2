@@ -16,6 +16,7 @@ from .auction_service import AuctionService
 from .user_service import UserService
 from .lore_piece_service import LorePieceService
 from .scheduler import channel_request_scheduler, vip_subscription_scheduler, vip_membership_scheduler
+from .narrative_event_scheduler import start_narrative_scheduler
 
 __all__ = [
     "AchievementService",
@@ -34,6 +35,7 @@ __all__ = [
     "channel_request_scheduler",
     "vip_subscription_scheduler",
     "vip_membership_scheduler",
+    "start_narrative_scheduler",
     "EventService",
     "RaffleService",
     "MessageService",

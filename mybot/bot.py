@@ -55,11 +55,16 @@ from services import (
     channel_request_scheduler,
     vip_subscription_scheduler,
     vip_membership_scheduler,
+    start_narrative_scheduler,
 )
 from services.scheduler import auction_monitor_scheduler, free_channel_cleanup_scheduler
 
 # Middlewares
-from middlewares import PointsMiddleware, UserRegistrationMiddleware
+from middlewares import (
+    PointsMiddleware,
+    UserRegistrationMiddleware,
+    NarrativeContextMiddleware,
+)
 
 # --- MANEJO DE ERRORES GLOBAL ---
 async def global_error_handler(event: ErrorEvent) -> None:
@@ -165,6 +170,7 @@ async def main() -> None:
         # Configurar middlewares en orden correcto
         session_middleware = SessionMiddleware(Session, bot)
         user_reg_middleware = UserRegistrationMiddleware()
+        narrative_middleware = NarrativeContextMiddleware()
         points_middleware = PointsMiddleware()
 
         # Middlewares outer (se ejecutan primero)
@@ -182,6 +188,14 @@ async def main() -> None:
         dp.chat_member.outer_middleware(user_reg_middleware)
         dp.poll_answer.outer_middleware(user_reg_middleware)
         dp.message_reaction.outer_middleware(user_reg_middleware)
+
+        # Middleware de contexto narrativo
+        dp.message.outer_middleware(narrative_middleware)
+        dp.callback_query.outer_middleware(narrative_middleware)
+        dp.chat_join_request.outer_middleware(narrative_middleware)
+        dp.chat_member.outer_middleware(narrative_middleware)
+        dp.poll_answer.outer_middleware(narrative_middleware)
+        dp.message_reaction.outer_middleware(narrative_middleware)
 
         # Middleware de puntos (inner)
         dp.message.middleware(points_middleware)
@@ -231,16 +245,20 @@ async def main() -> None:
             "vip_subscriptions"
         )
         task_manager.add_task(
-            vip_membership_scheduler(bot, Session), 
+            vip_membership_scheduler(bot, Session),
             "vip_memberships"
         )
         task_manager.add_task(
-            auction_monitor_scheduler(bot, Session), 
+            auction_monitor_scheduler(bot, Session),
             "auction_monitor"
         )
         task_manager.add_task(
-            free_channel_cleanup_scheduler(bot, Session), 
+            free_channel_cleanup_scheduler(bot, Session),
             "channel_cleanup"
+        )
+        task_manager.add_task(
+            start_narrative_scheduler(bot),
+            "narrative_scheduler"
         )
 
         # Iniciar polling
