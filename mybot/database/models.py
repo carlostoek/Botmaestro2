@@ -499,6 +499,8 @@ class TriviaAttempt(Base):
     completed_at = Column(DateTime, default=func.now())
 
 
+from .narrative_models import *
+
 class TriviaUserAnswer(Base):
     __tablename__ = "trivia_user_answers"
 
