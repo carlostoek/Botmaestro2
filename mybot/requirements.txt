@@ -4,4 +4,4 @@ aiosqlite
 APScheduler
 python-dotenv
 asyncpg
-psycopg2
+psycopg2-binary
