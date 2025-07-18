@@ -19,3 +19,4 @@ async def get_session() -> AsyncSession:
     if _engine is None:
         await init_db()
     return async_sessionmaker(bind=_engine, expire_on_commit=False)()
+    
