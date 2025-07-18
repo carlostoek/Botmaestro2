@@ -27,7 +27,7 @@ def setup_logging():
 
 
 # Imports
-from database.setup import init_db, get_session
+from database.setup import init_db, get_session_factory
 from utils.message_safety import patch_message_methods
 from utils.config import BOT_TOKEN, VIP_CHANNEL_ID
 
@@ -81,24 +81,6 @@ async def global_error_handler(event: ErrorEvent) -> None:
     
     return True  # Marca el error como manejado
 
-# --- MIDDLEWARE MEJORADO ---
-class SessionMiddleware:
-    """Middleware para inyección de sesión de BD y bot"""
-    
-    def __init__(self, session_factory, bot_instance):
-        self.session_factory = session_factory
-        self.bot_instance = bot_instance
-    
-    async def __call__(self, handler, event, data):
-        try:
-            async with self.session_factory() as session:
-                data["session"] = session
-                data["bot"] = self.bot_instance
-                return await handler(event, data)
-        except Exception as e:
-            logging.error(f"Error en SessionMiddleware: {e}", exc_info=True)
-            raise
-
 # --- GESTOR DE TAREAS EN SEGUNDO PLANO ---
 class BackgroundTaskManager:
     """Gestor para tareas en segundo plano con manejo de errores"""
@@ -148,7 +130,7 @@ async def main() -> None:
         logger.info("Aplicando parches de seguridad...")
         patch_message_methods()
         
-        Session = await get_session()
+        session_factory = get_session_factory()
         
         logger.info(f"VIP channel ID: {VIP_CHANNEL_ID}")
         logger.info("Configurando bot...")
@@ -158,31 +140,17 @@ async def main() -> None:
             BOT_TOKEN, 
             default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         )
-        dp = Dispatcher(storage=MemoryStorage())
+        dp = Dispatcher(storage=MemoryStorage(), session_factory=session_factory)
 
         # Registrar manejo de errores PRIMERO
         dp.error.register(global_error_handler)
 
         # Configurar middlewares en orden correcto
-        session_middleware = SessionMiddleware(Session, bot)
         user_reg_middleware = UserRegistrationMiddleware()
         points_middleware = PointsMiddleware()
 
         # Middlewares outer (se ejecutan primero)
-        dp.message.outer_middleware(session_middleware)
-        dp.callback_query.outer_middleware(session_middleware)
-        dp.chat_join_request.outer_middleware(session_middleware)
-        dp.chat_member.outer_middleware(session_middleware)
-        dp.poll_answer.outer_middleware(session_middleware)
-        dp.message_reaction.outer_middleware(session_middleware)
-
-        # Middleware de registro de usuario
-        dp.message.outer_middleware(user_reg_middleware)
-        dp.callback_query.outer_middleware(user_reg_middleware)
-        dp.chat_join_request.outer_middleware(user_reg_middleware)
-        dp.chat_member.outer_middleware(user_reg_middleware)
-        dp.poll_answer.outer_middleware(user_reg_middleware)
-        dp.message_reaction.outer_middleware(user_reg_middleware)
+        dp.update.outer_middleware(user_reg_middleware)
 
         # Middleware de puntos (inner)
         dp.message.middleware(points_middleware)
@@ -225,23 +193,23 @@ async def main() -> None:
         
         logger.info("Iniciando tareas en segundo plano...")
         task_manager.add_task(
-            channel_request_scheduler(bot, Session), 
+            channel_request_scheduler(bot, session_factory), 
             "channel_requests"
         )
         task_manager.add_task(
-            vip_subscription_scheduler(bot, Session), 
+            vip_subscription_scheduler(bot, session_factory), 
             "vip_subscriptions"
         )
         task_manager.add_task(
-            vip_membership_scheduler(bot, Session), 
+            vip_membership_scheduler(bot, session_factory), 
             "vip_memberships"
         )
         task_manager.add_task(
-            auction_monitor_scheduler(bot, Session), 
+            auction_monitor_scheduler(bot, session_factory), 
             "auction_monitor"
         )
         task_manager.add_task(
-            free_channel_cleanup_scheduler(bot, Session), 
+            free_channel_cleanup_scheduler(bot, session_factory), 
             "channel_cleanup"
         )
 
