@@ -3,7 +3,7 @@ import logging
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
 from .base import Base
-from mybot.utils.config import Config
+from utils.config import Config
 
 logger = logging.getLogger(__name__)
 
