@@ -316,7 +316,7 @@ class Challenge(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     type = Column(String, nullable=False)  # daily, weekly, monthly
-    goal_type = Column.String, nullable=False)  # messages, reactions, checkins
+    goal_type = Column(String, nullable=False)  # messages, reactions, checkins
     goal_value = Column(Integer, nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
