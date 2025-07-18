@@ -1,5 +1,4 @@
 aiogram>=3.0.0
-pg_config
 SQLAlchemy
 aiosqlite
 APScheduler
