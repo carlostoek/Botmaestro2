@@ -10,7 +10,7 @@ from sqlalchemy import (
     Enum,
 )
 from sqlalchemy.orm import relationship
-from .models import Base, User  # Import Base from the main models file
+from .base import Base
 
 class StoryFragment(Base):
     """
@@ -82,4 +82,4 @@ class UserNarrativeState(Base):
     choices_made = Column(JSON, default=[])
 
     # Relationship to the User model
-    user = relationship("User", back_populates="narrative_state")
+    user = relationship("User", back_populates="narrative_state", lazy="joined")

@@ -15,13 +15,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from uuid import uuid4
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.future import select
 import enum
-
-Base = declarative_base()
+from .base import Base
 
 
 class AuctionStatus(enum.Enum):
@@ -102,6 +99,7 @@ class UserAchievement(AsyncAttrs, Base):
     user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
     achievement_id = Column(String, ForeignKey("achievements.id"), primary_key=True)
     unlocked_at = Column(DateTime, default=func.now())
+    __table_args__ = (UniqueConstraint("user_id", "achievement_id", name="uix_user_achievements"),)
 
 
 class Mission(AsyncAttrs, Base):
@@ -467,7 +465,7 @@ async def set_user_menu_state(session, user_id: int, state: str):
         await session.commit()
         await session.refresh(user)
 
-class Trivia(Base):
+class Trivia(AsyncAttrs, Base):
     __tablename__ = "trivias"
 
     id = Column(Integer, primary_key=True)
