@@ -465,7 +465,7 @@ async def set_user_menu_state(session, user_id: int, state: str):
         await session.commit()
         await session.refresh(user)
 
-class Trivia(AsyncAttrs, Base):
+class Trivia(Base):
     __tablename__ = "trivias"
 
     id = Column(Integer, primary_key=True)
