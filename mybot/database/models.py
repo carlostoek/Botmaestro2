@@ -13,6 +13,7 @@ from sqlalchemy import (
     UniqueConstraint,
     Enum,
 )
+from sqlalchemy.orm import relationship
 from uuid import uuid4
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
@@ -55,6 +56,9 @@ class User(AsyncAttrs, Base):
     menu_state = Column(
         String, default="root"
     )  # e.g., "root", "profile", "missions", "rewards"
+
+    # Relationship to narrative state
+    narrative_state = relationship("UserNarrativeState", back_populates="user", uselist=False)
 
 
 
@@ -499,7 +503,7 @@ class TriviaAttempt(Base):
     completed_at = Column(DateTime, default=func.now())
 
 
-from .narrative_models import *
+
 
 class TriviaUserAnswer(Base):
     __tablename__ = "trivia_user_answers"
