@@ -97,13 +97,12 @@ class Achievement(Base):
     reward_text = Column(String, nullable=False)
     created_at = Column(DateTime, default=func.now())
 
-    @declared_attr
-    def story_fragments(cls):
-        return relationship(
-            "StoryFragment",
-            foreign_keys="StoryFragment.unlocks_achievement_id",
-            backref="achievement_link"  # Cambiado el backref para evitar conflicto
-        )
+    story_fragments = relationship(
+        "StoryFragment",
+        foreign_keys="StoryFragment.unlocks_achievement_id",
+        back_populates="achievement_link",
+        overlaps="linked_achievement"  # Para silenciar el warning
+    )
 
 
 class UserAchievement(Base):
