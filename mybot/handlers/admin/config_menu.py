@@ -93,7 +93,6 @@ async def set_reaction_points_value(message: Message, state: FSMContext, session
     await state.set_state(AdminConfigStates.waiting_for_reaction_buttons)
 
 
-
 @router.callback_query(
     StateFilter(
         AdminConfigStates.waiting_for_reaction_buttons,
@@ -136,7 +135,7 @@ async def scheduler_menu(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data == "config_add_channels")
-async def prompt_channel_type(callback: CallbackQuery, state: FSMContext):
+async def prompt_channel_type(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
@@ -148,7 +147,7 @@ async def prompt_channel_type(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(AdminConfigStates.waiting_for_channel_choice, F.data == "channel_mode_vip")
-async def channel_mode_vip(callback: CallbackQuery, state: FSMContext):
+async def channel_mode_vip(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.update_data(mode="vip_only")
@@ -161,7 +160,7 @@ async def channel_mode_vip(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(AdminConfigStates.waiting_for_channel_choice, F.data == "channel_mode_free")
-async def channel_mode_free(callback: CallbackQuery, state: FSMContext):
+async def channel_mode_free(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.update_data(mode="free_only")
@@ -174,7 +173,7 @@ async def channel_mode_free(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(AdminConfigStates.waiting_for_channel_choice, F.data == "channel_mode_both")
-async def channel_mode_both(callback: CallbackQuery, state: FSMContext):
+async def channel_mode_both(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.update_data(mode="both")
@@ -187,7 +186,7 @@ async def channel_mode_both(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "set_channel_interval")
-async def prompt_channel_interval(callback: CallbackQuery, state: FSMContext):
+async def prompt_channel_interval(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
@@ -199,7 +198,7 @@ async def prompt_channel_interval(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "set_vip_interval")
-async def prompt_vip_interval(callback: CallbackQuery, state: FSMContext):
+async def prompt_vip_interval(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
@@ -313,3 +312,4 @@ async def set_vip_interval(message: Message, state: FSMContext, session: AsyncSe
     await ConfigService(session).set_value("vip_scheduler_interval", str(seconds))
     await message.answer("Intervalo actualizado.", reply_markup=get_admin_config_kb())
     await state.clear()
+    
