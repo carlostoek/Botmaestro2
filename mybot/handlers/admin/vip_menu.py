@@ -2,8 +2,13 @@ from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton
+from aiogram import Router, F, Bot
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from datetime import datetime
 
 from utils.user_roles import is_admin, is_vip_member
 from keyboards.admin_vip_kb import get_admin_vip_kb
@@ -45,6 +50,7 @@ from utils.menu_utils import (
 from services.message_service import MessageService
 from database.models import set_user_menu_state
 import logging
+
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -523,5 +529,78 @@ async def prompt_vip_reminder(callback: CallbackQuery, state: FSMContext, sessio
 
 
 @router.message(AdminVipMessageStates.waiting_for_reminder_message)
-async def set_vip_reminder(message: Message, state:
+async def set_vip_reminder(message: Message, state: FSMContext, session: AsyncSession):
+    if not await is_admin(message.from_user.id, session):
+        return
+    
+    new_message = message.text.strip()
+    await ConfigService(session).set_value("vip_reminder_message", new_message)
+    
+    await message.answer(
+        "✅ Mensaje de recordatorio actualizado",
+        reply_markup=get_vip_messages_kb()
+    )
+    await state.clear()
+
+
+@router.callback_query(F.data == "edit_vip_welcome")
+async def prompt_vip_welcome(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
+        return await callback.answer()
+    
+    config = ConfigService(session)
+    current = await config.get_value("vip_welcome_message") or "¡Bienvenido al canal VIP!"
+    
+    await callback.message.edit_text(
+        f"📝 **Mensaje de bienvenida actual:**\n{current}\n\nEnvía el nuevo mensaje:",
+        reply_markup=get_back_keyboard("vip_config_messages")
+    )
+    await state.set_state(AdminVipMessageStates.waiting_for_welcome_message)
+    await callback.answer()
+
+
+@router.message(AdminVipMessageStates.waiting_for_welcome_message)
+async def set_vip_welcome(message: Message, state: FSMContext, session: AsyncSession):
+    if not await is_admin(message.from_user.id, session):
+        return
+    
+    new_message = message.text.strip()
+    await ConfigService(session).set_value("vip_welcome_message", new_message)
+    
+    await message.answer(
+        "✅ Mensaje de bienvenida actualizado",
+        reply_markup=get_vip_messages_kb()
+    )
+    await state.clear()
+
+
+@router.callback_query(F.data == "edit_vip_expired")
+async def prompt_vip_expired(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
+        return await callback.answer()
+    
+    config = ConfigService(session)
+    current = await config.get_value("vip_expired_message") or "Tu suscripción VIP ha expirado."
+    
+    await callback.message.edit_text(
+        f"📝 **Mensaje de expiración actual:**\n{current}\n\nEnvía el nuevo mensaje:",
+        reply_markup=get_back_keyboard("vip_config_messages")
+    )
+    await state.set_state(AdminVipMessageStates.waiting_for_expired_message)
+    await callback.answer()
+
+
+@router.message(AdminVipMessageStates.waiting_for_expired_message)
+async def set_vip_expired(message: Message, state: FSMContext, session: AsyncSession):
+    if not await is_admin(message.from_user.id, session):
+        return
+    
+    new_message = message.text.strip()
+    await ConfigService(session).set_value("vip_expired_message", new_message)
+    
+    await message.answer(
+        "✅ Mensaje de expiración actualizado",
+        reply_markup=get_vip_messages_kb()
+    )
+    await state.clear()
     
