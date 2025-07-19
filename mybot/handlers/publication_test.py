@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @router.message(Command("test_publicacion"))
 async def cmd_test_publicacion(message: Message, bot: Bot) -> None:
     """Send a test message to the configured channel to check publication mode."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
 
     channel_id = Config.CHANNEL_ID
