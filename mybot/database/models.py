@@ -44,6 +44,15 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
+    from database.models.narrative_modules import UserNarrativeState
+        return relationship(
+            UserNarrativeState,
+            back_populates="user",
+            uselist=False,
+            lazy="selectin",
+            cascade="all, delete-orphan"
+        )
+
     # Role management and VIP expiration
     role = Column(String, default="free")
     vip_expires_at = Column(DateTime, nullable=True)
