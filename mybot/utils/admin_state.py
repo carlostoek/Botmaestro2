@@ -79,6 +79,8 @@ class AdminVipMessageStates(StatesGroup):
 
     waiting_for_reminder_message = State()
     waiting_for_farewell_message = State()
+    waiting_for_welcome_message = State()  # Este es el que falta
+    waiting_for_expired_message = State()  # Este también podría ser necesario
 
 
 class AdminMissionStates(StatesGroup):
