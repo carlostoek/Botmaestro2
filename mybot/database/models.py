@@ -21,7 +21,7 @@ import enum
 from .base import Base
 from sqlalchemy import Column, BigInteger, String, Float, Integer, JSON, DateTime
 from sqlalchemy.orm import relationship, declared_attr
-from database.base import Base
+
 
 
 class AuctionStatus(enum.Enum):
@@ -63,7 +63,7 @@ class User(Base):
     @declared_attr
     def narrative_state(cls):
         # Importación local para evitar dependencia circular
-        from database.models.user_narrative_state import UserNarrativeState
+        from models.user_narrative_state import UserNarrativeState
         return relationship(
             UserNarrativeState,
             back_populates="user",
