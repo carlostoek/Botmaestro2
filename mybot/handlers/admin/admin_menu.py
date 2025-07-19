@@ -80,7 +80,7 @@ async def admin_menu(message: Message, session: AsyncSession, user_id: int | Non
 @router.callback_query(F.data == "admin_stats")
 async def admin_stats(callback: CallbackQuery, session: AsyncSession):
     """Enhanced admin statistics with better formatting."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     try:
@@ -130,7 +130,7 @@ async def admin_stats(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "admin_back")
 async def admin_back(callback: CallbackQuery, session: AsyncSession):
     """Enhanced back navigation for admin."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     try:
@@ -149,7 +149,7 @@ async def admin_back(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "admin_main_menu")
 async def back_to_admin_main(callback: CallbackQuery, session: AsyncSession):
     """Return to main admin menu."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     try:
@@ -168,7 +168,7 @@ async def handle_gamification_content_menu(callback: CallbackQuery, session: Asy
     Shows the comprehensive content and gamification management menu.
     This handler is now the central point for managing all gamification features.
     """
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     try:
@@ -200,7 +200,7 @@ async def handle_kinky_game_button_from_main(callback: CallbackQuery, session: A
     Handles the 'Juego Kinky' button click from the main admin menu.
     Redirects to the main gamification management panel.
     """
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     # Simplemente llamamos al handler que ya muestra el menú completo de gamificación
@@ -211,7 +211,7 @@ async def handle_kinky_game_button_from_main(callback: CallbackQuery, session: A
 @router.callback_query(F.data == "admin_bot_config")
 async def admin_bot_config(callback: CallbackQuery, session: AsyncSession):
     """Enhanced bot configuration menu."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     try:
@@ -254,7 +254,7 @@ async def admin_bot_config(callback: CallbackQuery, session: AsyncSession):
 @router.message(Command("admin_generate_token"))
 async def admin_generate_token_cmd(message: Message, session: AsyncSession, bot: Bot):
     """Enhanced token generation command."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         await menu_manager.send_temporary_message(
             message,
             "❌ **Acceso Denegado**\n\nNo tienes permisos de administrador.",
@@ -296,7 +296,7 @@ async def admin_generate_token_cmd(message: Message, session: AsyncSession, bot:
 @router.callback_query(F.data.startswith("generate_token_"))
 async def generate_token_callback(callback: CallbackQuery, session: AsyncSession, bot: Bot):
     """Enhanced token generation with better feedback."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     try:
@@ -349,7 +349,7 @@ async def generate_token_callback(callback: CallbackQuery, session: AsyncSession
 @router.callback_query(F.data == "admin_free_channel")
 async def admin_free_channel_redirect(callback: CallbackQuery, session: AsyncSession):
     """Redirigir a la gestión del canal gratuito."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     # Importar y llamar al handler del canal gratuito
@@ -360,7 +360,7 @@ async def admin_free_channel_redirect(callback: CallbackQuery, session: AsyncSes
 @router.message(F.text.startswith("/give_hint "))
 async def cmd_give_hint(message: Message):
     """Comando de admin para dar una pista a un usuario."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         await message.answer(
             "❌ **Acceso Denegado**\n\nNo tienes permisos para usar este comando.",
             parse_mode="HTML",

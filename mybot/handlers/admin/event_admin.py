@@ -20,7 +20,7 @@ router = Router()
 
 @router.callback_query(F.data == "admin_manage_events_sorteos")
 async def admin_events_main(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await update_menu(
         callback,
@@ -34,7 +34,7 @@ async def admin_events_main(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "event_menu")
 async def event_menu(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await update_menu(
         callback,
@@ -48,7 +48,7 @@ async def event_menu(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "raffle_menu")
 async def raffle_menu(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await update_menu(
         callback,
@@ -64,7 +64,7 @@ async def raffle_menu(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "create_event")
 async def start_create_event(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
         "Nombre del evento:", reply_markup=get_back_kb("event_menu")
@@ -75,7 +75,7 @@ async def start_create_event(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminEventStates.creating_event_name)
 async def process_event_name(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     await state.update_data(name=message.text)
     await message.answer("Descripción del evento:")
@@ -84,7 +84,7 @@ async def process_event_name(message: Message, state: FSMContext):
 
 @router.message(AdminEventStates.creating_event_description)
 async def process_event_description(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     await state.update_data(description=message.text)
     await message.answer("Multiplicador de puntos (ej. 2 para doble):")
@@ -93,7 +93,7 @@ async def process_event_description(message: Message, state: FSMContext):
 
 @router.message(AdminEventStates.creating_event_multiplier)
 async def finish_event_create(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     try:
         multiplier = int(message.text)
@@ -113,7 +113,7 @@ async def finish_event_create(message: Message, state: FSMContext, session: Asyn
 
 @router.callback_query(F.data == "list_events")
 async def list_events(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     service = EventService(session)
     events = await service.list_active_events()
@@ -130,7 +130,7 @@ async def list_events(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "end_event")
 async def choose_event_end(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     service = EventService(session)
     events = await service.list_active_events()
@@ -152,7 +152,7 @@ async def choose_event_end(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data.startswith("end_event_"))
 async def finish_event(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     event_id = int(callback.data.split("_")[-1])
     service = EventService(session)
@@ -167,7 +167,7 @@ async def finish_event(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "create_raffle")
 async def start_create_raffle(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
         "Nombre del sorteo:", reply_markup=get_back_kb("raffle_menu")
@@ -178,7 +178,7 @@ async def start_create_raffle(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminRaffleStates.creating_raffle_name)
 async def raffle_name(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     await state.update_data(name=message.text)
     await message.answer("Descripción del sorteo:")
@@ -187,7 +187,7 @@ async def raffle_name(message: Message, state: FSMContext):
 
 @router.message(AdminRaffleStates.creating_raffle_description)
 async def raffle_desc(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     await state.update_data(description=message.text)
     await message.answer("Premio del sorteo:")
@@ -196,7 +196,7 @@ async def raffle_desc(message: Message, state: FSMContext):
 
 @router.message(AdminRaffleStates.creating_raffle_prize)
 async def raffle_finish(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     data = await state.get_data()
     service = RaffleService(session)
@@ -211,7 +211,7 @@ async def raffle_finish(message: Message, state: FSMContext, session: AsyncSessi
 
 @router.callback_query(F.data == "list_raffles")
 async def list_raffles(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     service = RaffleService(session)
     raffles = await service.list_active_raffles()
@@ -228,7 +228,7 @@ async def list_raffles(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "end_raffle")
 async def choose_raffle_end(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     service = RaffleService(session)
     raffles = await service.list_active_raffles()
@@ -250,7 +250,7 @@ async def choose_raffle_end(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data.startswith("end_raffle_"))
 async def finish_raffle(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     raffle_id = int(callback.data.split("_")[-1])
     service = RaffleService(session)

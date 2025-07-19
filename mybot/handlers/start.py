@@ -67,7 +67,7 @@ async def cmd_start(message: Message, session: AsyncSession):
                 logger.info(f"Updated user info: {user_id}")
         
         # Check if this is an admin
-        if is_admin(user_id):
+        if await is_admin(user_id, session):
             logger.info(f"Admin user {user_id} accessing start command")
             tenant_service = TenantService(session)
             

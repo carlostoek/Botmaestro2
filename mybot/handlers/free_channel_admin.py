@@ -34,7 +34,7 @@ class FreeChannelStates(StatesGroup):
 @router.callback_query(F.data == "admin_free_channel")
 async def free_channel_admin_menu(callback: CallbackQuery, session: AsyncSession):
     """Menú principal de administración del canal gratuito."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     free_service = FreeChannelService(session, callback.bot)
@@ -68,7 +68,7 @@ async def free_channel_admin_menu(callback: CallbackQuery, session: AsyncSession
 @router.callback_query(F.data == "configure_free_channel")
 async def configure_free_channel(callback: CallbackQuery, state: FSMContext):
     """Iniciar configuración del canal gratuito."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     await callback.message.edit_text(
@@ -87,7 +87,7 @@ async def configure_free_channel(callback: CallbackQuery, state: FSMContext):
 @router.message(FreeChannelStates.waiting_for_channel_id)
 async def process_free_channel_id(message: Message, state: FSMContext, session: AsyncSession):
     """Procesar ID del canal gratuito."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     channel_id = None
@@ -136,7 +136,7 @@ async def process_free_channel_id(message: Message, state: FSMContext, session: 
 @router.callback_query(F.data == "set_wait_time")
 async def set_wait_time_menu(callback: CallbackQuery, session: AsyncSession):
     """Menú para configurar tiempo de espera."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     free_service = FreeChannelService(session, callback.bot)
@@ -155,7 +155,7 @@ async def set_wait_time_menu(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data.startswith("wait_time_"))
 async def set_wait_time_value(callback: CallbackQuery, session: AsyncSession):
     """Establecer tiempo de espera específico."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     minutes = int(callback.data.split("_")[-1])
@@ -185,7 +185,7 @@ async def set_wait_time_value(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "create_invite_link")
 async def create_invite_link(callback: CallbackQuery, session: AsyncSession):
     """Crear enlace de invitación para el canal gratuito."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     free_service = FreeChannelService(session, callback.bot)
@@ -214,7 +214,7 @@ async def create_invite_link(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "send_to_free_channel")
 async def send_to_free_channel_menu(callback: CallbackQuery, state: FSMContext):
     """Menú para enviar contenido al canal gratuito."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     await callback.message.edit_text(
@@ -231,7 +231,7 @@ async def send_to_free_channel_menu(callback: CallbackQuery, state: FSMContext):
 @router.message(FreeChannelStates.waiting_for_post_text)
 async def process_post_text(message: Message, state: FSMContext):
     """Procesar texto del post."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     await state.update_data(post_text=message.text)
@@ -248,7 +248,7 @@ async def process_post_text(message: Message, state: FSMContext):
 @router.callback_query(FreeChannelStates.waiting_for_media_files, F.data == "add_media")
 async def add_media_prompt(callback: CallbackQuery):
     """Solicitar archivos multimedia."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     await callback.message.edit_text(
@@ -264,7 +264,7 @@ async def add_media_prompt(callback: CallbackQuery):
 @router.message(FreeChannelStates.waiting_for_media_files)
 async def process_media_files(message: Message, state: FSMContext):
     """Procesar archivos multimedia."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     data = await state.get_data()
@@ -308,7 +308,7 @@ async def process_media_files(message: Message, state: FSMContext):
 @router.callback_query(FreeChannelStates.waiting_for_media_files, F.data == "continue_without_media")
 async def continue_without_media(callback: CallbackQuery, state: FSMContext):
     """Continuar sin multimedia."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     data = await state.get_data()
@@ -329,7 +329,7 @@ async def continue_without_media(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(FreeChannelStates.confirming_post, F.data.startswith("protect_"))
 async def confirm_and_send_post(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     """Confirmar y enviar el post al canal."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     protect_content = callback.data == "protect_yes"
@@ -391,7 +391,7 @@ async def confirm_and_send_post(callback: CallbackQuery, state: FSMContext, sess
 @router.callback_query(F.data == "process_pending_now")
 async def process_pending_now(callback: CallbackQuery, session: AsyncSession):
     """Procesar solicitudes pendientes manualmente."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     free_service = FreeChannelService(session, callback.bot)
@@ -409,7 +409,7 @@ async def process_pending_now(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "cleanup_old_requests")
 async def cleanup_old_requests(callback: CallbackQuery, session: AsyncSession):
     """Limpiar solicitudes antiguas."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     free_service = FreeChannelService(session, callback.bot)

@@ -11,7 +11,7 @@ router = Router()
 @router.callback_query(F.data == "admin_free")
 async def free_menu(callback: CallbackQuery, session: AsyncSession):
     """Placeholder Free channel admin menu."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await update_menu(
         callback,

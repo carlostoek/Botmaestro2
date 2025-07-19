@@ -25,7 +25,7 @@ router = Router()
 @router.callback_query(F.data == "config_tarifas")
 async def config_tarifas(callback: CallbackQuery, session: AsyncSession):
     """Show existing tariffs and menu options."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     result = await session.execute(select(Tariff).order_by(Tariff.duration_days))
@@ -44,7 +44,7 @@ async def config_tarifas(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data.startswith("tariff_"))
 async def tariff_options(callback: CallbackQuery, session: AsyncSession):
     """Display options for a specific tariff."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
 
     if callback.data.startswith("edit_tariff_") or callback.data.startswith("delete_tariff_"):
@@ -72,7 +72,7 @@ async def tariff_options(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data.startswith("edit_tariff_"))
 async def start_edit_tariff(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     """Begin editing a tariff."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
 
     tariff_id = int(callback.data.split("edit_tariff_")[-1])
@@ -94,7 +94,7 @@ async def start_edit_tariff(callback: CallbackQuery, state: FSMContext, session:
 
 @router.callback_query(AdminTariffStates.editing_tariff_duration)
 async def edit_tariff_duration(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
 
     duration = int(callback.data.split("_")[-1])
@@ -109,7 +109,7 @@ async def edit_tariff_duration(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminTariffStates.editing_tariff_price)
 async def edit_tariff_price(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
 
     try:
@@ -128,7 +128,7 @@ async def edit_tariff_price(message: Message, state: FSMContext):
 
 @router.message(AdminTariffStates.editing_tariff_name)
 async def finish_edit_tariff(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
 
     name = sanitize_text(message.text.strip())
@@ -170,7 +170,7 @@ async def finish_edit_tariff(message: Message, state: FSMContext, session: Async
 
 @router.callback_query(F.data == "tarifa_new")
 async def start_new_tarifa(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     await state.set_state(AdminTariffStates.waiting_for_tariff_duration)
@@ -184,7 +184,7 @@ async def start_new_tarifa(callback: CallbackQuery, state: FSMContext):
 
 @router.message(Command("admin_configure_tariffs"))
 async def admin_configure_tariffs(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     await state.set_state(AdminTariffStates.waiting_for_tariff_duration)
     await message.answer("⏱️ Selecciona la duración:", reply_markup=get_duration_kb())
@@ -192,7 +192,7 @@ async def admin_configure_tariffs(message: Message, state: FSMContext):
 
 @router.callback_query(AdminTariffStates.waiting_for_tariff_duration)
 async def tariff_duration_selected(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     duration = int(callback.data.split("_")[-1])
@@ -208,7 +208,7 @@ async def tariff_duration_selected(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminTariffStates.waiting_for_tariff_price)
 async def tariff_price(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     try:
@@ -233,7 +233,7 @@ async def tariff_price(message: Message, state: FSMContext):
 
 @router.message(AdminTariffStates.waiting_for_tariff_name)
 async def tariff_name(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     name = sanitize_text(message.text.strip())
@@ -276,7 +276,7 @@ async def tariff_name(message: Message, state: FSMContext, session: AsyncSession
 @router.callback_query(F.data.startswith("delete_tariff_"))
 async def delete_tariff(callback: CallbackQuery, session: AsyncSession):
     """Delete a tariff (admin only)."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     tariff_id = int(callback.data.split("_")[-1])

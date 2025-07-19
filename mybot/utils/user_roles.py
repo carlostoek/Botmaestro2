@@ -17,25 +17,23 @@ DEFAULT_VIP_MULTIPLIER = int(os.environ.get("VIP_POINTS_MULTIPLIER", "2"))
 _ROLE_CACHE: Dict[int, Tuple[str, float]] = {}
 
 
-async def is_admin_db(user_id: int, session: AsyncSession) -> bool:
-    """
-    @deprecated: Use is_admin_db instead.
-    Verifica si el usuario es admin usando la sesión proporcionada.
-    """
-    from database.models import User  # Import local para evitar circular imports
+async def is_admin(user_id: int, session: AsyncSession | None = None) -> bool:
+    """Check if the user is an admin with session support."""
+    # Primero verificar en la lista estática de admins
+    if user_id in ADMIN_IDS:
+        return True
     
-    result = await session.execute(
-        select(User.is_admin).where(User.id == user_id)
-    )
-    is_admin_status = result.scalar_one_or_none()
-    return is_admin_status or False
-
-def is_admin(user_id: int) -> bool:
-    """
-    @deprecated: This function is deprecated and will be removed in a future version.
-    Synchronous check for admin status based on a hardcoded list.
-    """
-    return user_id in ADMIN_IDS
+    # Si tenemos sesión, verificar en la base de datos
+    if session:
+        try:
+            result = await session.execute(
+                select(User.is_admin).where(User.id == user_id)
+            )
+            return result.scalar_one_or_none() or False
+        except Exception as e:
+            logger.error(f"Error checking admin status in DB: {e}")
+    
+    return False
 
 
 
@@ -116,12 +114,12 @@ async def get_user_role(
     cached = _ROLE_CACHE.get(user_id)
     
     # Use cache only for non-admin users and only for 2 minutes
-    if cached and now < cached[1] and not is_admin(user_id):
+    if cached and now < cached[1] and not await is_admin(user_id, session):
         logger.debug(f"Using cached role for user {user_id}: {cached[0]}")
         return cached[0]
 
     # Check admin first (highest priority)
-    if is_admin(user_id):
+    if await is_admin(user_id, session):
         role = "admin"
         _ROLE_CACHE[user_id] = (role, now + 120)  # cache for 2 minutes
         logger.debug(f"User {user_id} is admin")

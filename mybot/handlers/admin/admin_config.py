@@ -21,7 +21,7 @@ router = Router()
 
 @router.callback_query(F.data == "vip_config_reactions")
 async def vip_config_reactions(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.update_data(target_channel_id=VIP_CHANNEL_ID)
     await callback.message.edit_text(
@@ -34,7 +34,7 @@ async def vip_config_reactions(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "free_config_reactions")
 async def free_config_reactions(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.update_data(target_channel_id=FREE_CHANNEL_ID)
     await callback.message.edit_text(
@@ -47,7 +47,7 @@ async def free_config_reactions(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminConfigStates.waiting_for_reactions_input)
 async def process_reactions_input(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         await menu_manager.send_temporary_message(message, "❌ Acceso Denegado.", auto_delete_seconds=3)
         await state.clear()
         return
@@ -92,7 +92,7 @@ async def process_reactions_input(message: Message, state: FSMContext):
 
 @router.message(AdminConfigStates.waiting_for_points_input)
 async def process_points_input(message: Message, state: FSMContext):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         await menu_manager.send_temporary_message(message, "❌ Acceso Denegado.", auto_delete_seconds=3)
         await state.clear()
         return
@@ -147,7 +147,7 @@ async def process_points_input(message: Message, state: FSMContext):
     F.data == "cancel_config",
 )
 async def cancel_config_callback(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
 
     data = await state.get_data()
@@ -179,7 +179,7 @@ async def cancel_config_callback(callback: CallbackQuery, state: FSMContext):
     F.data == "save_reactions",
 )
 async def save_reaction_buttons_callback(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
 
     data = await state.get_data()
