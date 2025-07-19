@@ -119,8 +119,8 @@ async def vip_create_token(callback: CallbackQuery, session: AsyncSession, bot: 
     
     builder = InlineKeyboardBuilder()
     builder.button(text="❌ Invalidar Token", callback_data=f"vip_invalidate_{token.token_string}")
-    builder.button(text="🔄 Generar Otro", callback_data="vip_generate_token")
-    builder.button(text="🔙 Volver", callback_data="admin_vip")
+    builder.button(text="🔄 Generar Otro",
+        builder.button(text="🔙 Volver", callback_data="admin_vip")
     builder.adjust(1)
     
     message_text = (
@@ -382,7 +382,7 @@ async def manage_subs(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data.startswith("vip_add_"))
-async def vip_add_days(callback: CallbackQuery, state: FSMContext):
+async def vip_add_days(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     user_id = int(callback.data.split("_")[-1])
@@ -425,7 +425,7 @@ async def vip_profile(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data.startswith("vip_edit_"))
-async def vip_edit(callback: CallbackQuery, state: FSMContext):
+async def vip_edit(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     user_id = int(callback.data.split("_")[-1])
@@ -522,45 +522,6 @@ async def prompt_vip_reminder(callback: CallbackQuery, state: FSMContext, sessio
     await callback.answer()
 
 
-@router.callback_query(F.data == "edit_vip_farewell")
-async def prompt_vip_farewell(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    if not await is_admin(callback.from_user.id, session):
-        return await callback.answer()
-    config = ConfigService(session)
-    current = await config.get_value("vip_farewell_message") or "Tu suscripción VIP ha expirado."
-    await callback.message.edit_text(
-        f"👋 **Mensaje de despedida actual:**\n{current}\n\nEnvía el nuevo mensaje:",
-        reply_markup=get_back_keyboard("vip_config_messages"),
-    )
-    await state.set_state(AdminVipMessageStates.waiting_for_farewell_message)
-    await callback.answer()
-
-
-@router.message(AdminVipMessageStates.waiting_for_reminder_message, F.text)
-async def set_vip_reminder(message: Message, state: FSMContext, session: AsyncSession):
-    if not await is_admin(message.from_user.id, session):
-        return
-    config = ConfigService(session)
-    await config.set_value("vip_reminder_message", message.text)
-    await message.answer("✅ Mensaje de recordatorio actualizado.", reply_markup=get_vip_messages_kb())
-    await state.clear()
-
-
-@router.message(AdminVipMessageStates.waiting_for_farewell_message, F.text)
-async def set_vip_farewell(message: Message, state: FSMContext, session: AsyncSession):
-    if not await is_admin(message.from_user.id, session):
-        return
-    config = ConfigService(session)
-    await config.set_value("vip_farewell_message", message.text)
-    await message.answer("✅ Mensaje de despedida actualizado.", reply_markup=get_vip_messages_kb())
-    await state.clear()
-
-
-@router.callback_query(F.data == "vip_game")
-async def vip_game(callback: CallbackQuery, session: AsyncSession):
-    if not await is_vip_member(callback.bot, callback.from_user.id, session=session):
-        return await callback.answer()
-    await callback.message.edit_text(
-        "🎮 Accede al Juego del Diván", reply_markup=get_main_menu_keyboard()
-    )
-    await callback.answer()
+@router.message(AdminVipMessageStates.waiting_for_reminder_message)
+async def set_vip_reminder(message: Message, state:
+    
