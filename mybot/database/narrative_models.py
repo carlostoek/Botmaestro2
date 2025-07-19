@@ -37,13 +37,13 @@ class StoryFragment(Base):
         index=True
     )
 
-    # Relationships
-    choices = relationship(
-        "NarrativeChoice", 
-        back_populates="source_fragment", 
-        foreign_keys='NarrativeChoice.source_fragment_id',
-        cascade="all, delete-orphan"
+    achievement_link = relationship(
+        "Achievement",
+        foreign_keys=[unlocks_achievement_id],
+        back_populates="story_fragments",
+        lazy="joined"  # Añadido para evitar problemas de carga
     )
+    
     
     next_fragment = relationship(
         "StoryFragment",
