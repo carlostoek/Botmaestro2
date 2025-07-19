@@ -15,10 +15,10 @@ class StoryFragment(Base):
     text = Column(Text, nullable=False)
     character = Column(String, default='Lucien')
     
-    # Auto-next relationship
-    auto_next_fragment_key = Column(
-        String, 
-        ForeignKey('story_fragments.key', ondelete='SET NULL'), 
+    # Cambiado a referencia por ID en vez de KEY
+    auto_next_fragment_id = Column(
+        Integer, 
+        ForeignKey('story_fragments.id', ondelete='SET NULL'), 
         nullable=True,
         index=True
     )
@@ -47,13 +47,12 @@ class StoryFragment(Base):
     
     next_fragment = relationship(
         "StoryFragment",
-        remote_side=[key],
-        foreign_keys=[auto_next_fragment_key],
+        remote_side=[id],
+        foreign_keys=[auto_next_fragment_id],
         post_update=True,
         lazy="joined"
     )
 
-    # Achievement relationship (if needed)
     @declared_attr
     def achievement(cls):
         return relationship("Achievement", foreign_keys=[cls.unlocks_achievement_id])
@@ -67,7 +66,7 @@ class NarrativeChoice(Base):
 
     id = Column(Integer, primary_key=True)
     source_fragment_id = Column(Integer, ForeignKey('story_fragments.id'), nullable=False)
-    destination_fragment_key = Column(String, ForeignKey('story_fragments.key'), nullable=False)
+    destination_fragment_id = Column(Integer, ForeignKey('story_fragments.id'), nullable=False)
     text = Column(String, nullable=False)
 
     source_fragment = relationship(
@@ -78,7 +77,7 @@ class NarrativeChoice(Base):
     
     destination_fragment = relationship(
         "StoryFragment",
-        foreign_keys=[destination_fragment_key]
+        foreign_keys=[destination_fragment_id]
     )
 
 
@@ -89,7 +88,7 @@ class UserNarrativeState(Base):
     __tablename__ = 'user_narrative_states'
 
     user_id = Column(BigInteger, ForeignKey('users.id'), primary_key=True)
-    current_fragment_key = Column(String, ForeignKey('story_fragments.key'), nullable=False)
+    current_fragment_id = Column(Integer, ForeignKey('story_fragments.id'), nullable=False)
     choices_made = Column(JSON, default=[])
 
     user = relationship(
@@ -101,7 +100,7 @@ class UserNarrativeState(Base):
     
     current_fragment = relationship(
         "StoryFragment",
-        foreign_keys=[current_fragment_key],
+        foreign_keys=[current_fragment_id],
         lazy="joined"
     )
     
