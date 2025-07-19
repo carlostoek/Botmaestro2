@@ -43,25 +43,16 @@ router.include_router(game_admin_router)
 router.include_router(event_admin_router)
 router.include_router(admin_config_router)
 
-@router.message(CommandStart())
+@router.message(Command("admin"))
 async def admin_start(message: Message, session: AsyncSession):
-    """Enhanced admin start with setup detection."""
-    if not is_admin(message.from_user.id):
-        return
+    """Handler de inicio de administración"""
+    if not await is_admin(message.from_user.id, session):
+        return await message.answer("Acceso denegado")
     
-    # Check if this admin needs setup
-    tenant_service = TenantService(session)
-    tenant_status = await tenant_service.get_tenant_status(message.from_user.id)
-    
-    if not tenant_status["basic_setup_complete"]:
-        # Redirect to setup
-        from handlers.setup import start_setup
-        await start_setup(message, session)
-        return
-    
-    # Show admin panel
-    text, keyboard = await menu_factory.create_menu("admin_main", message.from_user.id, session, message.bot)
-    await menu_manager.show_menu(message, text, keyboard, session, "admin_main")
+    await message.answer(
+        "Panel de Administración",
+        reply_markup=get_admin_kb()
+    )
 
 @router.message(Command("admin_menu"))
 async def admin_menu(message: Message, session: AsyncSession, user_id: int | None = None):

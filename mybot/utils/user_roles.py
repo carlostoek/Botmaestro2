@@ -18,10 +18,14 @@ _ROLE_CACHE: Dict[int, Tuple[str, float]] = {}
 
 
 async def is_admin(user_id: int, session: AsyncSession) -> bool:
-    """Check if the user is an admin."""
-    # The session parameter is included for consistency with other handlers
-    # but is not used in the current implementation of is_admin.
-    return user_id in ADMIN_IDS
+    """Verifica si el usuario es admin usando la sesión proporcionada"""
+    from database.models import User  # Import local para evitar circular imports
+    
+    result = await session.execute(
+        select(User.is_admin).where(User.id == user_id)
+    )
+    is_admin_status = result.scalar_one_or_none()
+    return is_admin_status or False
 
 
 async def is_vip_member(bot: Bot, user_id: int, session: AsyncSession | None = None) -> bool:

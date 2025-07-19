@@ -50,6 +50,7 @@ class User(Base):
     vip_expires_at = Column(DateTime, nullable=True)
     last_reminder_sent_at = Column(DateTime, nullable=True)
     menu_state = Column(String, default="root")
+    is_admin = Column(Boolean, default=False) # New column for admin status
 
     @declared_attr
     def narrative_state(cls):
