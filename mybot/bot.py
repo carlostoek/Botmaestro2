@@ -2,11 +2,12 @@ import asyncio
 import logging
 import sys
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, BaseMiddleware
 from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ErrorEvent
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 # --- CONFIGURACIÓN DE LOGGING MEJORADA ---
 def setup_logging():
@@ -25,6 +26,20 @@ def setup_logging():
     logging.getLogger('aiohttp').setLevel(logging.WARNING)
 
 
+
+# --- MIDDLEWARE DE SESIÓN ---
+class DBSessionMiddleware(BaseMiddleware):
+    """Middleware para inyectar la sesión de base de datos en los handlers"""
+    def __init__(self, session_pool: async_sessionmaker[AsyncSession]):
+        self.session_pool = session_pool
+
+    async def __call__(self, handler, event, data):
+        async with self.session_pool() as session:
+            data["session"] = session
+            try:
+                return await handler(event, data)
+            finally:
+                await session.close()
 
 # Imports
 from database.setup import init_db, get_session_factory
@@ -145,11 +160,15 @@ async def main() -> None:
         # Registrar manejo de errores PRIMERO
         dp.error.register(global_error_handler)
 
+        # --- MIDDLEWARE DE SESIÓN ---
+        session_middleware = DBSessionMiddleware(session_factory)
+        dp.update.outer_middleware(session_middleware)  # Registrar PRIMERO
+
         # Configurar middlewares en orden correcto
         user_reg_middleware = UserRegistrationMiddleware()
         points_middleware = PointsMiddleware()
 
-        # Middlewares outer (se ejecutan primero)
+        # Middlewares outer (se ejecutan después de session_middleware)
         dp.update.outer_middleware(user_reg_middleware)
 
         # Middleware de puntos (inner)

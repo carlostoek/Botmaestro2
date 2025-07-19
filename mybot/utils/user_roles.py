@@ -17,8 +17,10 @@ DEFAULT_VIP_MULTIPLIER = int(os.environ.get("VIP_POINTS_MULTIPLIER", "2"))
 _ROLE_CACHE: Dict[int, Tuple[str, float]] = {}
 
 
-def is_admin(user_id: int) -> bool:
+async def is_admin(user_id: int, session: AsyncSession) -> bool:
     """Check if the user is an admin."""
+    # The session parameter is included for consistency with other handlers
+    # but is not used in the current implementation of is_admin.
     return user_id in ADMIN_IDS
 
 
