@@ -241,6 +241,12 @@ def get_admin_content_missions_keyboard():
         ]
     )
     return keyboard
+    
+def get_back_keyboard(callback_data: str) -> InlineKeyboardMarkup:
+    """Return a simple keyboard with a single back button."""
+    keyboard = [[InlineKeyboardButton(text="🔙 Volver", callback_data=callback_data)]]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
 
 
 def get_admin_content_badges_keyboard():
