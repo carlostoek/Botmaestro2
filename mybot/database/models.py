@@ -63,7 +63,7 @@ class User(Base):
     @declared_attr
     def narrative_state(cls):
         # Importación local para evitar dependencia circular
-        from models.user_narrative_state import UserNarrativeState
+        from .narrative_modules import UserNarrativeState
         return relationship(
             UserNarrativeState,
             back_populates="user",
