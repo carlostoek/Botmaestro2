@@ -12,6 +12,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 from .base import Base
 
+from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy.orm import relationship
+from database.base import Base
+
 class StoryFragment(Base):
     """
     Represents a modular block of the story.
@@ -30,21 +34,50 @@ class StoryFragment(Base):
     # Branching logic
     # If this is not null, the story progresses automatically to the next fragment
     # without waiting for user input. Useful for sequential storytelling.
-    auto_next_fragment_key = Column(String, ForeignKey('story_fragments.key'), nullable=True)
+    auto_next_fragment_key = Column(
+        String, 
+        ForeignKey('story_fragments.key', ondelete='SET NULL'), 
+        nullable=True,
+        index=True
+    )
 
     # Conditions for accessing this fragment
     level = Column(Integer, default=1, comment="Narrative level, e.g., 1-3 for free, 4-6 for VIP")
     min_besitos = Column(Integer, default=0, comment="Minimum 'besitos' (points) required to view")
-    required_role = Column(String, nullable=True, comment="e.g., 'vip' to restrict access")
+    required_role = Column(
+        String, 
+        nullable=True, 
+        comment="e.g., 'vip' to restrict access",
+        index=True
+    )
     
     # Rewards for reaching this fragment
     reward_besitos = Column(Integer, default=0, comment="Besitos awarded upon reaching this fragment")
     # Link to an achievement to be unlocked
-    unlocks_achievement_id = Column(String, ForeignKey('achievements.id'), nullable=True)
+    unlocks_achievement_id = Column(
+        String, 
+        ForeignKey('achievements.id', ondelete='SET NULL'), 
+        nullable=True,
+        index=True
+    )
 
     # Relationships
-    choices = relationship("NarrativeChoice", back_populates="source_fragment", foreign_keys='NarrativeChoice.source_fragment_id')
-
+    choices = relationship(
+        "NarrativeChoice", 
+        back_populates="source_fragment", 
+        foreign_keys='NarrativeChoice.source_fragment_id',
+        cascade="all, delete-orphan"
+    )
+    
+    # Self-referential relationship for auto-next
+    next_fragment = relationship(
+        "StoryFragment",
+        remote_side=[key],  # Referencia a sí mismo
+        foreign_keys=[auto_next_fragment_key],
+        post_update=True,
+        lazy="joined"
+    )
+    
 
 class NarrativeChoice(Base):
     """
