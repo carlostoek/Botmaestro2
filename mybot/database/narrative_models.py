@@ -4,10 +4,6 @@ from sqlalchemy.sql import func
 from .base import Base
 
 class StoryFragment(Base):
-    """
-    Represents a modular block of the story.
-    Each fragment is a step in the narrative journey.
-    """
     __tablename__ = 'story_fragments'
 
     id = Column(Integer, primary_key=True)
@@ -15,7 +11,6 @@ class StoryFragment(Base):
     text = Column(Text, nullable=False)
     character = Column(String, default='Lucien')
     
-    # Cambiado a referencia por ID en vez de KEY
     auto_next_fragment_id = Column(
         Integer, 
         ForeignKey('story_fragments.id', ondelete='SET NULL'), 
@@ -37,13 +32,13 @@ class StoryFragment(Base):
         index=True
     )
 
-    achievement_link = relationship(
-        "Achievement",
-        foreign_keys=[unlocks_achievement_id],
-        back_populates="story_fragments",
-        lazy="joined"  # Añadido para evitar problemas de carga
+    # Relationships
+    choices = relationship(
+        "NarrativeChoice", 
+        back_populates="source_fragment", 
+        foreign_keys="NarrativeChoice.source_fragment_id",  # Corregido: usar string
+        cascade="all, delete-orphan"
     )
-    
     
     next_fragment = relationship(
         "StoryFragment",
@@ -53,11 +48,15 @@ class StoryFragment(Base):
         lazy="joined"
     )
 
-    
+    achievement_link = relationship(
+        "Achievement",
+        foreign_keys=[unlocks_achievement_id],
+        back_populates="story_fragments",
+        lazy="joined"
+    )
+
+
 class NarrativeChoice(Base):
-    """
-    Represents a decision a user can make, linking one StoryFragment to another.
-    """
     __tablename__ = 'narrative_choices'
 
     id = Column(Integer, primary_key=True)
@@ -78,9 +77,6 @@ class NarrativeChoice(Base):
 
 
 class UserNarrativeState(Base):
-    """
-    Tracks the narrative progress for each individual user.
-    """
     __tablename__ = 'user_narrative_states'
 
     user_id = Column(BigInteger, ForeignKey('users.id'), primary_key=True)
