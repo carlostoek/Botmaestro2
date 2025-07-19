@@ -206,7 +206,7 @@ async def vip_stats(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data == "vip_manual_badge")
-async def vip_manual_badge(callback: CallbackQuery, state: FSMContext):
+async def vip_manual_badge(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
@@ -278,7 +278,7 @@ async def assign_manual_badge(callback: CallbackQuery, state: FSMContext, sessio
 
 
 @router.callback_query(F.data == "admin_send_channel_post")
-async def vip_send_channel_post(callback: CallbackQuery, state: FSMContext):
+async def vip_send_channel_post(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await send_clean_message(
