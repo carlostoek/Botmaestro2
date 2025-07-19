@@ -20,7 +20,7 @@ TABLES_ORDER = [
 ]
 
 async def init_db():
-    global _engine, _sessionmaker
+    global _engine
     try:
         logger.info("Creando motor de base de datos...")
         if _engine is None:
