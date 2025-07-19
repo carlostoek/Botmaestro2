@@ -25,7 +25,7 @@ from services import (
     get_admin_statistics,
     BadgeService,
     AchievementService,
-    MissionService,
+    MissionService,,
 )
 from database.models import User, Tariff
 from utils.message_utils import get_profile_message
