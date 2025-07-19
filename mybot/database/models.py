@@ -56,8 +56,11 @@ class User(Base):
         String, default="root"
     )  # e.g., "root", "profile", "missions", "rewards"
 
-    # Relationship to narrative state
-from database.models.narrative_models import UserNarrativeState
+    # SOLUCIÓN: Usar declared_attr para resolver dependencia circular
+    @declared_attr
+    def narrative_state(cls):
+        # Importación local para evitar dependencia circular
+        from database.models.user_narrative_state import UserNarrativeState
         return relationship(
             UserNarrativeState,
             back_populates="user",
