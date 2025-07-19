@@ -62,15 +62,6 @@ class User(Base):
             cascade="all, delete-orphan"
         )
 
-    # Añadir esta relación para achievements si es necesaria
-    @declared_attr
-    def unlocked_achievements(cls):
-        return relationship(
-            "UserAchievement",
-            backref="user",
-            cascade="all, delete-orphan"
-        )
-
 
 class Reward(Base):
     """Rewards unlocked by reaching a number of points."""
@@ -106,7 +97,6 @@ class Achievement(Base):
     reward_text = Column(String, nullable=False)
     created_at = Column(DateTime, default=func.now())
 
-    # Relación con StoryFragment si es necesaria
     @declared_attr
     def story_fragments(cls):
         return relationship(
