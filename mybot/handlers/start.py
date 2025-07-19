@@ -11,7 +11,7 @@ from database.models import User
 from utils.text_utils import sanitize_text
 from utils.menu_manager import menu_manager
 from utils.menu_factory import menu_factory 
-from utils.user_roles import clear_role_cache, is_admin_db
+from utils.user_roles import clear_role_cache, is_admin
 from services.tenant_service import TenantService
 import logging
 
@@ -67,7 +67,7 @@ async def cmd_start(message: Message, session: AsyncSession):
                 logger.info(f"Updated user info: {user_id}")
         
         # Check if this is an admin
-        if await is_admin_db(user_id, session):
+        if is_admin(user_id):
             logger.info(f"Admin user {user_id} accessing start command")
             tenant_service = TenantService(session)
             
