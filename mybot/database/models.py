@@ -101,7 +101,7 @@ class Achievement(Base):
         "StoryFragment",
         foreign_keys="StoryFragment.unlocks_achievement_id",
         back_populates="achievement_link",
-        overlaps="linked_achievement"  # Para silenciar el warning
+        lazy="selectin"  # Añadido para evitar problemas de carga
     )
 
 
