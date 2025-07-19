@@ -19,6 +19,9 @@ from sqlalchemy.sql import func
 from sqlalchemy.future import select
 import enum
 from .base import Base
+from sqlalchemy import Column, BigInteger, String, Float, Integer, JSON, DateTime
+from sqlalchemy.orm import relationship, declared_attr
+from database.base import Base
 
 
 class AuctionStatus(enum.Enum):
