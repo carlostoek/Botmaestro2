@@ -33,7 +33,7 @@ class AuctionStatus(enum.Enum):
 
 
 class User(Base):
-    __tablename__ = "users
+    __tablename__ = "users"
     id = Column(BigInteger, primary_key=True, unique=True)  # Telegram User ID
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
