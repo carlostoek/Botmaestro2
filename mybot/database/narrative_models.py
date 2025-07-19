@@ -54,9 +54,8 @@ class StoryFragment(Base):
     )
 
     @declared_attr
-    def achievement(cls):
+    def linked_achievement(cls):  # Cambiado de 'achievement' a 'linked_achievement'
         return relationship("Achievement", foreign_keys=[cls.unlocks_achievement_id])
-
 
 class NarrativeChoice(Base):
     """
