@@ -44,7 +44,7 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    from database.models.narrative_modules import UserNarrativeState
+    from database.models.narrative_models import UserNarrativeState
         return relationship(
             UserNarrativeState,
             back_populates="user",
