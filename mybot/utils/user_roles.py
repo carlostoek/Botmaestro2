@@ -44,3 +44,8 @@ async def get_user_role(user_id: int, session: AsyncSession) -> str:
         return "admin"
     # Aquí puedes agregar lógica para VIP
     return "normal"
+
+def get_points_multiplier(user_id: int) -> float:
+    """Función temporal hasta implementar lógica real"""
+    return 1.0  # Valor por defecto
+    
