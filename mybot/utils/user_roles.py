@@ -17,8 +17,11 @@ DEFAULT_VIP_MULTIPLIER = int(os.environ.get("VIP_POINTS_MULTIPLIER", "2"))
 _ROLE_CACHE: Dict[int, Tuple[str, float]] = {}
 
 
-async def is_admin(user_id: int, session: AsyncSession) -> bool:
-    """Verifica si el usuario es admin usando la sesión proporcionada"""
+async def is_admin_db(user_id: int, session: AsyncSession) -> bool:
+    """
+    @deprecated: Use is_admin_db instead.
+    Verifica si el usuario es admin usando la sesión proporcionada.
+    """
     from database.models import User  # Import local para evitar circular imports
     
     result = await session.execute(
@@ -26,6 +29,14 @@ async def is_admin(user_id: int, session: AsyncSession) -> bool:
     )
     is_admin_status = result.scalar_one_or_none()
     return is_admin_status or False
+
+def is_admin(user_id: int) -> bool:
+    """
+    @deprecated: This function is deprecated and will be removed in a future version.
+    Synchronous check for admin status based on a hardcoded list.
+    """
+    return user_id in ADMIN_IDS
+
 
 
 async def is_vip_member(bot: Bot, user_id: int, session: AsyncSession | None = None) -> bool:
