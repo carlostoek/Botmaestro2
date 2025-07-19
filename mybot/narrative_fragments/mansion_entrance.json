@@ -1,0 +1,33 @@
+{
+  "fragment_id": "mansion_entrance",
+  "content": "🚪 Al cruzar el umbral de la mansión, una sensación de déjà vu te invade. Lucien cierra la puerta detrás de ti con un suave clic.\n\n\"La señora Diana está en su estudio. Pero antes...\" Sus ojos brillan con malicia. \"¿Prefieres explorar las sombras del salón principal o ascender directamente por la escalera de mármol? Cada elección tiene sus... consecuencias.\"",
+  "level": 1,
+  "required_besitos": 0,
+  "unlock_conditions": {
+    "required_fragments": ["welcome_1"]
+  },
+  "decisions": [
+    {
+      "text": "Explorar el salón principal",
+      "next_fragment": "main_hall",
+      "rewards": {
+        "besitos": 5,
+        "item": "candelabro_antiguo"
+      }
+    },
+    {
+      "text": "Ascender por la escalera",
+      "next_fragment": "marble_stairs",
+      "required_besitos": 15,
+      "rewards": {
+        "unlock_mission": "encuentro_nocturno"
+      }
+    },
+    {
+      "text": "Preguntar sobre los anteriores invitados",
+      "next_fragment": "previous_guests",
+      "level": 2,
+      "required_item": "diario_olvidado"
+    }
+  ]
+}
