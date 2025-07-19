@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from mybot.database.base import Base
+from ..base import Base
 
 class Item(Base):
     __tablename__ = 'items'
