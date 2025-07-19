@@ -102,7 +102,7 @@ class Achievement(Base):
         return relationship(
             "StoryFragment",
             foreign_keys="StoryFragment.unlocks_achievement_id",
-            backref="achievement"
+            backref="achievement_link"  # Cambiado el backref para evitar conflicto
         )
 
 
