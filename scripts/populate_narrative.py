@@ -1,3 +1,7 @@
+# Este archivo contiene la implementación antigua de la narrativa y se conserva como referencia.
+# La nueva implementación se encuentra en scripts/populate_narrative.py
+
+"""
 # scripts/populate_narrative.py
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -106,3 +110,4 @@ if __name__ == "__main__":
     # This allows running the script directly to populate the database
     print("Running narrative population script...")
     asyncio.run(main())
+"""

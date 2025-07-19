@@ -3,6 +3,7 @@ from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from aiogram.filters import Command
+import logging
 
 from datetime import datetime
 
@@ -23,47 +24,68 @@ from database.models import User, UserBadge, set_user_menu_state
 from utils.text_utils import sanitize_text
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 
 @router.message(Command("vip_menu"))
 async def vip_menu(message: Message, session: AsyncSession):
-    if await get_user_role(message.bot, message.from_user.id, session=session) != "vip":
-        await send_temporary_reply(
+    user_id = message.from_user.id
+    logger.info(f"User {user_id} attempting to access VIP menu.")
+    try:
+        if await get_user_role(message.bot, user_id, session=session) != "vip":
+            logger.warning(f"Non-VIP user {user_id} tried to access VIP menu.")
+            await send_temporary_reply(
+                message,
+                BOT_MESSAGES.get(
+                    "vip_members_only",
+                    "Esta sección está disponible solo para miembros VIP.",
+                ),
+            )
+            return
+        
+        logger.info(f"Displaying VIP menu for user {user_id}.")
+        await send_menu(
             message,
-            BOT_MESSAGES.get(
-                "vip_members_only",
-                "Esta sección está disponible solo para miembros VIP.",
-            ),
+            BOT_MESSAGES["start_welcome_returning_user"],
+            get_vip_main_kb(),
+            session,
+            "vip_main",
         )
-        return
-    await send_menu(
-        message,
-        BOT_MESSAGES["start_welcome_returning_user"],
-        get_vip_main_kb(),
-        session,
-        "vip_main",
-    )
+    except Exception as e:
+        logger.error(f"Error displaying VIP menu for user {user_id}: {e}", exc_info=True)
+        await message.answer("❌ Hubo un error al cargar el menú VIP. Por favor, intenta de nuevo.")
+
 
 
 @router.callback_query(F.data == "vip_menu")
 async def vip_menu_cb(callback: CallbackQuery, session: AsyncSession):
     """Return to the VIP main menu from callbacks."""
-    if await get_user_role(callback.bot, callback.from_user.id, session=session) != "vip":
-        await callback.answer(
-            BOT_MESSAGES.get(
-                "vip_members_only",
-                "Esta sección está disponible solo para miembros VIP.",
-            ),
-            show_alert=True,
+    user_id = callback.from_user.id
+    logger.info(f"User {user_id} returning to VIP menu via callback.")
+    try:
+        if await get_user_role(callback.bot, user_id, session=session) != "vip":
+            logger.warning(f"Non-VIP user {user_id} tried to access VIP menu via callback.")
+            await callback.answer(
+                BOT_MESSAGES.get(
+                    "vip_members_only",
+                    "Esta sección está disponible solo para miembros VIP.",
+                ),
+                show_alert=True,
+            )
+            return
+        
+        logger.info(f"Updating to VIP menu for user {user_id}.")
+        await update_menu(
+            callback,
+            BOT_MESSAGES["start_welcome_returning_user"],
+            get_vip_main_kb(),
+            session,
+            "vip_main",
         )
-        return
-    await update_menu(
-        callback,
-        BOT_MESSAGES["start_welcome_returning_user"],
-        get_vip_main_kb(),
-        session,
-        "vip_main",
-    )
+    except Exception as e:
+        logger.error(f"Error updating to VIP menu for user {user_id}: {e}", exc_info=True)
+        await callback.answer("❌ Error al cargar el menú.", show_alert=True)
+    
     await callback.answer()
 
 

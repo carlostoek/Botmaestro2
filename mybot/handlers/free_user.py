@@ -20,17 +20,26 @@ logger = logging.getLogger(__name__)
 @router.message(Command("subscribe"))
 async def show_free_main_menu(message: Message, session: AsyncSession):
     """Display the menu for free users."""
-    if await get_user_role(message.bot, message.from_user.id, session=session) != "free":
-        return
+    user_id = message.from_user.id
+    logger.info(f"User {user_id} attempting to access free user menu.")
+    try:
+        if await get_user_role(message.bot, user_id, session=session) != "free":
+            logger.warning(f"Non-free user {user_id} (role: {await get_user_role(message.bot, user_id, session=session)}) tried to access free menu.")
+            return
 
-    await menu_manager.show_menu(
-        message,
-        BOT_MESSAGES.get("FREE_MENU_TEXT", "Menú gratuito"),
-        get_free_main_menu_kb(),
-        session,
-        "free_main",
-        delete_origin_message=True,
-    )
+        logger.info(f"Displaying free user menu for {user_id}.")
+        await menu_manager.show_menu(
+            message,
+            BOT_MESSAGES.get("FREE_MENU_TEXT", "Menú gratuito"),
+            get_free_main_menu_kb(),
+            session,
+            "free_main",
+            delete_origin_message=True,
+        )
+    except Exception as e:
+        logger.error(f"Error displaying free menu for user {user_id}: {e}", exc_info=True)
+        await message.answer("❌ Hubo un error al cargar el menú. Por favor, intenta de nuevo.")
+
 
 
 @router.callback_query(F.data == "free_main_menu")

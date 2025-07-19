@@ -1,3 +1,7 @@
+# Este archivo contiene la implementación antigua de la narrativa y se conserva como referencia.
+# La nueva implementación se encuentra en mybot/handlers/narrative_handlers.py
+
+"""
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -32,3 +36,4 @@ async def handle_decision(callback: CallbackQuery, session: AsyncSession, state:
     else:
         # Handle cases where conditions are not met
         await callback.answer("You cannot make this choice right now.", show_alert=True)
+"""

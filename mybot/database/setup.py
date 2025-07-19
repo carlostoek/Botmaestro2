@@ -12,10 +12,11 @@ _sessionmaker = None
 
 TABLES_ORDER = [
     'users',
+    'items',
+    'narrative_fragments',
+    'user_story_states',
     'achievements',
-    'story_fragments',
-    'narrative_choices',
-    'user_narrative_states',
+    
     'rewards',
     'lore_pieces',
     'missions',

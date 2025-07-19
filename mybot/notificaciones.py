@@ -26,6 +26,7 @@ async def enviar_notificacion_gamificada(bot: Bot, user_id: int):
     await bot.send_message(user_id, f"💬 {mensaje}")
 
 
+# Esta función pertenece a la implementación antigua de la narrativa.
 async def send_narrative_notification(bot: Bot, user_id: int, pista_code: str, origen: str = "Sistema"):
     mensajes = [
         f"🎩 Lucien: Una nueva pieza ha caído en tus manos... {pista_code}. No la pierdas.",

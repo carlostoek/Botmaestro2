@@ -554,11 +554,11 @@ async def desbloquear_pista_narrativa(bot, user_id, pista_code, context=None):
         await session.commit()
         
         # Enviar notificación narrativa
-        await send_narrative_notification(bot, user_id, "new_hint", {
-            'hint_title': pista.title,
-            'hint_code': pista.code_name,
-            'source': context.get('source', 'unknown') if context else 'unknown'
-        })
+        # await send_narrative_notification(bot, user_id, "new_hint", {
+        #     'hint_title': pista.title,
+        #     'hint_code': pista.code_name,
+        #     'source': context.get('source', 'unknown') if context else 'unknown'
+        # })
         
         return True
 

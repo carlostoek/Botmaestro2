@@ -13,8 +13,7 @@ from services.achievement_service import AchievementService
 from services.level_service import LevelService
 from services.mission_service import MissionService
 from sqlalchemy.future import select
-from database.models import LorePiece, NarrativeFragment
-from scripts.populate_narrative import populate_narrative_data
+
 
 DEFAULT_MISSIONS = [
     {
@@ -75,12 +74,7 @@ async def main() -> None:
         else:
             print("Pista de prueba 'TEST_P_1' ya existe.")
 
-        # Populate narrative data
-        existing_narrative = await session.execute(
-            select(NarrativeFragment).where(NarrativeFragment.key == "start")
-        )
-        if not existing_narrative.scalar_one_or_none():
-            await populate_narrative_data(session)
+        
 
     print("Database initialised")
 

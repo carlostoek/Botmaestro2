@@ -1,3 +1,7 @@
+# Este archivo contiene la implementación antigua de la narrativa y se conserva como referencia.
+# La nueva implementación se encuentra en mybot/modules/narrative/story_engine.py
+
+"""
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -97,3 +101,4 @@ class NarrativeService:
         """
         # For now, always return True. Implement actual condition checking later.
         return True
+"""

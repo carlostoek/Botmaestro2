@@ -1,3 +1,7 @@
+# Este archivo contiene la implementación antigua de la narrativa y se conserva como referencia.
+# La nueva implementación se encuentra en mybot/database/models/narrative.py
+
+"""
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, BigInteger, JSON
 from sqlalchemy.orm import relationship, declared_attr
 from sqlalchemy.sql import func
@@ -96,3 +100,4 @@ class UserNarrativeState(Base):
         lazy="joined"
     )
     
+"""

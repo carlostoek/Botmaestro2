@@ -52,16 +52,9 @@ class User(Base):
     menu_state = Column(String, default="root")
     is_admin = Column(Boolean, default=False) # New column for admin status
 
-    @declared_attr
-    def narrative_state(cls):
-        from .narrative_models import UserNarrativeState
-        return relationship(
-            UserNarrativeState,
-            back_populates="user",
-            uselist=False,
-            lazy="selectin",
-            cascade="all, delete-orphan"
-        )
+    story_state = relationship("UserStoryState", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+    
 
 
 class Reward(Base):
@@ -98,12 +91,7 @@ class Achievement(Base):
     reward_text = Column(String, nullable=False)
     created_at = Column(DateTime, default=func.now())
 
-    story_fragments = relationship(
-        "StoryFragment",
-        foreign_keys="StoryFragment.unlocks_achievement_id",
-        back_populates="achievement_link",
-        lazy="selectin"  # Añadido para evitar problemas de carga
-    )
+    
 
 
 class UserAchievement(Base):
