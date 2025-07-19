@@ -32,7 +32,62 @@ class AuctionStatus(enum.Enum):
 
 
 class User(Base):
-    __tablename__ = "users"
+    
+Desarrollo
+
+Diagnóstico del Error
+El error principal es:
+
+PYTHON
+ModuleNotFoundError: No module named 'models'
+Ocurre específicamente cuando intentas importar UserNarrativeState desde models.user_narrative_state en tu archivo models.py. El sistema no puede encontrar el módulo models porque:
+
+Ruta de importación incorrecta: Estás usando from models.user_narrative_state import... cuando deberías usar una ruta relativa o absoluta correcta.
+Estructura de archivos: Según tu descripción, user_narrative_state.py está en narrative_modules.py, no en un módulo llamado models.
+Solución Paso a Paso
+1. Corregir la importación en database/models.py:
+
+Cambia esta línea:
+
+PYTHON
+from models.user_narrative_state import UserNarrativeState  # ← Incorrecto
+Por una de estas opciones:
+
+PYTHON
+# Opción 1 (si está en el mismo directorio):
+from .narrative_modules import UserNarrativeState
+
+# Opción 2 (ruta absoluta desde el root):
+from mybot.database.narrative_modules import UserNarrativeState
+2. Verificar estructura de archivos:
+
+Asegúrate de que tu estructura sea consistente:
+
+TEXT
+mybot/
+├── database/
+│   ├── models.py          # Contiene clase User
+│   ├── narrative_modules.py # Contiene UserNarrativeState
+│   ├── __init__.py        # Vacío o con imports
+3. Crear/Actualizar database/__init__.py:
+
+PYTHON
+# database/__init__.py
+from .models import User
+from .narrative_modules import UserNarrativeState
+
+__all__ = ['User', 'UserNarrativeState']
+4. Modificación completa para models.py:
+
+PYTHON
+# database/models.py
+from sqlalchemy import Column, BigInteger, String, Float, Integer, JSON, DateTime
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship, declared_attr
+from database.base import Base
+
+class User(Base):
+    __tablename__ = "users
     id = Column(BigInteger, primary_key=True, unique=True)  # Telegram User ID
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
@@ -63,7 +118,7 @@ class User(Base):
     @declared_attr
     def narrative_state(cls):
         # Importación local para evitar dependencia circular
-        from .narrative_modules import UserNarrativeState
+        from .narrative_models import UserNarrativeState
         return relationship(
             UserNarrativeState,
             back_populates="user",
