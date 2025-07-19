@@ -82,4 +82,9 @@ class UserNarrativeState(Base):
     choices_made = Column(JSON, default=[])
 
     # Relationship to the User model
-    user = relationship("User", back_populates="narrative_state", lazy="joined")
+    user = relationship(
+        "User", 
+        back_populates="narrative_state",
+        lazy="joined",
+        single_parent=True
+    )
