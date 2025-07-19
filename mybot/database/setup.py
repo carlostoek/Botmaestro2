@@ -12,8 +12,11 @@ _sessionmaker = None
 
 TABLES_ORDER = [
     'users',
-    'rewards',
     'achievements',
+    'story_fragments',
+    'narrative_choices',
+    'user_narrative_states',
+    'rewards',
     'lore_pieces',
     'missions',
     'events',
@@ -31,9 +34,6 @@ TABLES_ORDER = [
     'challenges',
     'auctions',
     'trivias',
-    'story_fragments',
-    'narrative_choices',
-    'user_narrative_states',
     'user_rewards',
     'user_achievements',
     'user_mission_entries',
