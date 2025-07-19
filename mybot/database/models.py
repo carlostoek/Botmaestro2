@@ -44,14 +44,7 @@ class User(Base):
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    from database.models.narrative_models import UserNarrativeState
-        return relationship(
-            UserNarrativeState,
-            back_populates="user",
-            uselist=False,
-            lazy="selectin",
-            cascade="all, delete-orphan"
-        )
+    
 
     # Role management and VIP expiration
     role = Column(String, default="free")
@@ -64,8 +57,14 @@ class User(Base):
     )  # e.g., "root", "profile", "missions", "rewards"
 
     # Relationship to narrative state
-    narrative_state = relationship("UserNarrativeState", back_populates="user", uselist=False)
-
+from database.models.narrative_models import UserNarrativeState
+        return relationship(
+            UserNarrativeState,
+            back_populates="user",
+            uselist=False,
+            lazy="selectin",
+            cascade="all, delete-orphan"
+        )
 
 
 class Reward(Base):
