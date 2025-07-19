@@ -34,42 +34,40 @@ class AuctionStatus(enum.Enum):
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(BigInteger, primary_key=True, unique=True)  # Telegram User ID
+    id = Column(BigInteger, primary_key=True, unique=True)
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     points = Column(Float, default=0)
     level = Column(Integer, default=1)
-    achievements = Column(JSON, default={})  # {'achievement_id': timestamp_isoformat}
-    missions_completed = Column(JSON, default={})  # {'mission_id': timestamp_isoformat}
-    # Track last reset for daily/weekly missions
+    achievements = Column(JSON, default={})
+    missions_completed = Column(JSON, default={})
     last_daily_mission_reset = Column(DateTime, default=func.now())
     last_weekly_mission_reset = Column(DateTime, default=func.now())
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-
-    
-
-    # Role management and VIP expiration
     role = Column(String, default="free")
     vip_expires_at = Column(DateTime, nullable=True)
     last_reminder_sent_at = Column(DateTime, nullable=True)
+    menu_state = Column(String, default="root")
 
-    # Menu state management
-    menu_state = Column(
-        String, default="root"
-    )  # e.g., "root", "profile", "missions", "rewards"
-
-    # SOLUCIÓN: Usar declared_attr para resolver dependencia circular
     @declared_attr
     def narrative_state(cls):
-        # Importación local para evitar dependencia circular
         from .narrative_models import UserNarrativeState
         return relationship(
             UserNarrativeState,
             back_populates="user",
             uselist=False,
             lazy="selectin",
+            cascade="all, delete-orphan"
+        )
+
+    # Añadir esta relación para achievements si es necesaria
+    @declared_attr
+    def unlocked_achievements(cls):
+        return relationship(
+            "UserAchievement",
+            backref="user",
             cascade="all, delete-orphan"
         )
 
@@ -108,6 +106,15 @@ class Achievement(Base):
     reward_text = Column(String, nullable=False)
     created_at = Column(DateTime, default=func.now())
 
+    # Relación con StoryFragment si es necesaria
+    @declared_attr
+    def story_fragments(cls):
+        return relationship(
+            "StoryFragment",
+            foreign_keys="StoryFragment.unlocks_achievement_id",
+            backref="achievement"
+        )
+
 
 class UserAchievement(Base):
     __tablename__ = "user_achievements"
@@ -130,7 +137,21 @@ class Mission(Base):
     requires_action = Column(Boolean, default=False)
     action_data = Column(JSON, nullable=True)
     # Código de pista que se desbloquea al completar esta misión
-    unlocks_lore_piece_code = Column(String, nullable=True)
+    unlocks_lore_piece_code = Column(
+        String, 
+        ForeignKey('lore_pieces.code_name', ondelete='SET NULL'),  # Cambiado para referencia correcta
+        nullable=True,
+        index=True
+    )
+
+    # Relación con LorePiece
+    @declared_attr
+    def lore_piece(cls):
+        return relationship(
+            "LorePiece",
+            foreign_keys=[cls.unlocks_lore_piece_code],
+            primaryjoin="Mission.unlocks_lore_piece_code == LorePiece.code_name"
+        )
     created_at = Column(DateTime, default=func.now())
 
 

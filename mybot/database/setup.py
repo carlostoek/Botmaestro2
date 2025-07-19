@@ -10,6 +10,15 @@ logger = logging.getLogger(__name__)
 _engine = None
 _sessionmaker = None
 
+TABLES_ORDER = [
+    'achievements',
+    'story_fragments',
+    'narrative_choices',
+    'users',
+    'user_narrative_states',
+    # resto de tablas...
+]
+
 async def init_db():
     global _engine, _sessionmaker
     try:
@@ -20,12 +29,11 @@ async def init_db():
                 echo=False, 
                 poolclass=NullPool
             )
-            async with _engine.begin() as conn:
-                logger.info("Creando tablas...")
-                def create_tables(sync_conn):
-                    Base.metadata.create_all(bind=sync_conn)
-                await conn.run_sync(create_tables)
-                logger.info("Tablas creadas exitosamente")
+        async with _engine.begin() as conn:
+            logger.info("Creando tablas...")
+            tables = [Base.metadata.tables[name] for name in TABLES_ORDER]
+            await conn.run_sync(lambda sync_conn: Base.metadata.create_all(sync_conn, tables=tables))
+            logger.info("Tablas creadas exitosamente")
         return _engine
     except Exception as e:
         logger.critical(f"Error crítico en init_db: {str(e)}")
