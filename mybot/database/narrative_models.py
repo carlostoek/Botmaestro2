@@ -53,10 +53,7 @@ class StoryFragment(Base):
         lazy="joined"
     )
 
-    @declared_attr
-    def linked_achievement(cls):  # Cambiado de 'achievement' a 'linked_achievement'
-        return relationship("Achievement", foreign_keys=[cls.unlocks_achievement_id])
-
+    
 class NarrativeChoice(Base):
     """
     Represents a decision a user can make, linking one StoryFragment to another.
