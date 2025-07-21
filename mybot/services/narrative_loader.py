@@ -56,7 +56,7 @@ class NarrativeLoader:
             return
         
         # Buscar fragmento existente
-        stmt = select(StoryFragment).where(StoryFragment.key == fragment_id)
+        stmt = select(StoryFragment).where(StoryFragment.fragment_id == fragment_id)
         result = await self.session.execute(stmt)
         fragment = result.scalar_one_or_none()
         
