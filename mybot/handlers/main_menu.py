@@ -26,3 +26,8 @@ async def handle_config_button(message: Message, session: AsyncSession):
 @router.message(F.text == "❓ Ayuda")
 async def handle_help_button(message: Message, session: AsyncSession):
     await message.answer("❓ **Ayuda**\n\nGuía de uso del bot...")
+
+@router.message(F.text == "📖 Historia")
+async def handle_narrative_button(message: Message, session: AsyncSession):
+    from handlers.narrative_handler import start_narrative_command
+    await start_narrative_command(message, session)

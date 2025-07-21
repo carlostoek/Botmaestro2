@@ -9,6 +9,7 @@ main_menu_keyboard = ReplyKeyboardMarkup(
             KeyboardButton(text="🎯 Misiones"),
         ],
         [
+            KeyboardButton(text="📖 Historia"),
             KeyboardButton(text="⚙️ Configuración"),
             KeyboardButton(text="❓ Ayuda"),
         ],

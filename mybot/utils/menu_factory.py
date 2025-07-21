@@ -244,6 +244,9 @@ class MenuFactory:
         elif menu_state == "ranking":
             return await create_ranking_menu(user_id, session)
         
+        elif menu_state == "narrative":
+            return await self._create_narrative_menu(user_id, session)
+        
         elif menu_state == "admin_gamification_main": # Asegúrate de que este estado es reconocido si alguna otra parte lo invoca
             # Aunque el handler directo lo gestiona, si por alguna razón menu_factory
             # necesita crear este menú, podemos redirigirlo al panel admin principal
@@ -251,6 +254,33 @@ class MenuFactory:
         else:
             logger.warning(f"Unknown specific menu state: {menu_state}. Falling back to main menu for role: {role}")
             return self._create_main_menu(role)
+    
+    async def _create_narrative_menu(self, user_id: int, session: AsyncSession) -> Tuple[str, InlineKeyboardMarkup]:
+        """Create the narrative menu for a user."""
+        from services.narrative_engine import NarrativeEngine
+        from keyboards.narrative_kb import get_narrative_stats_keyboard
+        
+        engine = NarrativeEngine(session)
+        stats = await engine.get_user_narrative_stats(user_id)
+        
+        if stats["current_fragment"]:
+            text = f"""📖 **Tu Historia con Diana**
+
+🎭 **Fragmento Actual**: {stats['current_fragment']}
+📊 **Progreso**: {stats['progress_percentage']:.1f}%
+🗺️ **Fragmentos Visitados**: {stats['fragments_visited']}
+
+*Lucien te está esperando para continuar...*"""
+        else:
+            text = """📖 **El Diván de Diana**
+
+🌟 **Historia no iniciada**
+
+*Una mansión misteriosa te espera. Lucien, el mayordomo, está listo para guiarte a través de los secretos de Diana.*
+
+*¿Te atreves a comenzar esta aventura?*"""
+        
+        return text, get_narrative_stats_keyboard()
     
     def _create_fallback_menu(self, role: str = "free") -> Tuple[str, InlineKeyboardMarkup]:
         """

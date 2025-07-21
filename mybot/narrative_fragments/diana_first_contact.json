@@ -1,0 +1,22 @@
+{
+  "fragment_id": "diana_first_contact",
+  "content": "🌸 *Una voz suave como la seda resuena en tu mente...*\n\n\"Así que has llegado hasta aquí. Lucien habla bien de ti, pero las palabras son solo ecos. Lo que realmente me interesa es lo que hay en tu corazón.\"\n\n*Sientes una presencia cálida y envolvente, como si alguien te observara con curiosidad genuina.*\n\n\"Dime, querido viajero, ¿qué es lo que realmente buscas en mi mundo?\"",
+  "character": "Diana",
+  "level": 2,
+  "required_besitos": 15,
+  "reward_besitos": 20,
+  "decisions": [
+    {
+      "text": "Te busco a ti, Diana",
+      "next_fragment": "diana_response_seek"
+    },
+    {
+      "text": "Busco experiencias nuevas",
+      "next_fragment": "diana_response_experience"
+    },
+    {
+      "text": "Busco entender este lugar",
+      "next_fragment": "diana_response_mystery"
+    }
+  ]
+}

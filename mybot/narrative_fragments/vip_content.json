@@ -1,0 +1,23 @@
+{
+  "fragment_id": "vip_intimate_space",
+  "content": "🌸 *El ambiente cambia completamente. Te encuentras en un espacio más íntimo, decorado con sedas y velas.*\n\n\"Bienvenido a mi santuario personal. Aquí es donde me permito ser... completamente yo misma. Sin máscaras, sin pretensiones.\"\n\n*Diana aparece ante ti, más real que nunca, con una sonrisa que promete secretos por descubrir.*\n\n\"Solo mis invitados más especiales llegan hasta aquí. ¿Qué te gustaría saber de mí que nadie más ha preguntado?\"",
+  "character": "Diana",
+  "level": 4,
+  "required_besitos": 50,
+  "required_role": "vip",
+  "reward_besitos": 30,
+  "decisions": [
+    {
+      "text": "¿Cuál es tu mayor secreto?",
+      "next_fragment": "diana_deepest_secret"
+    },
+    {
+      "text": "¿Qué te hace sentir más viva?",
+      "next_fragment": "diana_passion"
+    },
+    {
+      "text": "Quiero conocer tu lado más vulnerable",
+      "next_fragment": "diana_vulnerability"
+    }
+  ]
+}

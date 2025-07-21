@@ -31,6 +31,10 @@ class StoryFragment(Base):
         nullable=True,
         index=True
     )
+    
+    # Timestamps
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
     choices = relationship(
@@ -63,6 +67,13 @@ class NarrativeChoice(Base):
     source_fragment_id = Column(Integer, ForeignKey('story_fragments.id'), nullable=False)
     destination_fragment_id = Column(Integer, ForeignKey('story_fragments.id'), nullable=False)
     text = Column(String, nullable=False)
+    
+    # Condiciones opcionales para la decisión
+    required_besitos = Column(Integer, default=0)
+    required_role = Column(String, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=func.now())
 
     source_fragment = relationship(
         "StoryFragment", 
@@ -82,6 +93,12 @@ class UserNarrativeState(Base):
     user_id = Column(BigInteger, ForeignKey('users.id'), primary_key=True)
     current_fragment_id = Column(Integer, ForeignKey('story_fragments.id'), nullable=False)
     choices_made = Column(JSON, default=[])
+    
+    # Estadísticas adicionales
+    fragments_visited = Column(Integer, default=0)
+    total_besitos_earned = Column(Integer, default=0)
+    narrative_started_at = Column(DateTime, default=func.now())
+    last_activity_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     user = relationship(
         "User", 

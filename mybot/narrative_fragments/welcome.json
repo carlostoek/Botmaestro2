@@ -1,7 +1,10 @@
 {
   "fragment_id": "welcome_1",
   "content": "🌙 *Bienvenido a la Mansión de los Susurros* 🌙\n\nLa luna brilla sobre el jardín abandonado cuando escuchas pasos acercándose. Lucien aparece de entre las sombras, su sonrisa tan enigmática como siempre.\n\n\"Ah, mi estimado invitado, qué oportuna es tu llegada. Diana te ha estado esperando... o tal vez seas tú quien la ha estado buscando. ¿Estás preparado para descubrir qué secretos esconde esta noche?\"",
+  "character": "Lucien",
   "level": 1,
+  "required_besitos": 0,
+  "reward_besitos": 10,
   "decisions": [
     {
       "text": "Seguir a Lucien al interior de la mansión",
@@ -13,8 +16,7 @@
     },
     {
       "text": "Investigar el jardín primero",
-      "next_fragment": "garden_investigation",
-      "required_besitos": 10
+      "next_fragment": "garden_investigation"
     }
   ]
 }
