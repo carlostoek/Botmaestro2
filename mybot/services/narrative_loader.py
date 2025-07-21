@@ -19,7 +19,7 @@ class NarrativeLoader:
     def __init__(self, session: AsyncSession):
         self.session = session
     
-    async def load_fragments_from_directory(self, directory_path: str = "narrative_fragments"):
+    async def load_fragments_from_directory(self, directory_path: str = "mybot/narrative_fragments"):
         """Carga todos los fragmentos JSON de un directorio."""
         if not os.path.exists(directory_path):
             logger.warning(f"Directorio de narrativa no encontrado: {directory_path}")
