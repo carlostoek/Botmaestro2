@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, BigInteger, JSON
+from sqlalchemy.types import DateTime
 from sqlalchemy.orm import relationship, declared_attr
 from sqlalchemy.sql import func
 from .base import Base
@@ -7,9 +8,11 @@ class StoryFragment(Base):
     __tablename__ = 'story_fragments'
 
     id = Column(Integer, primary_key=True)
-    key = Column(String, unique=True, nullable=False, index=True)
-    text = Column(Text, nullable=False)
-    character = Column(String, default='Lucien')
+    fragment_id = Column(String(50), unique=True, nullable=False)
+    content = Column(Text, nullable=False)
+    fragment_type = Column(String(20), nullable=False)  # 'start', 'normal', 'decision'
+    created_at = Column(DateTime, default=func.now())  # Corregido
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
     auto_next_fragment_id = Column(
         Integer, 
