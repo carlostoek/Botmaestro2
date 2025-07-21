@@ -202,7 +202,7 @@ async def main() -> None:
             ("combinar_pistas", combinar_pistas.router),
             ("channel_access", channel_access_router),
             ("narrative", narrative_router),
-            ("admin_narrative", admin_narrative_handlers.router),
+            ("admin_narrative", admin_narrative_handlers),
         ]
         
         for name, router in routers:
