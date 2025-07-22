@@ -19,6 +19,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.future import select
 import enum
+from narrative.models import UserNarrativeState, StoryFragment, UserDecision, NarrativeMetrics
 
 Base = declarative_base()
 
