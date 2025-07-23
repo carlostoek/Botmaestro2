@@ -27,7 +27,7 @@ router = Router()
 @router.callback_query(F.data == "admin_config")
 async def config_menu(callback: CallbackQuery, session: AsyncSession):
     """Placeholder bot configuration menu."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await update_menu(
         callback,
@@ -41,7 +41,7 @@ async def config_menu(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "config_reaction_buttons")
 async def prompt_reaction_buttons(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
         "Envía el emoji para la primera reacción:",
@@ -54,7 +54,7 @@ async def prompt_reaction_buttons(callback: CallbackQuery, session: AsyncSession
 
 @router.message(AdminConfigStates.waiting_for_reaction_buttons)
 async def set_reaction_buttons(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     data = await state.get_data()
     reactions = data.get("reactions", [])
@@ -73,7 +73,7 @@ async def set_reaction_buttons(message: Message, state: FSMContext, session: Asy
 
 @router.message(AdminConfigStates.waiting_for_reaction_points)
 async def set_reaction_points_value(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     try:
         value = float(message.text.strip())
@@ -93,7 +93,6 @@ async def set_reaction_points_value(message: Message, state: FSMContext, session
     await state.set_state(AdminConfigStates.waiting_for_reaction_buttons)
 
 
-
 @router.callback_query(
     StateFilter(
         AdminConfigStates.waiting_for_reaction_buttons,
@@ -102,7 +101,7 @@ async def set_reaction_points_value(message: Message, state: FSMContext, session
     F.data == "save_reactions",
 )
 async def save_reaction_buttons_callback(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     data = await state.get_data()
     reactions = data.get("reactions", [])
@@ -125,7 +124,7 @@ async def save_reaction_buttons_callback(callback: CallbackQuery, state: FSMCont
 
 @router.callback_query(F.data == "config_scheduler")
 async def scheduler_menu(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     config = ConfigService(session)
     ch = await config.get_value("channel_scheduler_interval") or "30"
@@ -136,8 +135,8 @@ async def scheduler_menu(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data == "config_add_channels")
-async def prompt_channel_type(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def prompt_channel_type(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
         "\u00bfQu\u00e9 tipo de canales deseas configurar?",
@@ -148,8 +147,8 @@ async def prompt_channel_type(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(AdminConfigStates.waiting_for_channel_choice, F.data == "channel_mode_vip")
-async def channel_mode_vip(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def channel_mode_vip(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.update_data(mode="vip_only")
     await callback.message.edit_text(
@@ -161,8 +160,8 @@ async def channel_mode_vip(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(AdminConfigStates.waiting_for_channel_choice, F.data == "channel_mode_free")
-async def channel_mode_free(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def channel_mode_free(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.update_data(mode="free_only")
     await callback.message.edit_text(
@@ -174,8 +173,8 @@ async def channel_mode_free(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(AdminConfigStates.waiting_for_channel_choice, F.data == "channel_mode_both")
-async def channel_mode_both(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def channel_mode_both(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.update_data(mode="both")
     await callback.message.edit_text(
@@ -187,8 +186,8 @@ async def channel_mode_both(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "set_channel_interval")
-async def prompt_channel_interval(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def prompt_channel_interval(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
         "Ingresa el intervalo en segundos para revisar solicitudes de canal:",
@@ -199,8 +198,8 @@ async def prompt_channel_interval(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "set_vip_interval")
-async def prompt_vip_interval(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def prompt_vip_interval(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
         "Ingresa el intervalo en segundos para revisar suscripciones VIP:",
@@ -212,7 +211,7 @@ async def prompt_vip_interval(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "run_schedulers_now")
 async def run_schedulers_now(callback: CallbackQuery, bot: Bot, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     Session = await get_session()
     await run_channel_request_check(bot, Session)
@@ -222,7 +221,7 @@ async def run_schedulers_now(callback: CallbackQuery, bot: Bot, session: AsyncSe
 
 @router.message(AdminConfigStates.waiting_for_channel_interval)
 async def set_channel_interval(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     try:
         seconds = int(message.text.strip())
@@ -236,7 +235,7 @@ async def set_channel_interval(message: Message, state: FSMContext, session: Asy
 
 @router.message(AdminConfigStates.waiting_for_vip_channel_id)
 async def receive_vip_channel(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     chat_id = None
     if message.forward_from_chat and message.forward_from_chat.type == ChatType.CHANNEL:
@@ -267,7 +266,7 @@ async def receive_vip_channel(message: Message, state: FSMContext, session: Asyn
 
 @router.message(AdminConfigStates.waiting_for_free_channel_id)
 async def receive_free_channel(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     chat_id = None
     if message.forward_from_chat and message.forward_from_chat.type == ChatType.CHANNEL:
@@ -303,7 +302,7 @@ async def receive_free_channel(message: Message, state: FSMContext, session: Asy
 
 @router.message(AdminConfigStates.waiting_for_vip_interval)
 async def set_vip_interval(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     try:
         seconds = int(message.text.strip())
@@ -313,3 +312,4 @@ async def set_vip_interval(message: Message, state: FSMContext, session: AsyncSe
     await ConfigService(session).set_value("vip_scheduler_interval", str(seconds))
     await message.answer("Intervalo actualizado.", reply_markup=get_admin_config_kb())
     await state.clear()
+    

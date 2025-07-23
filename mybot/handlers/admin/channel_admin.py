@@ -22,7 +22,7 @@ class ChannelStates(StatesGroup):
 
 @router.callback_query(F.data == "admin_channels")
 async def channels_menu(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     service = ChannelService(session)
     channels = await service.list_channels()
@@ -43,7 +43,7 @@ async def channels_menu(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "admin_add_channel")
 async def prompt_add_channel(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
         "Ingresa el ID del canal VIP o reenv\u00eda un mensaje del canal aqu\u00ed.\n"
@@ -57,7 +57,7 @@ async def prompt_add_channel(callback: CallbackQuery, state: FSMContext):
 
 @router.message(ChannelStates.waiting_for_vip_channel_id)
 async def receive_vip_channel(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     chat_id = None
     if message.forward_from_chat:
@@ -78,7 +78,7 @@ async def receive_vip_channel(message: Message, state: FSMContext, session: Asyn
 
 @router.message(ChannelStates.waiting_for_free_channel_id)
 async def receive_free_channel(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     chat_id = None
     if message.forward_from_chat:
@@ -108,7 +108,7 @@ async def receive_free_channel(message: Message, state: FSMContext, session: Asy
 
 @router.callback_query(F.data == "admin_wait_time")
 async def wait_time_menu(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     config = await session.get(BotConfig, 1)
     current = config.free_channel_wait_time_minutes if config else 0
@@ -124,7 +124,7 @@ async def wait_time_menu(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data.startswith("wait_"))
 async def set_wait_time(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     minutes = int(callback.data.split("_")[1])
     config = await session.get(BotConfig, 1)
@@ -152,7 +152,7 @@ async def set_wait_time(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data.startswith("remove_channel_"))
 async def remove_channel(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     chat_id = int(callback.data.split("_")[-1])
     service = ChannelService(session)

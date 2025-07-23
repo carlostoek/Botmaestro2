@@ -13,15 +13,16 @@ from sqlalchemy import (
     UniqueConstraint,
     Enum,
 )
+from sqlalchemy.orm import relationship
 from uuid import uuid4
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.future import select
 import enum
 from narrative.models import UserNarrativeState, StoryFragment, UserDecision, NarrativeMetrics
+from .base import Base
+from sqlalchemy import Column, BigInteger, String, Float, Integer, JSON, DateTime
+from sqlalchemy.orm import relationship, declared_attr
 
-Base = declarative_base()
 
 
 class AuctionStatus(enum.Enum):
@@ -31,35 +32,40 @@ class AuctionStatus(enum.Enum):
     CANCELLED = "cancelled"
 
 
-class User(AsyncAttrs, Base):
+
+class User(Base):
     __tablename__ = "users"
-    id = Column(BigInteger, primary_key=True, unique=True)  # Telegram User ID
+    id = Column(BigInteger, primary_key=True, unique=True)
     username = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     points = Column(Float, default=0)
     level = Column(Integer, default=1)
-    achievements = Column(JSON, default={})  # {'achievement_id': timestamp_isoformat}
-    missions_completed = Column(JSON, default={})  # {'mission_id': timestamp_isoformat}
-    # Track last reset for daily/weekly missions
+    achievements = Column(JSON, default={})
+    missions_completed = Column(JSON, default={})
     last_daily_mission_reset = Column(DateTime, default=func.now())
     last_weekly_mission_reset = Column(DateTime, default=func.now())
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-
-    # Role management and VIP expiration
     role = Column(String, default="free")
     vip_expires_at = Column(DateTime, nullable=True)
     last_reminder_sent_at = Column(DateTime, nullable=True)
+    menu_state = Column(String, default="root")
+    is_admin = Column(Boolean, default=False) # New column for admin status
 
-    # Menu state management
-    menu_state = Column(
-        String, default="root"
-    )  # e.g., "root", "profile", "missions", "rewards"
+    @declared_attr
+    def narrative_state(cls):
+        from .narrative_models import UserNarrativeState
+        return relationship(
+            UserNarrativeState,
+            back_populates="user",
+            uselist=False,
+            lazy="selectin",
+            cascade="all, delete-orphan"
+        )
 
 
-
-class Reward(AsyncAttrs, Base):
+class Reward(Base):
     """Rewards unlocked by reaching a number of points."""
 
     __tablename__ = "rewards"
@@ -74,7 +80,7 @@ class Reward(AsyncAttrs, Base):
     created_at = Column(DateTime, default=func.now())
 
 
-class UserReward(AsyncAttrs, Base):
+class UserReward(Base):
     """Stores claimed rewards per user."""
 
     __tablename__ = "user_rewards"
@@ -84,7 +90,7 @@ class UserReward(AsyncAttrs, Base):
     claimed_at = Column(DateTime, default=func.now())
 
 
-class Achievement(AsyncAttrs, Base):
+class Achievement(Base):
     __tablename__ = "achievements"
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
@@ -93,15 +99,23 @@ class Achievement(AsyncAttrs, Base):
     reward_text = Column(String, nullable=False)
     created_at = Column(DateTime, default=func.now())
 
+    story_fragments = relationship(
+        "StoryFragment",
+        foreign_keys="StoryFragment.unlocks_achievement_id",
+        back_populates="achievement_link",
+        lazy="selectin"  # Añadido para evitar problemas de carga
+    )
 
-class UserAchievement(AsyncAttrs, Base):
+
+class UserAchievement(Base):
     __tablename__ = "user_achievements"
     user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
     achievement_id = Column(String, ForeignKey("achievements.id"), primary_key=True)
     unlocked_at = Column(DateTime, default=func.now())
+    __table_args__ = (UniqueConstraint("user_id", "achievement_id", name="uix_user_achievements"),)
 
 
-class Mission(AsyncAttrs, Base):
+class Mission(Base):
     __tablename__ = "missions"
     id = Column(String, primary_key=True, unique=True)
     name = Column(String, nullable=False)
@@ -114,11 +128,25 @@ class Mission(AsyncAttrs, Base):
     requires_action = Column(Boolean, default=False)
     action_data = Column(JSON, nullable=True)
     # Código de pista que se desbloquea al completar esta misión
-    unlocks_lore_piece_code = Column(String, nullable=True)
+    unlocks_lore_piece_code = Column(
+        String, 
+        ForeignKey('lore_pieces.code_name', ondelete='SET NULL'),  # Cambiado para referencia correcta
+        nullable=True,
+        index=True
+    )
+
+    # Relación con LorePiece
+    @declared_attr
+    def lore_piece(cls):
+        return relationship(
+            "LorePiece",
+            foreign_keys=[cls.unlocks_lore_piece_code],
+            primaryjoin="Mission.unlocks_lore_piece_code == LorePiece.code_name"
+        )
     created_at = Column(DateTime, default=func.now())
 
 
-class UserMissionEntry(AsyncAttrs, Base):
+class UserMissionEntry(Base):
     """Consolidated mission progress and completion per user."""
 
     __tablename__ = "user_mission_entries"
@@ -131,7 +159,7 @@ class UserMissionEntry(AsyncAttrs, Base):
 
     __table_args__ = (UniqueConstraint("user_id", "mission_id", name="uix_user_mission_entry"),)
 
-class Event(AsyncAttrs, Base):
+class Event(Base):
     __tablename__ = "events"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
@@ -143,7 +171,7 @@ class Event(AsyncAttrs, Base):
     created_at = Column(DateTime, default=func.now())
 
 
-class Raffle(AsyncAttrs, Base):
+class Raffle(Base):
     __tablename__ = "raffles"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
@@ -155,14 +183,14 @@ class Raffle(AsyncAttrs, Base):
     ended_at = Column(DateTime, nullable=True)
 
 
-class RaffleEntry(AsyncAttrs, Base):
+class RaffleEntry(Base):
     __tablename__ = "raffle_entries"
     raffle_id = Column(Integer, ForeignKey("raffles.id"), primary_key=True)
     user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
     created_at = Column(DateTime, default=func.now())
 
 
-class Badge(AsyncAttrs, Base):
+class Badge(Base):
     __tablename__ = "badges"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -175,7 +203,7 @@ class Badge(AsyncAttrs, Base):
     created_at = Column(DateTime, default=func.now())
 
 
-class UserBadge(AsyncAttrs, Base):
+class UserBadge(Base):
     __tablename__ = "user_badges"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -186,7 +214,7 @@ class UserBadge(AsyncAttrs, Base):
     __table_args__ = (UniqueConstraint("user_id", "badge_id", name="uix_user_badges"),)
 
 
-class Level(AsyncAttrs, Base):
+class Level(Base):
     __tablename__ = "levels"
 
     level_id = Column(Integer, primary_key=True)
@@ -197,14 +225,14 @@ class Level(AsyncAttrs, Base):
     unlocks_lore_piece_code = Column(String, nullable=True)
 
 
-class VipSubscription(AsyncAttrs, Base):
+class VipSubscription(Base):
     __tablename__ = "vip_subscriptions"
     user_id = Column(BigInteger, primary_key=True)
     expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=func.now())
 
 
-class UserStats(AsyncAttrs, Base):
+class UserStats(Base):
     """Activity and progression stats per user (points stored in User)."""
 
     __tablename__ = "user_stats"
@@ -219,7 +247,7 @@ class UserStats(AsyncAttrs, Base):
     last_roulette_at = Column(DateTime, nullable=True)
 
 
-class InviteToken(AsyncAttrs, Base):
+class InviteToken(Base):
     __tablename__ = "invite_tokens"
     id = Column(Integer, primary_key=True, autoincrement=True)
     token = Column(String, unique=True, nullable=False)
@@ -230,7 +258,7 @@ class InviteToken(AsyncAttrs, Base):
     expires_at = Column(DateTime, nullable=True)
 
 
-class SubscriptionPlan(AsyncAttrs, Base):
+class SubscriptionPlan(Base):
     __tablename__ = "subscription_plans"
     id = Column(Integer, primary_key=True, autoincrement=True)
     token = Column(String, unique=True, nullable=True)
@@ -244,7 +272,7 @@ class SubscriptionPlan(AsyncAttrs, Base):
     used_at = Column(DateTime, nullable=True)
 
 
-class SubscriptionToken(AsyncAttrs, Base):
+class SubscriptionToken(Base):
     __tablename__ = "subscription_tokens"
     id = Column(Integer, primary_key=True, autoincrement=True)
     token = Column(String, unique=True, nullable=False)
@@ -255,7 +283,7 @@ class SubscriptionToken(AsyncAttrs, Base):
     used_at = Column(DateTime, nullable=True)
 
 
-class Token(AsyncAttrs, Base):
+class Token(Base):
     """VIP activation tokens linked to tariffs."""
 
     __tablename__ = "tokens"
@@ -269,7 +297,7 @@ class Token(AsyncAttrs, Base):
     is_used = Column(Boolean, default=False)
 
 
-class Tariff(AsyncAttrs, Base):
+class Tariff(Base):
     __tablename__ = "tariffs"
 
     id = Column(Integer, primary_key=True)
@@ -278,19 +306,19 @@ class Tariff(AsyncAttrs, Base):
     price = Column(Integer)
 
 
-class ConfigEntry(AsyncAttrs, Base):
+class ConfigEntry(Base):
     __tablename__ = "config_entries"
     key = Column(String, primary_key=True)
     value = Column(String, nullable=True)
 
 
-class BotConfig(AsyncAttrs, Base):
+class BotConfig(Base):
     __tablename__ = "bot_config"
     id = Column(Integer, primary_key=True, autoincrement=True)
     free_channel_wait_time_minutes = Column(Integer, default=0)
 
 
-class Channel(AsyncAttrs, Base):
+class Channel(Base):
     __tablename__ = "channels"
     id = Column(BigInteger, primary_key=True)  # Telegram chat ID
     title = Column(String, nullable=True)
@@ -300,7 +328,7 @@ class Channel(AsyncAttrs, Base):
     # --- FIN NUEVAS COLUMNAS ---
 
 
-class PendingChannelRequest(AsyncAttrs, Base):
+class PendingChannelRequest(Base):
     __tablename__ = "pending_channel_requests"
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, nullable=False)
@@ -309,7 +337,7 @@ class PendingChannelRequest(AsyncAttrs, Base):
     approved = Column(Boolean, default=False)
 
 
-class Challenge(AsyncAttrs, Base):
+class Challenge(Base):
     __tablename__ = "challenges"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -321,7 +349,7 @@ class Challenge(AsyncAttrs, Base):
     end_date = Column(DateTime, nullable=False)
 
 
-class UserChallengeProgress(AsyncAttrs, Base):
+class UserChallengeProgress(Base):
     __tablename__ = "user_challenge_progress"
 
     user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
@@ -331,7 +359,7 @@ class UserChallengeProgress(AsyncAttrs, Base):
     completed_at = Column(DateTime, nullable=True)
 
 
-class ButtonReaction(AsyncAttrs, Base):
+class ButtonReaction(Base):
     """Stores reactions made on interactive channel posts."""
 
     __tablename__ = "button_reactions"
@@ -344,7 +372,7 @@ class ButtonReaction(AsyncAttrs, Base):
 
 
 # NEW AUCTION SYSTEM MODELS
-class Auction(AsyncAttrs, Base):
+class Auction(Base):
     """Real-time auction system."""
     
     __tablename__ = "auctions"
@@ -370,7 +398,7 @@ class Auction(AsyncAttrs, Base):
     auto_extend_minutes = Column(Integer, default=5)  # Auto-extend if bid in last X minutes
 
 
-class Bid(AsyncAttrs, Base):
+class Bid(Base):
     """Individual bids in auctions."""
     
     __tablename__ = "bids"
@@ -387,7 +415,7 @@ class Bid(AsyncAttrs, Base):
     )
 
 
-class AuctionParticipant(AsyncAttrs, Base):
+class AuctionParticipant(Base):
     """Track users participating in auctions for notifications."""
     
     __tablename__ = "auction_participants"
@@ -399,7 +427,7 @@ class AuctionParticipant(AsyncAttrs, Base):
     last_notified_at = Column(DateTime, nullable=True)
 
 
-class MiniGamePlay(AsyncAttrs, Base):
+class MiniGamePlay(Base):
     """Record usage of minigames such as roulette or challenges."""
 
     __tablename__ = "minigame_play"
@@ -412,7 +440,7 @@ class MiniGamePlay(AsyncAttrs, Base):
     cost_points = Column(Float, default=0)
 
 
-class LorePiece(AsyncAttrs, Base):
+class LorePiece(Base):
     """Discrete lore or clue piece that users can unlock."""
 
     __tablename__ = "lore_pieces"
@@ -432,7 +460,7 @@ class LorePiece(AsyncAttrs, Base):
     is_active = Column(Boolean, default=True)
 
 
-class UserLorePiece(AsyncAttrs, Base):
+class UserLorePiece(Base):
     """Mapping of unlocked lore pieces per user."""
 
     __tablename__ = "user_lore_pieces"
@@ -498,6 +526,8 @@ class TriviaAttempt(Base):
     trivia_id = Column(Integer, ForeignKey("trivias.id"), nullable=False)
     score = Column(Integer, default=0)
     completed_at = Column(DateTime, default=func.now())
+
+
 
 
 class TriviaUserAnswer(Base):

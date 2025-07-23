@@ -29,7 +29,7 @@ router = Router()
 @router.callback_query(F.data == "admin_auction_main")
 async def admin_auction_main(callback: CallbackQuery, session: AsyncSession):
     """Main auction administration menu."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     await update_menu(
@@ -45,7 +45,7 @@ async def admin_auction_main(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "admin_create_auction")
 async def start_create_auction(callback: CallbackQuery, state: FSMContext):
     """Start auction creation flow."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     await callback.message.edit_text(
@@ -59,7 +59,7 @@ async def start_create_auction(callback: CallbackQuery, state: FSMContext):
 @router.message(AdminAuctionStates.creating_auction_name)
 async def process_auction_name(message: Message, state: FSMContext):
     """Process auction name input."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     name = message.text.strip()
@@ -78,7 +78,7 @@ async def process_auction_name(message: Message, state: FSMContext):
 @router.message(AdminAuctionStates.creating_auction_description)
 async def process_auction_description(message: Message, state: FSMContext):
     """Process auction description input."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     description = message.text.strip()
@@ -94,7 +94,7 @@ async def process_auction_description(message: Message, state: FSMContext):
 @router.message(AdminAuctionStates.creating_auction_prize)
 async def process_auction_prize(message: Message, state: FSMContext):
     """Process auction prize input."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     prize = message.text.strip()
@@ -113,7 +113,7 @@ async def process_auction_prize(message: Message, state: FSMContext):
 @router.message(AdminAuctionStates.creating_auction_initial_price)
 async def process_auction_initial_price(message: Message, state: FSMContext):
     """Process auction initial price input."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     try:
@@ -135,7 +135,7 @@ async def process_auction_initial_price(message: Message, state: FSMContext):
 @router.callback_query(AdminAuctionStates.creating_auction_duration, F.data.startswith("auction_duration_"))
 async def process_auction_duration(callback: CallbackQuery, state: FSMContext):
     """Process auction duration selection."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     duration_hours = int(callback.data.split("_")[-1])
@@ -165,7 +165,7 @@ async def process_auction_duration(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(AdminAuctionStates.confirming_auction_creation, F.data == "confirm_create_auction")
 async def confirm_create_auction(callback: CallbackQuery, state: FSMContext, session: AsyncSession, bot: Bot):
     """Confirm and create the auction."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     data = await state.get_data()
@@ -213,7 +213,7 @@ async def confirm_create_auction(callback: CallbackQuery, state: FSMContext, ses
 @router.callback_query(F.data == "admin_list_active_auctions")
 async def list_active_auctions(callback: CallbackQuery, session: AsyncSession):
     """List all active auctions."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     auction_service = AuctionService(session)
@@ -246,7 +246,7 @@ async def list_active_auctions(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "admin_list_pending_auctions")
 async def list_pending_auctions(callback: CallbackQuery, session: AsyncSession):
     """List all pending auctions."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     auction_service = AuctionService(session)
@@ -277,7 +277,7 @@ async def list_pending_auctions(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data.startswith("manage_auction_"))
 async def manage_auction(callback: CallbackQuery, session: AsyncSession):
     """Manage individual auction."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     auction_id = int(callback.data.split("_")[-1])
@@ -317,7 +317,7 @@ async def manage_auction(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data.startswith("end_auction_"))
 async def confirm_end_auction(callback: CallbackQuery, session: AsyncSession):
     """Confirm ending an auction."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     auction_id = int(callback.data.split("_")[-1])
@@ -339,7 +339,7 @@ async def confirm_end_auction(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data.startswith("confirm_end_auction_"))
 async def end_auction(callback: CallbackQuery, session: AsyncSession, bot: Bot):
     """End an auction."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     auction_id = int(callback.data.split("_")[-1])
@@ -375,7 +375,7 @@ async def end_auction(callback: CallbackQuery, session: AsyncSession, bot: Bot):
 @router.callback_query(F.data.startswith("cancel_auction_"))
 async def confirm_cancel_auction(callback: CallbackQuery, session: AsyncSession):
     """Confirm cancelling an auction."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     auction_id = int(callback.data.split("_")[-1])
@@ -397,7 +397,7 @@ async def confirm_cancel_auction(callback: CallbackQuery, session: AsyncSession)
 @router.callback_query(F.data.startswith("confirm_cancel_auction_"))
 async def cancel_auction(callback: CallbackQuery, session: AsyncSession, bot: Bot):
     """Cancel an auction."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     auction_id = int(callback.data.split("_")[-1])
@@ -426,7 +426,7 @@ async def cancel_auction(callback: CallbackQuery, session: AsyncSession, bot: Bo
 @router.callback_query(F.data == "admin_auction_stats")
 async def auction_statistics(callback: CallbackQuery, session: AsyncSession):
     """Show auction statistics."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     auction_service = AuctionService(session)

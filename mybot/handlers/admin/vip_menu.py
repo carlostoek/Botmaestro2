@@ -2,8 +2,13 @@ from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton
+from aiogram import Router, F, Bot
+from aiogram.types import CallbackQuery, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from datetime import datetime
 
 from utils.user_roles import is_admin, is_vip_member
 from keyboards.admin_vip_kb import get_admin_vip_kb
@@ -46,6 +51,7 @@ from services.message_service import MessageService
 from database.models import set_user_menu_state
 import logging
 
+
 logger = logging.getLogger(__name__)
 router = Router()
 
@@ -57,7 +63,7 @@ async def vip_none(callback: CallbackQuery):
 
 @router.callback_query(F.data == "admin_vip")
 async def vip_menu(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await update_menu(
         callback,
@@ -71,7 +77,7 @@ async def vip_menu(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "vip_generate_token")
 async def vip_generate_token(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     # Get available tariffs
@@ -100,7 +106,7 @@ async def vip_generate_token(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data.startswith("vip_token_"))
 async def vip_create_token(callback: CallbackQuery, session: AsyncSession, bot: Bot):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     tariff_id = int(callback.data.split("_")[-1])
@@ -118,9 +124,9 @@ async def vip_create_token(callback: CallbackQuery, session: AsyncSession, bot: 
     link = f"https://t.me/{bot_username}?start={token.token_string}"
     
     builder = InlineKeyboardBuilder()
-    builder.button(text="❌ Invalidar Token", callback_data=f"vip_invalidate_{token.token_string}")
-    builder.button(text="🔄 Generar Otro", callback_data="vip_generate_token")
-    builder.button(text="🔙 Volver", callback_data="admin_vip")
+    builder.button(text="❌ Invalidar Token", callback_data=f"vip_invalidate_{token.token_string}"),
+    builder.button(text="🔄 Generar Otro"),
+    builder.button(text="🔙 Volver", callback_data="admin_vip"),
     builder.adjust(1)
     
     message_text = (
@@ -139,7 +145,7 @@ async def vip_create_token(callback: CallbackQuery, session: AsyncSession, bot: 
 
 @router.callback_query(F.data.startswith("vip_invalidate_"))
 async def vip_invalidate_token(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     token_string = callback.data.split("_", 2)[-1]  # Get everything after "vip_invalidate_"
@@ -164,7 +170,7 @@ async def vip_invalidate_token(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "vip_stats")
 async def vip_stats(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     
     stats = await get_admin_statistics(session)
@@ -206,8 +212,8 @@ async def vip_stats(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data == "vip_manual_badge")
-async def vip_manual_badge(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def vip_manual_badge(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await callback.message.edit_text(
         "👤 Ingresa el ID o username del usuario:",
@@ -219,7 +225,7 @@ async def vip_manual_badge(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminManualBadgeStates.waiting_for_user, F.text)
 async def process_manual_badge_user(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     query = message.text.strip()
     user = None
@@ -255,7 +261,7 @@ async def process_manual_badge_user(message: Message, state: FSMContext, session
 
 @router.callback_query(F.data.startswith("manual_badge_"))
 async def assign_manual_badge(callback: CallbackQuery, state: FSMContext, session: AsyncSession, bot: Bot):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     data = await state.get_data()
     user_id = data.get("target_user")
@@ -278,8 +284,8 @@ async def assign_manual_badge(callback: CallbackQuery, state: FSMContext, sessio
 
 
 @router.callback_query(F.data == "admin_send_channel_post")
-async def vip_send_channel_post(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def vip_send_channel_post(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await send_clean_message(
         callback.message,
@@ -292,7 +298,7 @@ async def vip_send_channel_post(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminContentStates.waiting_for_channel_post_text)
 async def process_vip_channel_post(message: Message, state: FSMContext, session: AsyncSession, bot: Bot):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     await state.update_data(post_text=message.text)
     await send_clean_message(
@@ -305,7 +311,7 @@ async def process_vip_channel_post(message: Message, state: FSMContext, session:
 
 @router.callback_query(AdminContentStates.confirming_channel_post, F.data == "confirm_channel_post")
 async def confirm_vip_channel_post(callback: CallbackQuery, state: FSMContext, session: AsyncSession, bot: Bot):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     data = await state.get_data()
     text = data.get("post_text")
@@ -324,7 +330,7 @@ async def confirm_vip_channel_post(callback: CallbackQuery, state: FSMContext, s
 
 @router.callback_query(AdminContentStates.confirming_channel_post, F.data == "admin_vip")
 async def cancel_vip_channel_post(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await state.clear()
     await update_menu(
@@ -339,7 +345,7 @@ async def cancel_vip_channel_post(callback: CallbackQuery, state: FSMContext, se
 
 @router.callback_query(F.data.startswith("vip_manage"))
 async def manage_subs(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     parts = callback.data.split(":")
     page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
@@ -382,8 +388,8 @@ async def manage_subs(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data.startswith("vip_add_"))
-async def vip_add_days(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def vip_add_days(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     user_id = int(callback.data.split("_")[-1])
     await state.update_data(target_user=user_id)
@@ -397,7 +403,7 @@ async def vip_add_days(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith("vip_kick_"))
 async def vip_kick(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     user_id = int(callback.data.split("_")[-1])
     sub_service = SubscriptionService(session)
@@ -407,7 +413,7 @@ async def vip_kick(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data.startswith("vip_profile_"))
 async def vip_profile(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     user_id = int(callback.data.split("_")[-1])
     user = await session.get(User, user_id)
@@ -425,8 +431,8 @@ async def vip_profile(callback: CallbackQuery, session: AsyncSession):
 
 
 @router.callback_query(F.data.startswith("vip_edit_"))
-async def vip_edit(callback: CallbackQuery, state: FSMContext):
-    if not is_admin(callback.from_user.id):
+async def vip_edit(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     user_id = int(callback.data.split("_")[-1])
     await state.update_data(target_user=user_id)
@@ -440,7 +446,7 @@ async def vip_edit(callback: CallbackQuery, state: FSMContext):
 
 @router.message(AdminVipSubscriberStates.waiting_for_days)
 async def process_add_days(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     try:
         days = int(message.text)
@@ -457,7 +463,7 @@ async def process_add_days(message: Message, state: FSMContext, session: AsyncSe
 
 @router.message(AdminVipSubscriberStates.waiting_for_new_date)
 async def process_edit_date(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     text = message.text.strip()
     from datetime import datetime
@@ -479,7 +485,7 @@ async def process_edit_date(message: Message, state: FSMContext, session: AsyncS
 
 @router.callback_query(F.data == "vip_config")
 async def vip_config(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     config = ConfigService(session)
     price = await config.get_value("vip_price")
@@ -496,7 +502,7 @@ async def vip_config(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "vip_config_messages")
 async def vip_config_messages(callback: CallbackQuery, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     await update_menu(
         callback,
@@ -510,7 +516,7 @@ async def vip_config_messages(callback: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == "edit_vip_reminder")
 async def prompt_vip_reminder(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer()
     config = ConfigService(session)
     current = await config.get_value("vip_reminder_message") or "Tu suscripción VIP expira pronto."
@@ -522,45 +528,79 @@ async def prompt_vip_reminder(callback: CallbackQuery, state: FSMContext, sessio
     await callback.answer()
 
 
-@router.callback_query(F.data == "edit_vip_farewell")
-async def prompt_vip_farewell(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
-    if not is_admin(callback.from_user.id):
-        return await callback.answer()
-    config = ConfigService(session)
-    current = await config.get_value("vip_farewell_message") or "Tu suscripción VIP ha expirado."
-    await callback.message.edit_text(
-        f"👋 **Mensaje de despedida actual:**\n{current}\n\nEnvía el nuevo mensaje:",
-        reply_markup=get_back_keyboard("vip_config_messages"),
-    )
-    await state.set_state(AdminVipMessageStates.waiting_for_farewell_message)
-    await callback.answer()
-
-
-@router.message(AdminVipMessageStates.waiting_for_reminder_message, F.text)
+@router.message(AdminVipMessageStates.waiting_for_reminder_message)
 async def set_vip_reminder(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
-    config = ConfigService(session)
-    await config.set_value("vip_reminder_message", message.text)
-    await message.answer("✅ Mensaje de recordatorio actualizado.", reply_markup=get_vip_messages_kb())
-    await state.clear()
-
-
-@router.message(AdminVipMessageStates.waiting_for_farewell_message, F.text)
-async def set_vip_farewell(message: Message, state: FSMContext, session: AsyncSession):
-    if not is_admin(message.from_user.id):
-        return
-    config = ConfigService(session)
-    await config.set_value("vip_farewell_message", message.text)
-    await message.answer("✅ Mensaje de despedida actualizado.", reply_markup=get_vip_messages_kb())
-    await state.clear()
-
-
-@router.callback_query(F.data == "vip_game")
-async def vip_game(callback: CallbackQuery, session: AsyncSession):
-    if not await is_vip_member(callback.bot, callback.from_user.id, session=session):
-        return await callback.answer()
-    await callback.message.edit_text(
-        "🎮 Accede al Juego del Diván", reply_markup=get_main_menu_keyboard()
+    
+    new_message = message.text.strip()
+    await ConfigService(session).set_value("vip_reminder_message", new_message)
+    
+    await message.answer(
+        "✅ Mensaje de recordatorio actualizado",
+        reply_markup=get_vip_messages_kb()
     )
+    await state.clear()
+
+
+@router.callback_query(F.data == "edit_vip_welcome")
+async def prompt_vip_welcome(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
+        return await callback.answer()
+    
+    config = ConfigService(session)
+    current = await config.get_value("vip_welcome_message") or "¡Bienvenido al canal VIP!"
+    
+    await callback.message.edit_text(
+        f"📝 **Mensaje de bienvenida actual:**\n{current}\n\nEnvía el nuevo mensaje:",
+        reply_markup=get_back_keyboard("vip_config_messages")
+    )
+    await state.set_state(AdminVipMessageStates.waiting_for_welcome_message)
     await callback.answer()
+
+
+@router.message(AdminVipMessageStates.waiting_for_welcome_message)
+async def set_vip_welcome(message: Message, state: FSMContext, session: AsyncSession):
+    if not await is_admin(message.from_user.id, session):
+        return
+    
+    new_message = message.text.strip()
+    await ConfigService(session).set_value("vip_welcome_message", new_message)
+    
+    await message.answer(
+        "✅ Mensaje de bienvenida actualizado",
+        reply_markup=get_vip_messages_kb()
+    )
+    await state.clear()
+
+
+@router.callback_query(F.data == "edit_vip_expired")
+async def prompt_vip_expired(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+    if not await is_admin(callback.from_user.id, session):
+        return await callback.answer()
+    
+    config = ConfigService(session)
+    current = await config.get_value("vip_expired_message") or "Tu suscripción VIP ha expirado."
+    
+    await callback.message.edit_text(
+        f"📝 **Mensaje de expiración actual:**\n{current}\n\nEnvía el nuevo mensaje:",
+        reply_markup=get_back_keyboard("vip_config_messages")
+    )
+    await state.set_state(AdminVipMessageStates.waiting_for_expired_message)
+    await callback.answer()
+
+
+@router.message(AdminVipMessageStates.waiting_for_expired_message)
+async def set_vip_expired(message: Message, state: FSMContext, session: AsyncSession):
+    if not await is_admin(message.from_user.id, session):
+        return
+    
+    new_message = message.text.strip()
+    await ConfigService(session).set_value("vip_expired_message", new_message)
+    
+    await message.answer(
+        "✅ Mensaje de expiración actualizado",
+        reply_markup=get_vip_messages_kb()
+    )
+    await state.clear()
+    

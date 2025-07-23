@@ -1,5 +1,9 @@
 import os
 from typing import List
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Obtain the Telegram bot token from the ``BOT_TOKEN`` environment
 # variable. This avoids hard coding sensitive information in the

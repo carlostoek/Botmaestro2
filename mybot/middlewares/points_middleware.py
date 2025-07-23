@@ -10,6 +10,7 @@ from services.point_service import PointService
 from utils.messages import BOT_MESSAGES
 import logging
 import datetime
+from utils.user_roles import is_admin # Added import
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,11 @@ class PointsMiddleware(BaseMiddleware):
         bot: Bot = data.get("bot")
         if not session or not bot:
             return await handler(event, data)
+
+        # Verificar si es admin (usando la sesión)
+        if session and hasattr(event, 'from_user') and event.from_user:
+            if await is_admin(event.from_user.id, session):
+                return await handler(event, data)
 
         service = PointService(session)
         from services.mission_service import MissionService

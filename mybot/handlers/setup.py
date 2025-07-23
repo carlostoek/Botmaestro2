@@ -44,7 +44,7 @@ class SetupStates(StatesGroup):
 @router.message(Command("setup"))
 async def start_setup(message: Message, session: AsyncSession):
     """Start the initial setup process for new admins."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         await menu_manager.send_temporary_message(
             message,
             "❌ **Acceso Denegado**\n\nSolo los administradores pueden acceder a la configuración inicial.",
@@ -80,7 +80,7 @@ async def start_setup(message: Message, session: AsyncSession):
 @router.callback_query(F.data == "setup_channels")
 async def setup_channels_menu(callback: CallbackQuery, session: AsyncSession):
     """Show channel configuration options."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_channels", callback.from_user.id, session, callback.bot)
@@ -96,7 +96,7 @@ async def setup_channels_menu(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "setup_vip_channel")
 async def setup_vip_channel(callback: CallbackQuery, state: FSMContext, session: AsyncSession): # Añadido session
     """Start VIP channel configuration."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_vip_channel_prompt", callback.from_user.id, session, callback.bot)
@@ -114,7 +114,7 @@ async def setup_vip_channel(callback: CallbackQuery, state: FSMContext, session:
 @router.callback_query(F.data == "setup_free_channel")
 async def setup_free_channel(callback: CallbackQuery, state: FSMContext, session: AsyncSession): # Añadido session
     """Start free channel configuration."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_free_channel_prompt", callback.from_user.id, session, callback.bot)
@@ -132,7 +132,7 @@ async def setup_free_channel(callback: CallbackQuery, state: FSMContext, session
 @router.callback_query(F.data == "setup_both_channels")
 async def setup_both_channels(callback: CallbackQuery, session: AsyncSession):
     """Placeholder for configuring both channels."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     # Por simplicidad, volvemos al menú de canales y mostramos un mensaje
@@ -153,7 +153,7 @@ async def setup_both_channels(callback: CallbackQuery, session: AsyncSession):
 @router.message(SetupStates.waiting_for_vip_channel)
 async def process_vip_channel(message: Message, state: FSMContext, session: AsyncSession, bot: Bot): # Añadido bot
     """Process VIP channel configuration."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     channel_id = None
@@ -201,7 +201,7 @@ async def process_vip_channel(message: Message, state: FSMContext, session: Asyn
 @router.message(SetupStates.waiting_for_free_channel)
 async def process_free_channel(message: Message, state: FSMContext, session: AsyncSession, bot: Bot): # Añadido bot
     """Process free channel configuration."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     channel_id = None
@@ -249,7 +249,7 @@ async def process_free_channel(message: Message, state: FSMContext, session: Asy
 @router.callback_query(F.data == "confirm_channel", SetupStates.waiting_for_channel_confirmation)
 async def confirm_channel_setup(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     """Confirm and save channel configuration."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     data = await state.get_data()
@@ -309,7 +309,7 @@ async def confirm_channel_setup(callback: CallbackQuery, state: FSMContext, sess
 @router.callback_query(F.data == "detect_another", SetupStates.waiting_for_channel_confirmation)
 async def detect_another_channel(callback: CallbackQuery, state: FSMContext, session: AsyncSession): # Añadido session
     """Allow user to try detecting another channel."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     data = await state.get_data()
@@ -340,7 +340,7 @@ async def detect_another_channel(callback: CallbackQuery, state: FSMContext, ses
 @router.callback_query(F.data == "manual_channel_id", SetupStates.waiting_for_channel_confirmation)
 async def manual_channel_id_prompt(callback: CallbackQuery, state: FSMContext, session: AsyncSession): # Añadido session
     """Prompt for manual channel ID input."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     data = await state.get_data()
@@ -360,7 +360,7 @@ async def manual_channel_id_prompt(callback: CallbackQuery, state: FSMContext, s
 @router.message(SetupStates.waiting_for_manual_channel_id)
 async def process_manual_channel_id(message: Message, state: FSMContext, session: AsyncSession, bot: Bot): # Añadido bot
     """Process manually entered channel ID."""
-    if not is_admin(message.from_user.id):
+    if not await is_admin(message.from_user.id, session):
         return
     
     try:
@@ -403,7 +403,7 @@ async def process_manual_channel_id(message: Message, state: FSMContext, session
 @router.callback_query(F.data == "setup_missions")
 async def setup_missions(callback: CallbackQuery, session: AsyncSession):
     """Handle setup missions click."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_missions_info", callback.from_user.id, session, callback.bot)
@@ -419,7 +419,7 @@ async def setup_missions(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "setup_badges")
 async def setup_badges(callback: CallbackQuery, session: AsyncSession):
     """Handle setup badges click."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_badges_info", callback.from_user.id, session, callback.bot)
@@ -435,7 +435,7 @@ async def setup_badges(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "setup_rewards")
 async def setup_rewards(callback: CallbackQuery, session: AsyncSession):
     """Handle setup rewards click."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_rewards_info", callback.from_user.id, session, callback.bot)
@@ -451,7 +451,7 @@ async def setup_rewards(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "setup_levels")
 async def setup_levels(callback: CallbackQuery, session: AsyncSession):
     """Handle setup levels click."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_levels_info", callback.from_user.id, session, callback.bot)
@@ -473,7 +473,7 @@ async def setup_levels(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "setup_premium_tariff")
 async def setup_premium_tariff(callback: CallbackQuery, session: AsyncSession):
     """Handle setup premium tariff click."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_premium_tariff_info", callback.from_user.id, session, callback.bot)
@@ -489,7 +489,7 @@ async def setup_premium_tariff(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "setup_custom_tariffs")
 async def setup_custom_tariffs(callback: CallbackQuery, session: AsyncSession):
     """Handle setup custom tariffs click."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_custom_tariffs_info", callback.from_user.id, session, callback.bot)
@@ -508,7 +508,7 @@ async def setup_custom_tariffs(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "setup_complete_setup")
 async def handle_setup_complete(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
     """Display setup completion message."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
 
     await state.clear()
@@ -532,7 +532,7 @@ async def handle_setup_complete(callback: CallbackQuery, session: AsyncSession, 
 @router.callback_query(F.data == "skip_setup")
 async def handle_skip_setup(callback: CallbackQuery, session: AsyncSession, state: FSMContext):
     """Skip remaining setup steps and go directly to the admin panel."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
 
     await state.clear()
@@ -556,7 +556,7 @@ async def handle_skip_setup(callback: CallbackQuery, session: AsyncSession, stat
 @router.callback_query(F.data == "setup_guide")
 async def show_setup_guide(callback: CallbackQuery, session: AsyncSession):
     """Show setup guide for admin."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_guide_info", callback.from_user.id, session, callback.bot)
@@ -572,7 +572,7 @@ async def show_setup_guide(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == "setup_advanced")
 async def setup_advanced(callback: CallbackQuery, session: AsyncSession):
     """Handle advanced setup options."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("setup_advanced_info", callback.from_user.id, session, callback.bot)
@@ -589,7 +589,7 @@ async def setup_advanced(callback: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data.startswith("cancel_"))
 async def cancel_setup_action(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     """Cancel current setup action and return to main setup menu."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
 
     await state.clear() # Limpiar el estado de FSM
@@ -611,7 +611,7 @@ async def cancel_setup_action(callback: CallbackQuery, state: FSMContext, sessio
 @router.callback_query(F.data == "admin_main")
 async def navigate_to_admin_main_from_setup(callback: CallbackQuery, session: AsyncSession):
     """Navigate to the main admin panel after setup completion or skip."""
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     text, keyboard = await menu_factory.create_menu("admin_main", callback.from_user.id, session, callback.bot)
@@ -633,7 +633,7 @@ async def handle_start_setup_callback(callback: CallbackQuery, session: AsyncSes
     Handles the '🚀 Configurar Ahora' button from the initial admin choice menu.
     Redirects to the main setup menu.
     """
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     await state.clear() # Limpia cualquier estado de FSM por si acaso
@@ -654,7 +654,7 @@ async def handle_skip_to_admin_callback(callback: CallbackQuery, session: AsyncS
     Handles the '⏭️ Ir al Panel' button from the initial admin choice menu.
     Redirects to the main admin panel.
     """
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     await state.clear() # Limpia cualquier estado de FSM por si acaso
@@ -675,7 +675,7 @@ async def handle_show_setup_guide_callback(callback: CallbackQuery, session: Asy
     Handles the '📖 Ver Guía' button from the initial admin choice menu.
     Redirects to the setup guide menu.
     """
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     await state.clear() # Limpia cualquier estado de FSM por si acaso
@@ -698,7 +698,7 @@ async def handle_admin_kinky_game_button(callback: CallbackQuery, session: Async
     Handles the 'Juego Kinky' button click from the admin panel.
     Displays the Kinky Game menu or info for admins.
     """
-    if not is_admin(callback.from_user.id):
+    if not await is_admin(callback.from_user.id, session):
         return await callback.answer("Acceso denegado", show_alert=True)
     
     from utils.keyboard_utils import get_admin_manage_content_keyboard # Asegurarse de la importación
